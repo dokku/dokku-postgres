@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$(dirname "$0")/../common/functions"
+source "$(dirname "$0")/functions"
+
+STDIN=$(cat)
+APP="$1"
+PLUGIN_DATA_ROOT=/var/lib/dokku/services/postgres
+
+output=""
+for i in $PLUGIN_DATA_ROOT/*; do
+  [[ -d $i ]] || continue
+  SERVICE=$(echo "$i" | cut -d'/' -f 7)
+  LINKS_FILE="$PLUGIN_DATA_ROOT/$SERVICE/LINKS"
+  ALIAS="$(service_alias "$SERVICE")"
+  SERVICE_URL="$(service_url "$SERVICE")"
+  if [[ -f "$LINKS_FILE" ]]; then
+    while read line; do
+      if [[ "$line" == "$APP" ]]; then
+        output="$output --link dokku.postgres.$SERVICE:$ALIAS --env ${ALIAS}_URL=$SERVICE_URL"
+        break
+      fi
+    done < "$LINKS_FILE"
+  fi
+done
+
+echo "$STDIN$output"

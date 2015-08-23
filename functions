@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+
+PLUGIN_DATA_ROOT=/var/lib/dokku/services/postgres
+PLUGIN_SERVICE="Postgres"
+
+get_random_port() {
+  local port=$RANDOM
+  local quit=0
+
+  while [ "$quit" -ne 1 ]; do
+    netstat -a | grep $port >> /dev/null
+    if [ $? -gt 0 ]; then
+      quit=1
+    else
+      port=$((port + 1))
+    fi
+  done
+  echo $port
+}
+
+get_container_ip() {
+  docker inspect --format '{{ .NetworkSettings.IPAddress }}' "$1"
+}
+
+verify_service_name() {
+  local SERVICE="$1"
+  [[ ! -n "$SERVICE" ]] && dokku_log_fail "(verify_service_name) SERVICE must not be null"
+  [[ ! -d "$PLUGIN_DATA_ROOT/$SERVICE" ]] && dokku_log_fail "$PLUGIN_SERVICE service $SERVICE does not exist"
+  return 0
+}
+
+service_alias() {
+  local SERVICE="$1"
+  local ALIAS_FILE="$PLUGIN_DATA_ROOT/$SERVICE/ALIAS"
+
+  verify_service_name "$1"
+  if [[ -f "$ALIAS_FILE" ]]; then
+    cat "$ALIAS_FILE"
+  else
+    echo "DATABASE"
+  fi
+}
+
+service_url() {
+  local SERVICE="$1";
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  verify_service_name "$1"
+
+  local ID="$(cat "$SERVICE_ROOT/ID")"
+  local IP="$(get_container_ip "$ID")"
+  local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
+  echo "postgres://postgres:$PASSWORD@$IP:5432/$SERVICE"
+}
