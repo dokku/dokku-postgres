@@ -176,7 +176,7 @@ case "$1" in
       DOKKU_LOGS_ARGS="--tail 100"
     fi
 
-    docker logs "$DOKKU_LOGS_ARGS" "$ID"
+    docker logs $DOKKU_LOGS_ARGS "$ID"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:restart)
