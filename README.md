@@ -11,7 +11,7 @@ Official postgres plugin for dokku. Currently installs postgres 9.5.
 
 ```
 cd /var/lib/dokku/plugins
-git clone https://github.com/dokku/dokku-postgres-plugin.git postgres
+git clone https://github.com/dokku/dokku-postgres.git postgres
 dokku plugins-install-dependencies
 dokku plugins-install
 ```
