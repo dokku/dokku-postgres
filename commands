@@ -195,23 +195,11 @@ case "$1" in
     ;;
 
   $PLUGIN_COMMAND_PREFIX:info)
-    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
-    verify_service_name "$2"
-    SERVICE="$2"; SERVICE_URL=$(service_url "$SERVICE")
-
-    echo "       DSN: $SERVICE_URL"
+    service_info $2
     ;;
 
   $PLUGIN_COMMAND_PREFIX:list)
-    CONTAINERS=$(ls $PLUGIN_DATA_ROOT 2> /dev/null)
-    if [[ -z $CONTAINERS ]]; then
-        echo "There are no $PLUGIN_SERVICE services"
-    else
-        echo "$PLUGIN_SERVICE services:"
-        for CONTAINER in $CONTAINERS; do
-            echo "  - $CONTAINER"
-        done
-    fi
+    service_list
     ;;
 
   $PLUGIN_COMMAND_PREFIX:clone)

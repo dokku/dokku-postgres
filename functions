@@ -40,6 +40,41 @@ service_alias() {
   fi
 }
 
+service_info() {
+  [[ -z $1 ]] && dokku_log_fail "Please specify a name for the service"
+  verify_service_name "$1"
+
+  local SERVICE="$1";
+  local SERVICE_URL=$(service_url "$SERVICE")
+
+  echo "       DSN: $SERVICE_URL"
+}
+
+service_list() {
+  local SERVICES=$(ls $PLUGIN_DATA_ROOT 2> /dev/null)
+  if [[ -z $SERVICES ]]; then
+    dokku_log_warn "There are no $PLUGIN_SERVICE services"
+  else
+    dokku_log_info1_quiet "$PLUGIN_SERVICE services:"
+    for SERVICE in $SERVICES; do
+      dokku_log_verbose "$SERVICE $(service_status $SERVICE)"
+    done
+  fi
+}
+
+service_status() {
+  local SERVICE="$1";
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local ID="$(cat "$SERVICE_ROOT/ID")"
+
+  is_container_status "$ID" "Dead" && echo "(dead)" && return 0
+  is_container_status "$ID" "OOMKilled" && echo "(oomkilled)" && return 0
+  is_container_status "$ID" "Paused" && echo "(paused)" && return 0
+  is_container_status "$ID" "Restarting" && echo "(restarting)" && return 0
+  is_container_status "$ID" "Running" && echo "(running)" && return 0
+  echo "(stopped)" && return 0
+}
+
 service_url() {
   local SERVICE="$1";
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
@@ -48,4 +83,16 @@ service_url() {
   local IP="$(get_container_ip "$ID")"
   local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
   echo "$PLUGIN_SCHEME://postgres:$PASSWORD@$IP:$PLUGIN_DATASTORE_PORT/$SERVICE"
+}
+
+is_container_status () {
+  local CID=$1
+  local TEMPLATE="{{.State.$2}}"
+  local CONTAINER_STATUS=$(docker inspect -f "$TEMPLATE" "$CID" || true)
+
+  if [[ "$CONTAINER_STATUS" == "true" ]]; then
+    return 0
+  else
+    return 1
+  fi
 }
