@@ -21,11 +21,7 @@ case "$1" in
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     [[ -z $3 ]] && dokku_log_fail "Please specify an alias for the service"
     verify_service_name "$2"
-    SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"; ALIAS_FILE="$SERVICE_ROOT/ALIAS"
-
-    mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
-    touch "$ALIAS_FILE"
-    echo "$3" > "$ALIAS_FILE"
+    service_set_alias "$2" "$3"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:create)
@@ -110,15 +106,7 @@ case "$1" in
     [[ -z $3 ]] && dokku_log_fail "Please specify an app to run the command on"
     verify_app_name "$3"
     verify_service_name "$2"
-    APP="$3"; SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"; LINKS_FILE="$SERVICE_ROOT/LINKS"
-
-    mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
-    touch "$LINKS_FILE"
-    echo "$APP" >> "$LINKS_FILE"
-    sort "$LINKS_FILE" -u -o "$LINKS_FILE"
-
-    dokku_log_info1 "Restarting app $APP"
-    dokku ps:restart "$APP"
+    service_link "$2" "$3"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:unlink)
@@ -126,15 +114,7 @@ case "$1" in
     [[ -z $3 ]] && dokku_log_fail "Please specify an app to run the command on"
     verify_app_name "$3"
     verify_service_name "$2"
-    APP="$3"; SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"; LINKS_FILE="$SERVICE_ROOT/LINKS"
-
-    mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
-    touch "$LINKS_FILE"
-    sed -i "/^$3\$/d" "$LINKS_FILE"
-    sort "$LINKS_FILE" -u -o "$LINKS_FILE"
-
-    dokku_log_info1 "Restarting app $APP"
-    dokku ps:restart "$APP"
+    service_unlink "$2" "$3"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:export)
@@ -159,17 +139,7 @@ case "$1" in
   $PLUGIN_COMMAND_PREFIX:logs)
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     verify_service_name "$2"
-    SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-
-    ID=$(cat "$SERVICE_ROOT/ID")
-
-    if [[ $3 == "-t" ]]; then
-      DOKKU_LOGS_ARGS="--follow"
-    else
-      DOKKU_LOGS_ARGS="--tail 100"
-    fi
-
-    docker logs $DOKKU_LOGS_ARGS "$ID"
+    service_logs "$2" "$3"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:restart)

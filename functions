@@ -41,7 +41,7 @@ service_alias() {
 }
 
 service_info() {
-  local SERVICE="$1";
+  local SERVICE="$1"
   local SERVICE_URL=$(service_url "$SERVICE")
 
   echo "       DSN: $SERVICE_URL"
@@ -59,8 +59,47 @@ service_list() {
   fi
 }
 
+service_link() {
+  local APP="$2"
+  local SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local LINKS_FILE="$SERVICE_ROOT/LINKS"
+
+  mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
+  touch "$LINKS_FILE"
+  echo "$APP" >> "$LINKS_FILE"
+  sort "$LINKS_FILE" -u -o "$LINKS_FILE"
+
+  dokku_log_info1 "Restarting app $APP"
+  dokku ps:restart "$APP"
+}
+
+service_logs() {
+  local SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local ID=$(cat "$SERVICE_ROOT/ID")
+
+  if [[ $2 == "-t" ]]; then
+    DOKKU_LOGS_ARGS="--follow"
+  else
+    DOKKU_LOGS_ARGS="--tail 100"
+  fi
+
+  docker logs $DOKKU_LOGS_ARGS "$ID"
+}
+
+service_set_alias() {
+  local SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local ALIAS_FILE="$SERVICE_ROOT/ALIAS"
+
+  mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
+  touch "$ALIAS_FILE"
+  echo "$2" > "$ALIAS_FILE"
+}
+
 service_status() {
-  local SERVICE="$1";
+  local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local ID="$(cat "$SERVICE_ROOT/ID")"
 
@@ -72,8 +111,23 @@ service_status() {
   echo "(stopped)" && return 0
 }
 
+service_unlink() {
+  local APP="$2"
+  local SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local LINKS_FILE="$SERVICE_ROOT/LINKS"
+
+  mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
+  touch "$LINKS_FILE"
+  sed -i "/^$APP\$/d" "$LINKS_FILE"
+  sort "$LINKS_FILE" -u -o "$LINKS_FILE"
+
+  dokku_log_info1 "Restarting app $APP"
+  dokku ps:restart "$APP"
+}
+
 service_url() {
-  local SERVICE="$1";
+  local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
 
   local ID="$(cat "$SERVICE_ROOT/ID")"
