@@ -93,7 +93,7 @@ case "$1" in
     fi
 
     dokku_log_info1 "Deleting $SERVICE"
-    if [[ -f "$SERVICE_ROOT/ID" ]] && docker ps -aq --no-trunc | grep $(cat "$SERVICE_ROOT/ID"); then
+    if [[ -f "$SERVICE_ROOT/ID" ]] && docker ps -aq --no-trunc | grep -q $(cat "$SERVICE_ROOT/ID"); then
       ID=$(cat "$SERVICE_ROOT/ID")
 
       dokku_log_verbose_quiet "Stopping container"
