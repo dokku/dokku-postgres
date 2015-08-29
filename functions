@@ -43,7 +43,6 @@ service_alias() {
 service_url() {
   local SERVICE="$1";
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  verify_service_name "$1"
 
   local ID="$(cat "$SERVICE_ROOT/ID")"
   local IP="$(get_container_ip "$ID")"
