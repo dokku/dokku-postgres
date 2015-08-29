@@ -195,6 +195,8 @@ case "$1" in
     ;;
 
   $PLUGIN_COMMAND_PREFIX:info)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    verify_service_name "$2"
     service_info $2
     ;;
 

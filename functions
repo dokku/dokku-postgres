@@ -41,9 +41,6 @@ service_alias() {
 }
 
 service_info() {
-  [[ -z $1 ]] && dokku_log_fail "Please specify a name for the service"
-  verify_service_name "$1"
-
   local SERVICE="$1";
   local SERVICE_URL=$(service_url "$SERVICE")
 
