@@ -233,9 +233,9 @@ case "$1" in
     IP=$(get_container_ip "$ID")
     PORT=$(get_random_port)
     echo "$PORT" > "$PORT_FILE"
-    echo "$IP:5432" > "$DESTINATION_FILE"
+    echo "$IP:$PLUGIN_DATASTORE_PORT" > "$DESTINATION_FILE"
 
-    iptables -t nat -A DOCKER -p tcp --dport "$PORT" -j DNAT --to-destination "$IP:5432"
+    iptables -t nat -A DOCKER -p tcp --dport "$PORT" -j DNAT --to-destination "$IP:$PLUGIN_DATASTORE_PORT"
     dokku_log_info1 "Service $SERVICE exposed on port $PORT"
     ;;
 
