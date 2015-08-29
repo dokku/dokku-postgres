@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
-
-PLUGIN_DATA_ROOT=/var/lib/dokku/services/postgres
-PLUGIN_SERVICE="Postgres"
+source "$(dirname "$0")/config"
 
 get_random_port() {
   local port=$RANDOM
@@ -38,7 +36,7 @@ service_alias() {
   if [[ -f "$ALIAS_FILE" ]]; then
     cat "$ALIAS_FILE"
   else
-    echo "DATABASE"
+    echo "$PLUGIN_DEFAULT_ALIAS"
   fi
 }
 
@@ -50,5 +48,5 @@ service_url() {
   local ID="$(cat "$SERVICE_ROOT/ID")"
   local IP="$(get_container_ip "$ID")"
   local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
-  echo "postgres://postgres:$PASSWORD@$IP:5432/$SERVICE"
+  echo "$PLUGIN_SCHEME://postgres:$PASSWORD@$IP:$PLUGIN_DATASTORE_PORT/$SERVICE"
 }

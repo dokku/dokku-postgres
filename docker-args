@@ -2,10 +2,10 @@
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$(dirname "$0")/../common/functions"
 source "$(dirname "$0")/functions"
+source "$(dirname "$0")/config"
 
 STDIN=$(cat)
 APP="$1"
-PLUGIN_DATA_ROOT=/var/lib/dokku/services/postgres
 
 output=""
 for i in $PLUGIN_DATA_ROOT/*; do

@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
-
-POSTGRES_IMAGE="postgres"
-POSTGRES_IMAGE_VERSION=9.5
-POSTGRES_ROOT=/var/lib/dokku/services/postgres
-
-PLUGIN_DATA_ROOT=$POSTGRES_ROOT
-PLUGIN_SERVICE="Postgres"
-PLUGIN_IMAGE=$POSTGRES_IMAGE
-PLUGIN_IMAGE_VERSION=$POSTGRES_IMAGE_VERSION
+source "$(dirname "$0")/config"
 
 if ! docker images | grep -e "^$PLUGIN_IMAGE " | grep -q $PLUGIN_IMAGE_VERSION ; then
   docker pull $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION
