@@ -66,7 +66,12 @@ service_exposed_ports() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local PORT_FILE="$SERVICE_ROOT/PORT"
   [[ ! -f $PORT_FILE ]] && return 0
-  printf ", exposed port(s): %s" "$(cat "$PORT_FILE")"
+  local PORTS=($(cat "$PORT_FILE"))
+  echo -n ", exposed port(s):"
+  for (( i=0; i < ${#PLUGIN_DATASTORE_PORTS[@]}; i++ )); do
+    echo -n " ${PLUGIN_DATASTORE_PORTS[i]}->${PORTS[i]}"
+  done
+  echo ""
 }
 
 service_link() {
