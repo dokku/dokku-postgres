@@ -1,0 +1,6 @@
+sudo: required
+language: bash
+env:
+  - DOKKU_VERSION=master
+before_install: make setup
+script: make test
