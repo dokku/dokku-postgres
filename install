@@ -6,5 +6,7 @@ if ! docker images | grep -e "^$PLUGIN_IMAGE " | grep -q $PLUGIN_IMAGE_VERSION ;
   docker pull $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION
 fi
 
+docker pull svendowideit/ambassador:latest
+
 mkdir -p $PLUGIN_DATA_ROOT || echo "Failed to create $PLUGIN_SERVICE directory"
 chown dokku:dokku $PLUGIN_DATA_ROOT

@@ -39,7 +39,8 @@ case "$1" in
     touch "$LINKS_FILE"
 
     dokku_log_info1 "Starting container"
-    ID=$(docker run --name "dokku.postgres.$SERVICE" -v "$SERVICE_ROOT:/var/lib/postgresql" -e "POSTGRES_PASSWORD=$password" -d "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION")
+    SERVICE_NAME=$(get_service_name "$SERVICE")
+    ID=$(docker run --name "$SERVICE_NAME" -v "$SERVICE_ROOT:/var/lib/postgresql" -e "POSTGRES_PASSWORD=$password" -d --restart always --label dokku=service --label dokku.service=postgres "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION")
     echo "$ID" > "$SERVICE_ROOT/ID"
 
     dokku_log_verbose_quiet "Waiting for container to be ready"
@@ -83,9 +84,9 @@ case "$1" in
     if [[ -f "$SERVICE_ROOT/ID" ]] && docker ps -aq --no-trunc | grep -q $(cat "$SERVICE_ROOT/ID"); then
       ID=$(cat "$SERVICE_ROOT/ID")
 
-      dokku_log_verbose_quiet "Stopping container"
-      docker stop "$ID" > /dev/null
-      docker kill "$ID" > /dev/null
+      service_stop "$SERVICE"
+      dokku_log_verbose_quiet "Killing container"
+      docker kill "$ID" > /dev/null || true
       sleep 1
 
       dokku_log_verbose_quiet "Removing container"
@@ -142,14 +143,23 @@ case "$1" in
     service_logs "$2" "$3"
     ;;
 
+  $PLUGIN_COMMAND_PREFIX:start)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    verify_service_name "$2"
+    service_start "$2"
+    ;;
+
+  $PLUGIN_COMMAND_PREFIX:stop)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    verify_service_name "$2"
+    service_stop "$2"
+    ;;
+
   $PLUGIN_COMMAND_PREFIX:restart)
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     verify_service_name "$2"
-    SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-
-    ID=$(cat "$SERVICE_ROOT/ID")
-
-    docker restart --time=10 "$ID"
+    service_stop "$2"
+    service_start "$2"
     dokku_log_info1 "Please call dokku ps:restart on all linked apps"
     ;;
 
@@ -185,34 +195,13 @@ case "$1" in
   $PLUGIN_COMMAND_PREFIX:expose)
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     verify_service_name "$2"
-    SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"; PORT_FILE="$SERVICE_ROOT/PORT"; DESTINATION_FILE="$SERVICE_ROOT/IPTABLES_DESTINATION"
-
-    [[ -f "$PORT_FILE" ]] && PORT=$(cat "$PORT_FILE") && dokku_log_fail "Service $SERVICE already exposed on port $PORT"
-
-    ID=$(cat "$SERVICE_ROOT/ID")
-    IP=$(get_container_ip "$ID")
-    PORT=$(get_random_port)
-    echo "$PORT" > "$PORT_FILE"
-    echo "$IP:$PLUGIN_DATASTORE_PORT" > "$DESTINATION_FILE"
-
-    iptables -t nat -A DOCKER -p tcp --dport "$PORT" -j DNAT --to-destination "$IP:$PLUGIN_DATASTORE_PORT"
-    dokku_log_info1 "Service $SERVICE exposed on port $PORT"
+    service_port_expose "$2" "${@:3}"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:unexpose)
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     verify_service_name "$2"
-    SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"; PORT_FILE="$SERVICE_ROOT/PORT"; DESTINATION_FILE="$SERVICE_ROOT/IPTABLES_DESTINATION"
-
-    [[ ! -f "$PORT_FILE" ]] && dokku_log_fail "Service not exposed"
-
-    ID=$(cat "$SERVICE_ROOT/ID")
-    IP=$(get_container_ip "$ID")
-    PORT=$(cat "$PORT_FILE")
-    DESTINATION=$(cat "$DESTINATION_FILE")
-
-    iptables -t nat -D DOCKER -p tcp --dport "$PORT" -j DNAT --to-destination "$DESTINATION"
-    rm -rf "$PORT_FILE"
+    service_port_unexpose "$2"
     ;;
 
   help)
@@ -226,12 +215,14 @@ case "$1" in
     $PLUGIN_COMMAND_PREFIX:import <name> <file>, NOT IMPLEMENTED
     $PLUGIN_COMMAND_PREFIX:connect <name>, Connect via psql to a $PLUGIN_SERVICE service
     $PLUGIN_COMMAND_PREFIX:logs <name> [-t], Print the most recent log(s) for this service
-    $PLUGIN_COMMAND_PREFIX:restart <name>, Graceful shutdown and restart of the service container
+    $PLUGIN_COMMAND_PREFIX:restart <name>, Graceful shutdown and restart of the $PLUGIN_SERVICE service container
     $PLUGIN_COMMAND_PREFIX:info <name>, Print the connection information
     $PLUGIN_COMMAND_PREFIX:list, List all $PLUGIN_SERVICE services
     $PLUGIN_COMMAND_PREFIX:clone <name> <new-name>, NOT IMPLEMENTED
-    $PLUGIN_COMMAND_PREFIX:expose <name> <port>, NOT IMPLEMENTED
-    $PLUGIN_COMMAND_PREFIX:unexpose <name> <port>, NOT IMPLEMENTED
+    $PLUGIN_COMMAND_PREFIX:expose <name> [port], Expose a $PLUGIN_SERVICE service on custom port if provided (random port otherwise)
+    $PLUGIN_COMMAND_PREFIX:unexpose <name>, Unexpose a previously exposed $PLUGIN_SERVICE service
+    $PLUGIN_COMMAND_PREFIX:start <name>, Start a previously stopped $PLUGIN_SERVICE service
+    $PLUGIN_COMMAND_PREFIX:stop <name>, Stop a running $PLUGIN_SERVICE service
 EOF
     ;;
 

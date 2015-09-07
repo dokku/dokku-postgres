@@ -25,15 +25,16 @@ postgres:connect <name>           Connect via psql to a postgres service
 postgres:create <name>            Create a postgres service
 postgres:destroy <name>           Delete the service and stop its container if there are no links left
 postgres:export <name>            Export a dump of the postgres service database
-postgres:expose <name> <port>     NOT IMPLEMENTED
+postgres:expose <name> [port]     Expose a postgres service on custom port if provided (random port otherwise)
 postgres:import <name> <file>     NOT IMPLEMENTED
 postgres:info <name>              Print the connection information
 postgres:link <name> <app>        Link the postgres service to the app
 postgres:list                     List all postgres services
 postgres:logs <name> [-t]         Print the most recent log(s) for this service
-postgres:restart <name>           Graceful shutdown and restart of the service container
-postgres:unexpose <name> <port>   NOT IMPLEMENTED
-postgres:unlink <name> <app>      Unlink the postgres service from the app
+postgres:restart <name>           Graceful shutdown and restart of the postgres service container
+postgres:start <name>             Start a previously stopped postgres service
+postgres:stop <name>              Stop a running postgres service
+postgres:unexpose <name>          Unexpose a previously exposed postgres service
 ```
 
 ## usage
@@ -65,7 +66,7 @@ dokku postgres:link lolipop playground
 # the above will expose the following environment variables
 #
 #   DATABASE_URL=postgres://postgres:SOME_PASSWORD@172.17.0.1:5432/lolipop
-#   DATABASE_NAME=/playground/DATABASE
+#   DATABASE_NAME=/lolipop/DATABASE
 #   DATABASE_PORT=tcp://172.17.0.1:5432
 #   DATABASE_PORT_5432_TCP=tcp://172.17.0.1:5432
 #   DATABASE_PORT_5432_TCP_PROTO=tcp
@@ -85,11 +86,10 @@ dokku postgres:logs lolipop
 dokku postgres:logs lolipop -t # to tail
 
 # finally, you can destroy the container
-dokku postgres:destroy playground
+dokku postgres:destroy lolipop
 ```
 
 ## todo
 
 - implement postgres:clone
-- implement postgres:expose
 - implement postgres:import
