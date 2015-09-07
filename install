@@ -2,11 +2,11 @@
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$(dirname "$0")/config"
 
-if ! docker images | grep -e "^$PLUGIN_IMAGE " | grep -q $PLUGIN_IMAGE_VERSION ; then
-  docker pull $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION
+if ! docker images | grep -e "^$PLUGIN_IMAGE " | grep -q "$PLUGIN_IMAGE_VERSION" ; then
+  docker pull "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
 fi
 
 docker pull svendowideit/ambassador:latest
 
-mkdir -p $PLUGIN_DATA_ROOT || echo "Failed to create $PLUGIN_SERVICE directory"
-chown dokku:dokku $PLUGIN_DATA_ROOT
+mkdir -p "$PLUGIN_DATA_ROOT" || echo "Failed to create $PLUGIN_SERVICE directory"
+chown dokku:dokku "$PLUGIN_DATA_ROOT"

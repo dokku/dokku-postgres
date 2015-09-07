@@ -81,7 +81,7 @@ case "$1" in
     fi
 
     dokku_log_info1 "Deleting $SERVICE"
-    if [[ -f "$SERVICE_ROOT/ID" ]] && docker ps -aq --no-trunc | grep -q $(cat "$SERVICE_ROOT/ID"); then
+    if [[ -f "$SERVICE_ROOT/ID" ]] && docker ps -aq --no-trunc | grep -q "$(cat "$SERVICE_ROOT/ID")"; then
       ID=$(cat "$SERVICE_ROOT/ID")
 
       service_stop "$SERVICE"
@@ -177,7 +177,7 @@ case "$1" in
   $PLUGIN_COMMAND_PREFIX:info)
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     verify_service_name "$2"
-    service_info $2
+    service_info "$2"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:list)
