@@ -246,7 +246,8 @@ service_url() {
   local ID="$(cat "$SERVICE_ROOT/ID")"
   local IP="$(get_container_ip "$ID")"
   local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
-  echo "$PLUGIN_SCHEME://postgres:$PASSWORD@$IP:${PLUGIN_DATASTORE_PORTS[0]}/$SERVICE"
+  local DATABASE_NAME="$(get_database_name $SERVICE)"
+  echo "$PLUGIN_SCHEME://postgres:$PASSWORD@$IP:${PLUGIN_DATASTORE_PORTS[0]}/$DATABASE_NAME"
 }
 
 is_container_status () {
@@ -264,4 +265,10 @@ is_container_status () {
 get_service_name() {
   local SERVICE="$1"
   echo "dokku.${PLUGIN_COMMAND_PREFIX}.$SERVICE"
+}
+
+get_database_name() {
+  # postgres does not like special characters in database names
+  # so we need to normalize them out
+  echo "$1" | tr .- _
 }

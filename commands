@@ -48,8 +48,9 @@ case "$1" in
 
     dokku_log_verbose_quiet "Creating container database"
     IP=$(get_container_ip "$ID")
+    DATABASE_NAME="$(get_database_name $SERVICE)"
     while true; do
-      PGPASSWORD=$password psql --quiet -h "$IP" -p 5432 -U postgres --command "CREATE DATABASE $SERVICE;" &>/dev/null || {
+      PGPASSWORD=$password psql --quiet -h "$IP" -p 5432 -U postgres --command "CREATE DATABASE $DATABASE_NAME;" &>/dev/null || {
         continue
       }
       break
@@ -171,7 +172,8 @@ case "$1" in
     ID=$(cat "$SERVICE_ROOT/ID")
     IP=$(get_container_ip "$ID")
     PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
-    PGPASSWORD="$PASSWORD" psql -h "$IP" -U postgres
+    DATABASE_NAME="$(get_database_name $SERVICE)"
+    PGPASSWORD="$PASSWORD" psql -h "$IP" -U postgres -d "$DATABASE_NAME"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:info)
