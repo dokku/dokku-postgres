@@ -1,6 +1,6 @@
 # dokku postgres (beta) [![Build Status](https://img.shields.io/travis/dokku/dokku-postgres.svg?branch=master "Build Status")](https://travis-ci.org/dokku/dokku-postgres) [![IRC Network](https://img.shields.io/badge/irc-freenode-blue.svg "IRC Freenode")](https://webchat.freenode.net/?channels=dokku)
 
-Official postgres plugin for dokku. Currently installs postgres 9.5.
+Official postgres plugin for dokku. Currently installs [postgres 9.5](https://hub.docker.com/_/postgres/).
 
 ## requirements
 
