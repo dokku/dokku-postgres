@@ -8,14 +8,6 @@ if [[ ! -d $PLUGIN_DATA_ROOT ]]; then
   dokku_log_fail "$PLUGIN_SERVICE: Please run: sudo dokku plugins-install"
 fi
 
-if ! command -v psql &>/dev/null; then
-  dokku_log_fail "$PLUGIN_SERVICE: Please run: sudo dokku plugins-install-dependencies"
-fi
-
-if ! command -v pg_dump &>/dev/null; then
-  dokku_log_fail "$PLUGIN_SERVICE: Please run: sudo dokku plugins-install-dependencies"
-fi
-
 case "$1" in
   $PLUGIN_COMMAND_PREFIX:alias)
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
@@ -123,11 +115,11 @@ case "$1" in
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     verify_service_name "$2"
     SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-
+    SERVICE_NAME="$(get_service_name "$SERVICE")"
+    DATABASE_NAME="$(get_database_name $SERVICE)"
     PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
-    IP=$(get_container_ip "$ID")
 
-    PGPASSWORD="$PASSWORD" pg_dump -h "$IP" -p 5432 -U postgres -c -O "$SERVICE"
+    docker exec "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_dump -Fc --no-acl --no-owner -h localhost -U postgres -w "$DATABASE_NAME"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:import)
@@ -168,12 +160,10 @@ case "$1" in
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     verify_service_name "$2"
     SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-
-    ID=$(cat "$SERVICE_ROOT/ID")
-    IP=$(get_container_ip "$ID")
-    PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
     DATABASE_NAME="$(get_database_name $SERVICE)"
-    PGPASSWORD="$PASSWORD" psql -h "$IP" -U postgres -d "$DATABASE_NAME"
+    SERVICE_NAME="$(get_service_name "$SERVICE")"
+
+    docker exec -it "$SERVICE_NAME" psql -h localhost -U postgres "$DATABASE_NAME"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:info)
