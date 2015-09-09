@@ -39,14 +39,8 @@ case "$1" in
     docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" aanand/wait > /dev/null
 
     dokku_log_verbose_quiet "Creating container database"
-    IP=$(get_container_ip "$ID")
-    DATABASE_NAME="$(get_database_name $SERVICE)"
-    while true; do
-      PGPASSWORD=$password psql --quiet -h "$IP" -p 5432 -U postgres --command "CREATE DATABASE $DATABASE_NAME;" &>/dev/null || {
-        continue
-      }
-      break
-    done
+    DATABASE_NAME="$(get_database_name "$SERVICE")"
+    docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME"
 
     dokku_log_info2 "$PLUGIN_SERVICE container created: $SERVICE"
     dokku "$PLUGIN_COMMAND_PREFIX:info" "$SERVICE"
