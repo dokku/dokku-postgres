@@ -36,7 +36,7 @@ case "$1" in
     echo "$ID" > "$SERVICE_ROOT/ID"
 
     dokku_log_verbose_quiet "Waiting for container to be ready"
-    sleep 10
+    docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" aanand/wait > /dev/null
 
     dokku_log_verbose_quiet "Creating container database"
     IP=$(get_container_ip "$ID")
