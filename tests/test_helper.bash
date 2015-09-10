@@ -7,7 +7,8 @@ export PLUGIN_COMMAND_PREFIX="postgres"
 export PLUGIN_PATH="$DOKKU_ROOT/plugins"
 export PLUGIN_DATA_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fixtures"
 
-mkdir -p $PLUGIN_DATA_ROOT
+mkdir -p "$PLUGIN_DATA_ROOT"
+rm -rf "${PLUGIN_DATA_ROOT:?}"/*
 
 flunk() {
   { if [ "$#" -eq 0 ]; then cat -
