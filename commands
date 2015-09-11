@@ -176,10 +176,14 @@ case "$1" in
 
   $PLUGIN_COMMAND_PREFIX:clone)
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    [[ -z $3 ]] && dokku_log_fail "Please specify a name for the new service"
     verify_service_name "$2"
     SERVICE="$2"
-
-    dokku_log_fail "Not yet implemented"
+    NEW_SERVICE="$3"
+    dokku "$PLUGIN_COMMAND_PREFIX:create" "$NEW_SERVICE"
+    dokku_log_info1 "Copying data from $SERVICE to $NEW_SERVICE"
+    dokku "$PLUGIN_COMMAND_PREFIX:export" "$SERVICE" | dokku "$PLUGIN_COMMAND_PREFIX:import" "$NEW_SERVICE" > /dev/null 2>&1 || true
+    dokku_log_info1 "Done"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:expose)
@@ -208,7 +212,7 @@ case "$1" in
     $PLUGIN_COMMAND_PREFIX:restart <name>, Graceful shutdown and restart of the $PLUGIN_SERVICE service container
     $PLUGIN_COMMAND_PREFIX:info <name>, Print the connection information
     $PLUGIN_COMMAND_PREFIX:list, List all $PLUGIN_SERVICE services
-    $PLUGIN_COMMAND_PREFIX:clone <name> <new-name>, NOT IMPLEMENTED
+    $PLUGIN_COMMAND_PREFIX:clone <name> <new-name>, Create container <new-name> then copy data from <name> into <new-name>
     $PLUGIN_COMMAND_PREFIX:expose <name> [port], Expose a $PLUGIN_SERVICE service on custom port if provided (random port otherwise)
     $PLUGIN_COMMAND_PREFIX:unexpose <name>, Unexpose a previously exposed $PLUGIN_SERVICE service
     $PLUGIN_COMMAND_PREFIX:start <name>, Start a previously stopped $PLUGIN_SERVICE service
