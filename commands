@@ -199,7 +199,7 @@ case "$1" in
     ;;
 
   help)
-    cat && cat<<EOF
+    HELP=$(cat<<EOF
     $PLUGIN_COMMAND_PREFIX:alias <name> <alias>, Set an alias for the docker link
     $PLUGIN_COMMAND_PREFIX:create <name>, Create a $PLUGIN_SERVICE service
     $PLUGIN_COMMAND_PREFIX:destroy <name>, Delete the $PLUGIN_SERVICE service and stop its container if there are no links left
@@ -218,6 +218,12 @@ case "$1" in
     $PLUGIN_COMMAND_PREFIX:start <name>, Start a previously stopped $PLUGIN_SERVICE service
     $PLUGIN_COMMAND_PREFIX:stop <name>, Stop a running $PLUGIN_SERVICE service
 EOF
+)
+    if [[ -n $DOKKU_API_VERSION ]]; then
+      echo "$HELP"
+    else
+      cat && echo "$HELP"
+    fi
     ;;
 
   *)
