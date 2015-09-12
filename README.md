@@ -20,13 +20,13 @@ dokku plugins-install
 
 ```
 postgres:alias <name> <alias>     Set an alias for the docker link
-postgres:clone <name> <new-name>  NOT IMPLEMENTED
+postgres:clone <name> <new-name>  Create container <new-name> then copy data from <name> into <new-name>
 postgres:connect <name>           Connect via psql to a postgres service
 postgres:create <name>            Create a postgres service
 postgres:destroy <name>           Delete the service and stop its container if there are no links left
 postgres:export <name>            Export a dump of the postgres service database
 postgres:expose <name> [port]     Expose a postgres service on custom port if provided (random port otherwise)
-postgres:import <name> <file>     NOT IMPLEMENTED
+postgres:import <name> < <file>   Import a dump into the postgres service database
 postgres:info <name>              Print the connection information
 postgres:link <name> <app>        Link the postgres service to the app
 postgres:list                     List all postgres services
@@ -85,11 +85,15 @@ dokku postgres:unlink lolipop playground
 dokku postgres:logs lolipop
 dokku postgres:logs lolipop -t # to tail
 
+# you can dump the database
+dokku postgres:export lolipop > lolipop.dump
+
+# you can import a dump
+dokku postgres:import lolipop < database.dump
+
+# you can clone an existing database to a new one
+dokku postgres:clone lolipop new_database
+
 # finally, you can destroy the container
 dokku postgres:destroy lolipop
 ```
-
-## todo
-
-- implement postgres:clone
-- implement postgres:import
