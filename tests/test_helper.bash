@@ -5,6 +5,9 @@ export DOKKU_VERSION=${DOKKU_VERSION:-"master"}
 export PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/bin:$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/dokku:$PATH"
 export PLUGIN_COMMAND_PREFIX="postgres"
 export PLUGIN_PATH="$DOKKU_ROOT/plugins"
+export PLUGIN_ENABLED_PATH="$PLUGIN_PATH"
+export PLUGIN_AVAILABLE_PATH="$PLUGIN_PATH"
+export PLUGIN_CORE_AVAILABLE_PATH="$PLUGIN_PATH"
 export PLUGIN_DATA_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fixtures"
 
 mkdir -p "$PLUGIN_DATA_ROOT"
