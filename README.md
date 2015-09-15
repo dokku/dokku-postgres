@@ -97,3 +97,23 @@ dokku postgres:clone lolipop new_database
 # finally, you can destroy the container
 dokku postgres:destroy lolipop
 ```
+
+## upgrade/downgrade
+
+At the moment a database can’t be upgraded  (or downgraded) inplace. Instead a clone has to be made, like this:
+
+```shell
+# Our original DB using default PG 9.4.4
+$ dokku postgres:create db9.4
+
+# Migrate it like this for example
+$ POSTGRES_IMAGE_VERSION=9.5 dokku postgres:clone db9.4 db9.5
+
+# If it was linked to an application, first link the new DB
+$ dokku postgres:link db9.5 my_app
+# Then unlink the old one
+$ dokku postgres:unlink db9.4 my_app
+
+# And last, destroy the old container
+$ dokku postgres:destroy db9.4
+```
