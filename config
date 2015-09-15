@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 export POSTGRES_IMAGE=${POSTGRES_IMAGE:="postgres"}
-export POSTGRES_IMAGE_VERSION=${POSTGRES_IMAGE_VERSION:="9.4"}
+export POSTGRES_IMAGE_VERSION=${POSTGRES_IMAGE_VERSION:="9.4.4"}
 export POSTGRES_ROOT=/var/lib/dokku/services/postgres
 
 export PLUGIN_COMMAND_PREFIX="postgres"
