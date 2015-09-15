@@ -11,13 +11,13 @@ teardown() {
 
 @test "($PLUGIN_COMMAND_PREFIX:list) with no exposed ports" {
   run dokku "$PLUGIN_COMMAND_PREFIX:list"
-  assert_contains "${lines[*]}" "l (running)"
+  assert_contains "${lines[*]}" "l, postgres:9.4.4 (running)"
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:list) with exposed ports" {
   dokku "$PLUGIN_COMMAND_PREFIX:expose" l 4242
   run dokku "$PLUGIN_COMMAND_PREFIX:list"
-  assert_contains "${lines[*]}" "l (running), exposed port(s): 5432->4242"
+  assert_contains "${lines[*]}" "l, postgres:9.4.4 (running), exposed port(s): 5432->4242"
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:list) when there are no services" {

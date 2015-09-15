@@ -56,7 +56,7 @@ service_list() {
   else
     dokku_log_info1_quiet "$PLUGIN_SERVICE services:"
     for SERVICE in $SERVICES; do
-      dokku_log_verbose "$SERVICE $(service_status "$SERVICE")$(service_exposed_ports "$SERVICE")"
+      dokku_log_verbose "$SERVICE, $(service_version "$SERVICE") $(service_status "$SERVICE")$(service_exposed_ports "$SERVICE")"
     done
   fi
 }
@@ -276,4 +276,10 @@ get_database_name() {
   # postgres does not like special characters in database names
   # so we need to normalize them out
   echo "$1" | tr .- _
+}
+
+service_version() {
+  local SERVICE="$1"
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
+  docker inspect -f '{{.Config.Image}}' "$SERVICE_NAME"
 }
