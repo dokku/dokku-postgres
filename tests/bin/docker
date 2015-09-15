@@ -51,6 +51,11 @@ case "$1" in
       exit 0
     fi
 
+    if [[ $@ =~ \{\{.Config.Image\}\} ]]; then
+      echo "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
+      exit 0
+    fi
+
     if [[ $@ =~ \{\{\.State\..*\}\} ]]; then
       if [[ $@ =~ \{\{\.State\.Running\}\} ]]; then
         echo "true"
