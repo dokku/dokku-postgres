@@ -117,3 +117,11 @@ $ dokku postgres:unlink db9.4 my_app
 # And last, destroy the old container
 $ dokku postgres:destroy db9.4
 ```
+
+## importing data
+
+The `import` command should be used with any non-plain-text files exported by `pg_dump`. To import a SQL file, use `connect` like this:
+
+```shell
+$ dokku postgres:connect db < ./dump.sql
+```
