@@ -167,8 +167,9 @@ case "$1" in
     SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
     DATABASE_NAME="$(get_database_name $SERVICE)"
     SERVICE_NAME="$(get_service_name "$SERVICE")"
+    has_tty && SERVICE_TTY_OPTS="-t"
 
-    docker exec -it "$SERVICE_NAME" psql -h localhost -U postgres "$DATABASE_NAME"
+    docker exec -i $SERVICE_TTY_OPTS "$SERVICE_NAME" psql -h localhost -U postgres "$DATABASE_NAME"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:info)
