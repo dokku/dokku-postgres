@@ -22,7 +22,6 @@ dokku plugin:install https://github.com/dokku/dokku-postgres.git postgres
 ## commands
 
 ```
-postgres:alias <name> <alias>     Set an alias for the docker link
 postgres:clone <name> <new-name>  Create container <new-name> then copy data from <name> into <new-name>
 postgres:connect <name>           Connect via psql to a postgres service
 postgres:create <name>            Create a postgres service
@@ -34,6 +33,7 @@ postgres:info <name>              Print the connection information
 postgres:link <name> <app>        Link the postgres service to the app
 postgres:list                     List all postgres services
 postgres:logs <name> [-t]         Print the most recent log(s) for this service
+postgres:promote <name> <app>     Promote service <name> as DATABASE_URL in <app>
 postgres:restart <name>           Graceful shutdown and restart of the postgres service container
 postgres:start <name>             Start a previously stopped postgres service
 postgres:stop <name>              Stop a running postgres service
@@ -57,8 +57,6 @@ dokku postgres:create lolipop
 # get connection information as follows
 dokku postgres:info lolipop
 
-# lets assume the ip of our postgres service is 172.17.0.1
-
 # a postgres service can be linked to a
 # container this will use native docker
 # links via the docker-options plugin
@@ -68,24 +66,42 @@ dokku postgres:link lolipop playground
 
 # the above will expose the following environment variables
 #
-#   DATABASE_URL=postgres://postgres:SOME_PASSWORD@172.17.0.1:5432/lolipop
-#   DATABASE_NAME=/lolipop/DATABASE
-#   DATABASE_PORT=tcp://172.17.0.1:5432
-#   DATABASE_PORT_5432_TCP=tcp://172.17.0.1:5432
-#   DATABASE_PORT_5432_TCP_PROTO=tcp
-#   DATABASE_PORT_5432_TCP_PORT=5432
-#   DATABASE_PORT_5432_TCP_ADDR=172.17.0.1
+#   DOKKU_POSTGRES_LOLIPOP_NAME=/lolipop/DATABASE
+#   DOKKU_POSTGRES_LOLIPOP_PORT=tcp://172.17.0.1:5432
+#   DOKKU_POSTGRES_LOLIPOP_PORT_5432_TCP=tcp://172.17.0.1:5432
+#   DOKKU_POSTGRES_LOLIPOP_PORT_5432_TCP_PROTO=tcp
+#   DOKKU_POSTGRES_LOLIPOP_PORT_5432_TCP_PORT=5432
+#   DOKKU_POSTGRES_LOLIPOP_PORT_5432_TCP_ADDR=172.17.0.1
+#
+# and the following will be set on the linked application by default
+#
+#   DATABASE_URL=postgres://postgres:SOME_PASSWORD@dokku-postgres-lolipop:5432/lolipop
+#
+# NOTE: the host exposed here only works internally in docker containers. If
+# you want your container to be reachable from outside, you should use `expose`.
 
-# you can examine the environment variables
-# using our 'playground' app's env command
-dokku run playground env
+# another service can be linked to your app
+dokku postgres:link other_service playground
 
-# you can customize the environment
-# variables through a custom docker link alias
-dokku postgres:alias lolipop POSTGRES_DATABASE
+# since DATABASE_URL is already in use, another environment variable will be
+# generated automatically
+#
+#   DOKKU_POSTGRES_BLUE_URL=postgres://postgres:ANOTHER_PASSWORD@dokku-postgres-other_service:5432/other_service
+
+# you can then promote the new service to be the primary one
+# NOTE: this will restart your app
+dokku postgres:promote other_service playground
+
+# this will replace DATABASE_URL with the url from other_service and generate
+# another environment variable to hold the previous value if necessary.
+# you could end up with the following for example:
+#
+#   DATABASE_URL=postgres://postgres:ANOTHER_PASSWORD@dokku-postgres-other_service:5432/other_service
+#   DOKKU_POSTGRES_BLUE_URL=postgres://postgres:ANOTHER_PASSWORD@dokku-postgres-other_service:5432/other_service
+#   DOKKU_POSTGRES_SILVER_URL=postgres://postgres:SOME_PASSWORD@dokku-postgres-lolipop:5432/lolipop
 
 # you can also unlink a postgres service
-# NOTE: this will restart your app
+# NOTE: this will restart your app and unset related environment variables
 dokku postgres:unlink lolipop playground
 
 # you can tail logs for a particular service

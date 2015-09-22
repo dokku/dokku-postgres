@@ -22,5 +22,5 @@ teardown() {
 @test "($PLUGIN_COMMAND_PREFIX:info) success" {
   run dokku "$PLUGIN_COMMAND_PREFIX:info" l
   password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
-  assert_contains "${lines[*]}" "DSN: postgres://postgres:$password@172.17.0.34:5432/l"
+  assert_contains "${lines[*]}" "DSN: postgres://postgres:$password@dokku-postgres-l:5432/l"
 }
