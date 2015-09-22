@@ -10,7 +10,7 @@ if ! docker images | grep -e "^svendowideit/ambassador "; then
   docker pull svendowideit/ambassador:latest
 fi
 
-if ! docker images | grep -e "^aanand/wait " | grep -q "$PLUGIN_IMAGE_VERSION" ; then
+if ! docker images | grep -e "^aanand/wait "; then
   docker pull aanand/wait:latest
 fi
 
