@@ -9,11 +9,14 @@ Official postgres plugin for dokku. Currently defaults to installing [postgres 9
 
 ## installation
 
-```
+```shell
+# on 0.3.x
 cd /var/lib/dokku/plugins
 git clone https://github.com/dokku/dokku-postgres.git postgres
-dokku plugins-install-dependencies
 dokku plugins-install
+
+# on 0.4.x
+dokku plugin:install https://github.com/dokku/dokku-postgres.git postgres
 ```
 
 ## commands
