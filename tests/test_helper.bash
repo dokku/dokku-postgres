@@ -8,7 +8,8 @@ export PLUGIN_PATH="$DOKKU_ROOT/plugins"
 export PLUGIN_ENABLED_PATH="$PLUGIN_PATH"
 export PLUGIN_AVAILABLE_PATH="$PLUGIN_PATH"
 export PLUGIN_CORE_AVAILABLE_PATH="$PLUGIN_PATH"
-export PLUGIN_DATA_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fixtures"
+export POSTGRES_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fixtures"
+export PLUGIN_DATA_ROOT="$POSTGRES_ROOT"
 
 mkdir -p "$PLUGIN_DATA_ROOT"
 rm -rf "${PLUGIN_DATA_ROOT:?}"/*
