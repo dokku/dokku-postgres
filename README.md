@@ -76,6 +76,10 @@ dokku postgres:link lolipop playground
 #   DATABASE_PORT_5432_TCP_PORT=5432
 #   DATABASE_PORT_5432_TCP_ADDR=172.17.0.1
 
+# you can examine the environment variables
+# using our 'playground' app's env command
+dokku run playground env
+
 # you can customize the environment
 # variables through a custom docker link alias
 dokku postgres:alias lolipop POSTGRES_DATABASE
