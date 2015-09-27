@@ -206,7 +206,7 @@ case "$1" in
     service_port_unexpose "$2"
     ;;
 
-  help)
+  help | $PLUGIN_COMMAND_PREFIX:help)
     HELP=$(cat<<EOF
     $PLUGIN_COMMAND_PREFIX:alias <name> <alias>, Set an alias for the docker link
     $PLUGIN_COMMAND_PREFIX:create <name>, Create a $PLUGIN_SERVICE service
