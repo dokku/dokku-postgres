@@ -31,8 +31,31 @@ teardown() {
   assert_contains "${lines[*]}" "service not_existing_service does not exist"
 }
 
-@test "($PLUGIN_COMMAND_PREFIX:link) success" {
+@test "($PLUGIN_COMMAND_PREFIX:link) error when the service is already linked to app" {
+  dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app
   run dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app
-  links=$(cat "$PLUGIN_DATA_ROOT/l/LINKS")
-  assert_equal "$links" "my_app"
+  assert_contains "${lines[*]}" "Already linked as DATABASE_URL"
+}
+
+@test "($PLUGIN_COMMAND_PREFIX:link) exports DATABASE_URL to app" {
+  dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app
+  url=$(dokku config:get my_app DATABASE_URL)
+  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  assert_contains "$url" "postgres://postgres:$password@dokku-postgres-l:5432/l"
+  dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
+}
+
+@test "($PLUGIN_COMMAND_PREFIX:link) generates an alternate config url when DATABASE_URL already in use" {
+  dokku config:set my_app DATABASE_URL=postgres://user:pass@host:5432/db
+  dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app
+  run dokku config my_app
+  assert_contains "${lines[*]}" "DOKKU_POSTGRES_"
+  dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
+}
+
+@test "($PLUGIN_COMMAND_PREFIX:link) links to app with docker-options" {
+  dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app
+  run dokku docker-options my_app
+  assert_contains "${lines[*]}" "--link dokku.postgres.l:dokku-postgres-l"
+  dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
 }

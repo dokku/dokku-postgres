@@ -32,14 +32,8 @@ verify_service_name() {
 
 service_alias() {
   local SERVICE="$1"
-  local ALIAS_FILE="$PLUGIN_DATA_ROOT/$SERVICE/ALIAS"
-
-  verify_service_name "$1"
-  if [[ -f "$ALIAS_FILE" ]]; then
-    cat "$ALIAS_FILE"
-  else
-    echo "$PLUGIN_DEFAULT_ALIAS"
-  fi
+  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  echo "$SERVICE_NAME" | tr . -
 }
 
 service_info() {
@@ -77,16 +71,45 @@ service_exposed_ports() {
 service_link() {
   local APP="$2"
   local SERVICE="$1"
+  local SERVICE_URL=$(service_url "$SERVICE")
+  local SERVICE_NAME=$(get_service_name "$SERVICE")
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local EXISTING_CONFIG=$(dokku config "$APP")
+  local DATABASE_NAME=$(get_database_name "$SERVICE")
+  local LINK=$(echo "$EXISTING_CONFIG" | grep "$PLUGIN_SCHEME://.*/$DATABASE_NAME" | cut -d: -f1) || true
+  local DEFAULT_ALIAS=$(echo "$EXISTING_CONFIG" | grep "${PLUGIN_DEFAULT_ALIAS}_URL") || true
+  local SERVICE_ALIAS=$(service_alias "$SERVICE")
   local LINKS_FILE="$SERVICE_ROOT/LINKS"
 
+  [[ -n $LINK ]] && dokku_log_fail "Already linked as $LINK"
   mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
   touch "$LINKS_FILE"
   echo "$APP" >> "$LINKS_FILE"
   sort "$LINKS_FILE" -u -o "$LINKS_FILE"
 
-  dokku_log_info1 "Restarting app $APP"
-  dokku ps:restart "$APP"
+  local ALIAS="$PLUGIN_DEFAULT_ALIAS"
+  if [[ -n $DEFAULT_ALIAS ]]; then
+    ALIAS=$(service_alternative_alias "$EXISTING_CONFIG")
+  fi
+  dokku docker-options:add "$APP" build,deploy,run "--link $SERVICE_NAME:$SERVICE_ALIAS"
+  dokku config:set "$APP" "${ALIAS}_URL=$SERVICE_URL"
+}
+
+service_alternative_alias() {
+  local EXISTING_CONFIG="$1"
+  local COLORS=(AQUA BLACK BLUE FUCHSIA GRAY GREEN LIME MAROON NAVY OLIVE PURPLE RED SILVER TEAL WHITE YELLOW)
+  local ALIAS;
+
+  while [[ -z $ALIAS ]]; do
+    local IDX=$((RANDOM % ${#COLORS[*]}))
+    local COLOR=${COLORS[IDX]}
+    ALIAS="${PLUGIN_ALT_ALIAS}_${COLOR}"
+    local IN_USE=$(echo "$EXISTING_CONFIG" | grep "${ALIAS}_URL")
+    if [[ -n $IN_USE ]]; then
+      unset ALIAS
+    fi
+  done
+  echo "$ALIAS"
 }
 
 service_logs() {
@@ -232,27 +255,33 @@ service_stop() {
 service_unlink() {
   local APP="$2"
   local SERVICE="$1"
+  local SERVICE_URL=$(service_url "$SERVICE")
+  local SERVICE_NAME=$(get_service_name "$SERVICE")
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local EXISTING_CONFIG=$(dokku config "$APP")
+  local DATABASE_NAME=$(get_database_name "$SERVICE")
+  local SERVICE_ALIAS=$(service_alias "$SERVICE")
+  local LINK=($(echo "$EXISTING_CONFIG" | grep "$PLUGIN_SCHEME://.*/$DATABASE_NAME" | cut -d: -f1)) || true
   local LINKS_FILE="$SERVICE_ROOT/LINKS"
 
+  [[ -z ${LINK[*]} ]] && dokku_log_fail "Not linked to app $APP"
   mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
   touch "$LINKS_FILE"
   sed -i "/^$APP\$/d" "$LINKS_FILE"
   sort "$LINKS_FILE" -u -o "$LINKS_FILE"
 
-  dokku_log_info1 "Restarting app $APP"
-  dokku ps:restart "$APP"
+  dokku docker-options:remove "$APP" build,deploy,run "--link $SERVICE_NAME:$SERVICE_ALIAS"
+  dokku config:unset "$APP" "${LINK[*]}"
 }
 
 service_url() {
   local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
 
-  local ID="$(cat "$SERVICE_ROOT/ID")"
-  local IP="$(get_container_ip "$ID")"
   local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
-  local DATABASE_NAME="$(get_database_name $SERVICE)"
-  echo "$PLUGIN_SCHEME://postgres:$PASSWORD@$IP:${PLUGIN_DATASTORE_PORTS[0]}/$DATABASE_NAME"
+  local DATABASE_NAME="$(get_database_name "$SERVICE")"
+  local SERVICE_ALIAS="$(service_alias "$SERVICE")"
+  echo "$PLUGIN_SCHEME://postgres:$PASSWORD@$SERVICE_ALIAS:${PLUGIN_DATASTORE_PORTS[0]}/$DATABASE_NAME"
 }
 
 is_container_status () {
@@ -282,4 +311,35 @@ service_version() {
   local SERVICE="$1"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   docker inspect -f '{{.Config.Image}}' "$SERVICE_NAME"
+}
+
+get_url_from_config() {
+  local EXISTING_CONFIG="$1"
+  local CONFIG_VAR="$2"
+  echo "$EXISTING_CONFIG" | grep "$CONFIG_VAR" | sed "s/$CONFIG_VAR:\s*//"
+}
+
+promote() {
+  local SERVICE="$1"
+  local APP="$2"
+  local PLUGIN_DEFAULT_CONFIG_VAR="${PLUGIN_DEFAULT_ALIAS}_URL"
+  local EXISTING_CONFIG=$(dokku config "$APP")
+  local DATABASE_NAME=$(get_database_name "$SERVICE")
+  local CONFIG_VARS=($(echo "$EXISTING_CONFIG" | grep "$PLUGIN_SCHEME://.*/$DATABASE_NAME" | cut -d: -f1)) || true
+  local PREVIOUS_DEFAULT_URL=$(get_url_from_config "$EXISTING_CONFIG" "$PLUGIN_DEFAULT_CONFIG_VAR")
+
+  [[ -z ${CONFIG_VARS[*]} ]] && dokku_log_fail "Not linked to app $APP"
+  [[ ${CONFIG_VARS[*]} =~ $PLUGIN_DEFAULT_CONFIG_VAR ]] && dokku_log_fail "Service $1 already promoted as $PLUGIN_DEFAULT_CONFIG_VAR"
+
+  local NEW_CONFIG_VARS=""
+  if [[ -n $PREVIOUS_DEFAULT_URL ]]; then
+    local PREVIOUS_ALIAS=$(echo "$EXISTING_CONFIG" | grep "$PREVIOUS_DEFAULT_URL" | grep -v "$PLUGIN_DEFAULT_CONFIG_VAR") || true
+    if [[ -z $PREVIOUS_ALIAS ]]; then
+      local ALIAS=$(service_alternative_alias "$EXISTING_CONFIG")
+      NEW_CONFIG_VARS+="${ALIAS}_URL=$PREVIOUS_DEFAULT_URL "
+    fi
+  fi
+  local PROMOTE_URL=$(get_url_from_config "$EXISTING_CONFIG" "${CONFIG_VARS[0]}")
+  NEW_CONFIG_VARS+="$PLUGIN_DEFAULT_CONFIG_VAR=$PROMOTE_URL"
+  dokku config:set "$APP" $NEW_CONFIG_VARS
 }
