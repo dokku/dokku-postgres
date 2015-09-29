@@ -33,7 +33,7 @@ verify_service_name() {
 service_alias() {
   local SERVICE="$1"
   local SERVICE_NAME=$(get_service_name "$SERVICE")
-  echo "$SERVICE_NAME" | tr . -
+  echo "$SERVICE_NAME" | tr ._ -
 }
 
 service_info() {
