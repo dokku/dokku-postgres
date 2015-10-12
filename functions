@@ -48,10 +48,11 @@ service_list() {
   if [[ -z $SERVICES ]]; then
     dokku_log_warn "There are no $PLUGIN_SERVICE services"
   else
-    dokku_log_info1_quiet "$PLUGIN_SERVICE services:"
+    LIST="NAME,VERSION,STATUS,EXPOSED PORTS,LINKS\n"
     for SERVICE in $SERVICES; do
-      dokku_log_verbose "$SERVICE, $(service_version "$SERVICE") $(service_status "$SERVICE")$(service_exposed_ports "$SERVICE")"
+      LIST+="$SERVICE,$(service_version "$SERVICE"),$(service_status "$SERVICE"),$(service_exposed_ports "$SERVICE"),$(service_linked_apps "$SERVICE")\n"
     done
+    printf "%b" "$LIST" | column -t -s,
   fi
 }
 
@@ -59,13 +60,11 @@ service_exposed_ports() {
   local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local PORT_FILE="$SERVICE_ROOT/PORT"
-  [[ ! -f $PORT_FILE ]] && return 0
+  [[ ! -f $PORT_FILE ]] && echo '-' && return 0
   local PORTS=($(cat "$PORT_FILE"))
-  echo -n ", exposed port(s):"
   for (( i=0; i < ${#PLUGIN_DATASTORE_PORTS[@]}; i++ )); do
-    echo -n " ${PLUGIN_DATASTORE_PORTS[i]}->${PORTS[i]}"
+    echo -n "${PLUGIN_DATASTORE_PORTS[i]}->${PORTS[i]} "
   done
-  echo ""
 }
 
 service_link() {
@@ -140,12 +139,12 @@ service_status() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local ID="$(cat "$SERVICE_ROOT/ID")"
 
-  is_container_status "$ID" "Dead" && echo "(dead)" && return 0
-  is_container_status "$ID" "OOMKilled" && echo "(oomkilled)" && return 0
-  is_container_status "$ID" "Paused" && echo "(paused)" && return 0
-  is_container_status "$ID" "Restarting" && echo "(restarting)" && return 0
-  is_container_status "$ID" "Running" && echo "(running)" && return 0
-  echo "(stopped)" && return 0
+  is_container_status "$ID" "Dead" && echo "dead" && return 0
+  is_container_status "$ID" "OOMKilled" && echo "oomkilled" && return 0
+  is_container_status "$ID" "Paused" && echo "paused" && return 0
+  is_container_status "$ID" "Restarting" && echo "restarting" && return 0
+  is_container_status "$ID" "Running" && echo "running" && return 0
+  echo "stopped" && return 0
 }
 
 service_port_expose() {
@@ -347,4 +346,14 @@ remove_from_links_file() {
   touch "$LINKS_FILE"
   sed -i "/^$APP\$/d" "$LINKS_FILE"
   sort "$LINKS_FILE" -u -o "$LINKS_FILE"
+}
+
+service_linked_apps() {
+  local SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local LINKS_FILE="$SERVICE_ROOT/LINKS"
+
+  [[ -z $(< "$LINKS_FILE") ]] && echo '-' && return 0
+
+  tr '\n' ' ' < "$LINKS_FILE"
 }
