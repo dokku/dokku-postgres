@@ -111,7 +111,9 @@ case "$1" in
     DATABASE_NAME="$(get_database_name $SERVICE)"
     PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
 
+    [[ -n $SSH_TTY ]] && stty -opost
     docker exec "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_dump -Fc --no-acl --no-owner -h localhost -U postgres -w "$DATABASE_NAME"
+    [[ -n $SSH_TTY ]] && stty opost
     ;;
 
   $PLUGIN_COMMAND_PREFIX:import)
