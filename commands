@@ -44,7 +44,7 @@ case "$1" in
 
     dokku_log_verbose_quiet "Creating container database"
     DATABASE_NAME="$(get_database_name "$SERVICE")"
-    docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME"
+    docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME 2> /dev/null || echo 'Already exists'"
 
     dokku_log_info2 "$PLUGIN_SERVICE container created: $SERVICE"
     dokku "$PLUGIN_COMMAND_PREFIX:info" "$SERVICE"
