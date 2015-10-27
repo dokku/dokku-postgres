@@ -24,7 +24,7 @@ dokku plugin:install https://github.com/dokku/dokku-postgres.git postgres
 ```
 postgres:clone <name> <new-name>  Create container <new-name> then copy data from <name> into <new-name>
 postgres:connect <name>           Connect via psql to a postgres service
-postgres:create <name>            Create a postgres service
+postgres:create <name> <env=val>  Create a postgres service with environment variables
 postgres:destroy <name>           Delete the service and stop its container if there are no links left
 postgres:export <name>            Export a dump of the postgres service database
 postgres:expose <name> [port]     Expose a postgres service on custom port if provided (random port otherwise)
