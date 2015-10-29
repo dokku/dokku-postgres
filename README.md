@@ -26,7 +26,7 @@ postgres:clone <name> <new-name>  Create container <new-name> then copy data fro
 postgres:connect <name>           Connect via psql to a postgres service
 postgres:create <name>            Create a postgres service
 postgres:destroy <name>           Delete the service and stop its container if there are no links left
-postgres:export <name>            Export a dump of the postgres service database
+postgres:export <name> > <file>   Export a dump of the postgres service database
 postgres:expose <name> [port]     Expose a postgres service on custom port if provided (random port otherwise)
 postgres:import <name> < <file>   Import a dump into the postgres service database
 postgres:info <name>              Print the connection information
