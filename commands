@@ -31,8 +31,13 @@ case "$1" in
     touch "$LINKS_FILE"
 
     dokku_log_info1 "Starting container"
+    if [[ -n $POSTGRES_CUSTOM_ENV ]]; then
+      echo "$POSTGRES_CUSTOM_ENV" | tr ';' "\n" > "$SERVICE_ROOT/ENVIRONMENT"
+    else
+      echo "" > "$SERVICE_ROOT/ENVIRONMENT"
+    fi
     SERVICE_NAME=$(get_service_name "$SERVICE")
-    ID=$(docker run --name "$SERVICE_NAME" -v "$SERVICE_ROOT/data:/var/lib/postgresql/data" -e "POSTGRES_PASSWORD=$password" -d --restart always --label dokku=service --label dokku.service=postgres "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION")
+    ID=$(docker run --name "$SERVICE_NAME" -v "$SERVICE_ROOT/data:/var/lib/postgresql/data" --env-file="$SERVICE_ROOT/ENVIRONMENT" -e "POSTGRES_PASSWORD=$password" -d --restart always --label dokku=service --label dokku.service=postgres "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION")
     echo "$ID" > "$SERVICE_ROOT/ID"
 
     dokku_log_verbose_quiet "Waiting for container to be ready"
@@ -40,7 +45,7 @@ case "$1" in
 
     dokku_log_verbose_quiet "Creating container database"
     DATABASE_NAME="$(get_database_name "$SERVICE")"
-    docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME"
+    docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2> /dev/null || echo 'Already exists'
 
     dokku_log_info2 "$PLUGIN_SERVICE container created: $SERVICE"
     dokku "$PLUGIN_COMMAND_PREFIX:info" "$SERVICE"
