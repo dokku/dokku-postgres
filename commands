@@ -32,9 +32,9 @@ case "$1" in
 
     dokku_log_info1 "Starting container"
     if [[ -n $POSTGRES_CUSTOM_ENV ]]; then
-      echo "$POSTGRES_CUSTOM_ENV" | tr ';' "\n" > "$SERVICE_ROOT/ENVIRONMENT"
+      echo "$POSTGRES_CUSTOM_ENV" | tr ';' "\n" > "$SERVICE_ROOT/ENV"
     else
-      echo "" > "$SERVICE_ROOT/ENVIRONMENT"
+      echo "" > "$SERVICE_ROOT/ENV"
     fi
     SERVICE_NAME=$(get_service_name "$SERVICE")
     ID=$(docker run --name "$SERVICE_NAME" -v "$SERVICE_ROOT/data:/var/lib/postgresql/data" --env-file="$SERVICE_ROOT/ENVIRONMENT" -e "POSTGRES_PASSWORD=$password" -d --restart always --label dokku=service --label dokku.service=postgres "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION")
