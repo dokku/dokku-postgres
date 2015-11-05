@@ -52,7 +52,7 @@ dokku postgres:create lolipop
 # official postgres image
 export POSTGRES_IMAGE="postgres"
 export POSTGRES_IMAGE_VERSION="9.4.4"
-export POSTGRES_DOCKER_ARGS="USER=alpha;HOST=beta"
+export POSTGRES_CUSTOM_ENV="USER=alpha;HOST=beta"
 dokku postgres:create lolipop
 
 # get connection information as follows

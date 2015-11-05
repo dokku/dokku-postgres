@@ -31,8 +31,8 @@ case "$1" in
     touch "$LINKS_FILE"
 
     dokku_log_info1 "Starting container"
-    if [[ -n $POSTGRES_DOCKER_ARGS ]]; then
-      echo "$POSTGRES_DOCKER_ARGS" | tr ';' "\n" > "$SERVICE_ROOT/ENVIRONMENT"
+    if [[ -n $POSTGRES_CUSTOM_ENV ]]; then
+      echo "$POSTGRES_CUSTOM_ENV" | tr ';' "\n" > "$SERVICE_ROOT/ENVIRONMENT"
     else
       echo "" > "$SERVICE_ROOT/ENVIRONMENT"
     fi
