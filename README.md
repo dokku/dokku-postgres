@@ -52,7 +52,13 @@ dokku postgres:create lolipop
 # official postgres image
 export POSTGRES_IMAGE="postgres"
 export POSTGRES_IMAGE_VERSION="9.4.4"
+
+# you can also specify custom environment
+# variables to start the postgres service
+# in semi-colon separated forma
 export POSTGRES_CUSTOM_ENV="USER=alpha;HOST=beta"
+
+# create a postgres service
 dokku postgres:create lolipop
 
 # get connection information as follows
