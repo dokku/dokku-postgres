@@ -299,6 +299,12 @@ get_database_name() {
   echo "$1" | tr .- _
 }
 
+get_user_name() {
+  # postgres does not like special characters in database names
+  # so we need to normalize them out
+  echo "$1" | tr .- _
+}
+
 service_version() {
   local SERVICE="$1"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
