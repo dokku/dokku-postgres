@@ -19,6 +19,6 @@ find ./ -maxdepth 1 -type f -exec cp '{}' $DOKKU_ROOT/plugins/service \;
 if [[ ! -f $BIN_STUBS/plugn ]]; then
   wget -O- "$PLUGN_URL" | tar xzf - -C "$BIN_STUBS"
   plugn init
-  ln -s "$DOKKU_ROOT"/plugins/* "$DOKKU_ROOT"/plugins/available
-  ln -s "$DOKKU_ROOT"/plugins/* "$DOKKU_ROOT"/plugins/enabled
+  find "$DOKKU_ROOT/plugins" -mindepth 1 -maxdepth 1 -type d ! -name 'available' ! -name 'enabled' -exec ln -s {} "$DOKKU_ROOT/plugins/available" \;
+  find "$DOKKU_ROOT/plugins" -mindepth 1 -maxdepth 1 -type d ! -name 'available' ! -name 'enabled' -exec ln -s {} "$DOKKU_ROOT/plugins/enabled" \;
 fi
