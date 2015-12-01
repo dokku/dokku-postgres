@@ -156,3 +156,12 @@ The `import` command should be used with any non-plain-text files exported by `p
 ```shell
 $ dokku postgres:connect db < ./dump.sql
 ```
+
+## security
+
+The connection to the database is done over SSL. A self-signed certificate is
+automatically generated when creating the service.  It can be replaced by a
+custom certificate by overwriting the `server.crt` and `server.key` files in
+`/var/lib/dokku/services/postgres/<DB_NAME>/data`.
+The `server.key` must be chmoded to 600 and must be owned by the postgres user
+or root.
