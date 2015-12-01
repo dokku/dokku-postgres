@@ -38,6 +38,7 @@ postgres:restart <name>           Graceful shutdown and restart of the postgres 
 postgres:start <name>             Start a previously stopped postgres service
 postgres:stop <name>              Stop a running postgres service
 postgres:unexpose <name>          Unexpose a previously exposed postgres service
+postgres:unlink <name> <app>      Unlink the postgres service from the app
 ```
 
 ## usage
