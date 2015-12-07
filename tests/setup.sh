@@ -15,6 +15,7 @@ cd -
 rm -rf $DOKKU_ROOT/plugins/service
 mkdir -p $DOKKU_ROOT/plugins/service
 find ./ -maxdepth 1 -type f -exec cp '{}' $DOKKU_ROOT/plugins/service \;
+cp -r ./scripts "$DOKKU_ROOT/plugins/service"
 
 if [[ ! -f $BIN_STUBS/plugn ]]; then
   wget -O- "$PLUGN_URL" | tar xzf - -C "$BIN_STUBS"

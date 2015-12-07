@@ -48,6 +48,11 @@ case "$1" in
     DATABASE_NAME="$(get_database_name "$SERVICE")"
     docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2> /dev/null || echo 'Already exists'
 
+    dokku_log_verbose_quiet "Securing connection to database"
+    service_stop "$SERVICE" > /dev/null
+    docker run --rm -i -v "$SERVICE_ROOT/data:/var/lib/postgresql/data" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" bash -s < "$(dirname "$0")/scripts/enable_ssl.sh" &> /dev/null
+    service_start "$SERVICE" > /dev/null
+
     dokku_log_info2 "$PLUGIN_SERVICE container created: $SERVICE"
     dokku "$PLUGIN_COMMAND_PREFIX:info" "$SERVICE"
     ;;
