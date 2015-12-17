@@ -29,7 +29,7 @@ case "$1" in
     
     if [[ -n $POSTGRES_PASSWORD ]]; then
       password="$POSTGRES_PASSWORD"
-      echo "$POSTGRES_PASSWORD" > "$SERVICE_ROOT/PASSWORD"
+      echo "$password" > "$SERVICE_ROOT/PASSWORD"
     else
       password=$(openssl rand -hex 16)
       echo "$password" > "$SERVICE_ROOT/PASSWORD"
