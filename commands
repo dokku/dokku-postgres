@@ -132,7 +132,7 @@ case "$1" in
     SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
     SERVICE_NAME="$(get_service_name "$SERVICE")"
     if [[ -e $SERVICE_ROOT/DATABASE_NAME ]]; then
-      DATABASE_NAME="$(cat $SERVICE/DATABASE_NAME)"
+      DATABASE_NAME="$(cat $SERVICE_ROOT/DATABASE_NAME)"
     else
       DATABASE_NAME="$(get_database_name $SERVICE)"
     fi
@@ -149,7 +149,7 @@ case "$1" in
     SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
     SERVICE_NAME="$(get_service_name "$SERVICE")"
     if [[ -e $SERVICE_ROOT/DATABASE_NAME ]]; then
-      DATABASE_NAME="$(cat $SERVICE/DATABASE_NAME)"
+      DATABASE_NAME=$(cat "$SERVICE_ROOT/DATABASE_NAME")
     else
       DATABASE_NAME="$(get_database_name $SERVICE)"
     fi
@@ -192,7 +192,7 @@ case "$1" in
     verify_service_name "$2"
     SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
     if [[ -e $SERVICE_ROOT/DATABASE_NAME ]]; then
-      DATABASE_NAME="$(cat $SERVICE/DATABASE_NAME)"
+      DATABASE_NAME=$(cat "$SERVICE_ROOT/DATABASE_NAME")
     else
       DATABASE_NAME="$(get_database_name $SERVICE)"
     fi
