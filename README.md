@@ -59,6 +59,11 @@ export POSTGRES_IMAGE_VERSION="9.4.4"
 # in semi-colon separated forma
 export POSTGRES_CUSTOM_ENV="USER=alpha;HOST=beta"
 
+# you can specify custom password and database name
+# variables
+export POSTGRES_PASSWORD="some-password"
+export POSTGRES_DATABASE_NAME="some-database-name"
+
 # create a postgres service
 dokku postgres:create lolipop
 

@@ -26,10 +26,17 @@ case "$1" in
     fi
 
     mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
-    password=$(openssl rand -hex 16)
-    echo "$password" > "$SERVICE_ROOT/PASSWORD"
+    
+    if [[ -n $POSTGRES_PASSWORD ]]; then
+      password="$POSTGRES_PASSWORD"
+      echo "$POSTGRES_PASSWORD" > "$SERVICE_ROOT/PASSWORD"
+    else
+      password=$(openssl rand -hex 16)
+      echo "$password" > "$SERVICE_ROOT/PASSWORD"
+    fi
     chmod 640 "$SERVICE_ROOT/PASSWORD"
     touch "$LINKS_FILE"
+    
 
     dokku_log_info1 "Starting container"
     if [[ -n $POSTGRES_CUSTOM_ENV ]]; then
@@ -45,7 +52,11 @@ case "$1" in
     docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" dokkupaas/wait > /dev/null
 
     dokku_log_verbose_quiet "Creating container database"
-    DATABASE_NAME="$(get_database_name "$SERVICE")"
+    if [[ -n $POSTGRES_DATABASE_NAME ]]; then
+      DATABASE_NAME="$POSTGRES_DATABASE_NAME"
+    else
+      DATABASE_NAME="$(get_database_name "$SERVICE")"
+    fi
     docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2> /dev/null || echo 'Already exists'
 
     dokku_log_verbose_quiet "Securing connection to database"
