@@ -270,8 +270,15 @@ service_url() {
   local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
 
+ 
   local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
-  local DATABASE_NAME="$(get_database_name "$SERVICE")"
+
+  if [[ -e "$SERVICE_ROOT/DATABASE_NAME" ]];then
+    local DATABASE_NAME=$(cat "$SERVICE_ROOT/DATABASE_NAME")
+  else
+    local DATABASE_NAME="$(get_database_name "$SERVICE")"
+  fi
+
   local SERVICE_ALIAS="$(service_alias "$SERVICE")"
   echo "$PLUGIN_SCHEME://postgres:$PASSWORD@$SERVICE_ALIAS:${PLUGIN_DATASTORE_PORTS[0]}/$DATABASE_NAME"
 }
