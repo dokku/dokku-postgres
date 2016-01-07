@@ -241,7 +241,7 @@ case "$1" in
     verify_service_name "$2"
     SERVICE="$2"; USERNAME="$3"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
     SERVICE_NAME="$(get_service_name "$SERVICE")"
-    PASSWORD=${4:=$(openssl rand -hex 16)}
+    PASSWORD=${4:-$(openssl rand -hex 16)}
     [[ -e $SERVICE_ROOT/auth/$USERNAME ]] && dokku_log_fail "This user already exists"
 
     docker exec "$SERVICE_NAME" su - postgres -c "psql --command \"CREATE USER $USERNAME WITH PASSWORD '$PASSWORD' SUPERUSER;\""
