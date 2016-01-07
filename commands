@@ -246,6 +246,7 @@ case "$1" in
 
     docker exec "$SERVICE_NAME" su - postgres -c "psql --command \"CREATE USER $USERNAME WITH PASSWORD '$PASSWORD' SUPERUSER;\""
     echo "$PASSWORD" > "$SERVICE_ROOT/auth/$USERNAME"
+    ;;
 
   help | $PLUGIN_COMMAND_PREFIX:help)
     HELP=$(cat<<EOF
