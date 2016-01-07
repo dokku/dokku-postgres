@@ -248,6 +248,15 @@ case "$1" in
     echo "$PASSWORD" > "$SERVICE_ROOT/auth/$USERNAME"
     ;;
 
+  $PLUGIN_COMMAND_PREFIX:create:database)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    [[ -z $3 ]] && dokku_log_fail "Please specify a name for the new database"
+    verify_service_name "$2"
+    SERVICE="$2"; DATABASE="$3"; SERVICE_NAME="$(get_service_name "$SERVICE")"
+
+    docker exec "$SERVICE_NAME" su - postgres -c "createdb -O $POSTGRES_USER $DATABASE"
+    ;;
+
   help | $PLUGIN_COMMAND_PREFIX:help)
     HELP=$(cat<<EOF
     $PLUGIN_COMMAND_PREFIX:create <name>, Create a $PLUGIN_SERVICE service
