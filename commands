@@ -40,6 +40,7 @@ case "$1" in
     fi
 
     mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
+    mkdir -p "$SERVICE_ROOT/auth" || dokku_log_fail "Unable to create service directory"
     password=$(openssl rand -hex 16)
     echo "$password" > "$SERVICE_ROOT/PASSWORD"
     chmod 640 "$SERVICE_ROOT/PASSWORD"
@@ -233,6 +234,18 @@ case "$1" in
     verify_app_name "$3"
     promote "$2" "$3"
     ;;
+
+  $PLUGIN_COMMAND_PREFIX:create:user)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    [[ -z $3 ]] && dokku_log_fail "Please specify a name for the new user"
+    verify_service_name "$2"
+    SERVICE="$2"; USERNAME="$3"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+    SERVICE_NAME="$(get_service_name "$SERVICE")"
+    PASSWORD=${4:=$(openssl rand -hex 16)}
+    [[ -e $SERVICE_ROOT/auth/$USERNAME ]] && dokku_log_fail "This user already exists"
+
+    docker exec "$SERVICE_NAME" su - postgres -c "psql --command \"CREATE USER $USERNAME WITH PASSWORD '$PASSWORD' SUPERUSER;\""
+    echo "$PASSWORD" > "$SERVICE_ROOT/auth/$USERNAME"
 
   help | $PLUGIN_COMMAND_PREFIX:help)
     HELP=$(cat<<EOF
