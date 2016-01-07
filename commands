@@ -13,6 +13,24 @@ if [[ $1 == $PLUGIN_COMMAND_PREFIX:* ]]; then
   if [[ ! -d $PLUGIN_DATA_ROOT ]]; then
     dokku_log_fail "$PLUGIN_SERVICE: Please run: sudo dokku plugin:install"
   fi
+
+  shift 2;
+  TEMP=$(getopt -o u:d: --long user:,database: -n "dokku $PLUGIN_COMMAND_PREFIX" -- "$@")
+  eval set -- "$TEMP"
+
+  POSTGRES_USER="postgres"
+  POSTGRES_DATABASE=$(get_service_name "$2")
+  while true; do
+    case "$1" in
+      -u|--user) POSTGRES_USER="$2"; shift 2 ;;
+      -d|--database) POSTGRES_DATABASE="$2"; shift 2 ;;
+      --) shift; break ;;
+      *) echo "Internal error"; exit 1;;
+    esac
+  done
+
+  echo $POSTGRES_USER
+  echo $POSTGRES_DATABASE
 fi
 
 case "$1" in
