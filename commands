@@ -43,7 +43,9 @@ case "$1" in
     mkdir -p "$SERVICE_ROOT/auth" || dokku_log_fail "Unable to create service directory"
     password=$(openssl rand -hex 16)
     echo "$password" > "$SERVICE_ROOT/PASSWORD"
+    echo "$password" > "$SERVICE_ROOT/auth/postgres"
     chmod 640 "$SERVICE_ROOT/PASSWORD"
+    chmod 640 "$SERVICE_ROOT/auth/postgres"
     touch "$LINKS_FILE"
 
     dokku_log_info1 "Starting container"
@@ -196,7 +198,7 @@ case "$1" in
   $PLUGIN_COMMAND_PREFIX:info)
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     verify_service_name "$2"
-    service_info "$2"
+    service_info "$2" "$POSTGRES_USER" "$POSTGRES_DATABASE"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:list)

@@ -37,8 +37,8 @@ service_alias() {
 }
 
 service_info() {
-  local SERVICE="$1"
-  local SERVICE_URL=$(service_url "$SERVICE")
+  local SERVICE="$1"; local USER="$2"; local DB="$3"
+  local SERVICE_URL=$(service_url "$SERVICE" "$USER" "$DB")
 
   echo "       DSN: $SERVICE_URL"
 }
@@ -267,13 +267,13 @@ service_unlink() {
 }
 
 service_url() {
-  local SERVICE="$1"
+  local SERVICE="$1"; local USER="$2"; local DB="$3"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
 
-  local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
-  local DATABASE_NAME="$(get_database_name "$SERVICE")"
+  local PASSWORD="$(<"$SERVICE_ROOT/auth/$USER")"
+  local DATABASE_NAME="${DB:-$(get_database_name "$SERVICE")}"
   local SERVICE_ALIAS="$(service_alias "$SERVICE")"
-  echo "$PLUGIN_SCHEME://postgres:$PASSWORD@$SERVICE_ALIAS:${PLUGIN_DATASTORE_PORTS[0]}/$DATABASE_NAME"
+  echo "$PLUGIN_SCHEME://$USER:$PASSWORD@$SERVICE_ALIAS:${PLUGIN_DATASTORE_PORTS[0]}/$DATABASE_NAME"
 }
 
 is_container_status () {
