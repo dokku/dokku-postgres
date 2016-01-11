@@ -136,11 +136,10 @@ case "$1" in
     verify_service_name "$2"
     SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
     SERVICE_NAME="$(get_service_name "$SERVICE")"
-    DATABASE_NAME="$(get_database_name $SERVICE)"
-    PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
+    PASSWORD=$(<"$SERVICE_ROOT/auth/$POSTGRES_USER")
 
     [[ -n $SSH_TTY ]] && stty -opost
-    docker exec "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_dump -Fc --no-acl --no-owner -h localhost -U postgres -w "$DATABASE_NAME"
+    docker exec "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_dump -Fc --no-acl --no-owner -h localhost -U "$POSTGRES_USER" -w "$POSTGRES_DATABASE"
     [[ -n $SSH_TTY ]] && stty opost
     ;;
 
@@ -149,13 +148,12 @@ case "$1" in
     verify_service_name "$2"
     SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
     SERVICE_NAME="$(get_service_name "$SERVICE")"
-    DATABASE_NAME="$(get_database_name $SERVICE)"
-    PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
+    PASSWORD=$(<"$SERVICE_ROOT/auth/$POSTGRES_USER")
 
     if [[ -t 0 ]]; then
       dokku_log_fail "No data provided on stdin."
     fi
-    docker exec -i "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_restore -h localhost -cO -d "$DATABASE_NAME" -U postgres -w
+    docker exec -i "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_restore -h localhost -cO -d "$POSTGRES_DATABASE" -U "$POSTGRES_USER" -w
     ;;
 
   $PLUGIN_COMMAND_PREFIX:logs)
