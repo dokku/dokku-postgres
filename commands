@@ -120,7 +120,7 @@ case "$1" in
     [[ -z $3 ]] && dokku_log_fail "Please specify an app to run the command on"
     verify_app_name "$3"
     verify_service_name "$2"
-    service_link "$2" "$3"
+    service_link "$2" "$3" "$POSTGRES_USER" "$POSTGRES_DATABASE"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:unlink)
@@ -128,7 +128,7 @@ case "$1" in
     [[ -z $3 ]] && dokku_log_fail "Please specify an app to run the command on"
     verify_app_name "$3"
     verify_service_name "$2"
-    service_unlink "$2" "$3"
+    service_unlink "$2" "$3" "$POSTGRES_USER" "$POSTGRES_DATABASE"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:export)
@@ -232,7 +232,7 @@ case "$1" in
     [[ -z $3 ]] && dokku_log_fail "Please specify an app to run the command on"
     verify_service_name "$2"
     verify_app_name "$3"
-    promote "$2" "$3"
+    promote "$2" "$3" "$POSTGRES_USER" "$POSTGRES_DATABASE"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:create:user)
