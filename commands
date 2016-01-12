@@ -41,10 +41,9 @@ case "$1" in
 
     mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
     mkdir -p "$SERVICE_ROOT/auth" || dokku_log_fail "Unable to create service directory"
+    mkdir -p "$SERVICE_ROOT/databases" || dokku_log_fail "Unable to create service directory"
     password=$(openssl rand -hex 16)
-    echo "$password" > "$SERVICE_ROOT/PASSWORD"
     echo "$password" > "$SERVICE_ROOT/auth/postgres"
-    chmod 640 "$SERVICE_ROOT/PASSWORD"
     chmod 640 "$SERVICE_ROOT/auth/postgres"
     touch "$LINKS_FILE"
 
@@ -64,6 +63,7 @@ case "$1" in
     dokku_log_verbose_quiet "Creating container database"
     DATABASE_NAME="$(get_database_name "$SERVICE")"
     docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2> /dev/null || echo 'Already exists'
+    touch "$SERVICE_ROOT/databases/$DATABASE_NAME"
 
     dokku_log_verbose_quiet "Securing connection to database"
     service_stop "$SERVICE" > /dev/null
@@ -250,9 +250,26 @@ case "$1" in
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     [[ -z $3 ]] && dokku_log_fail "Please specify a name for the new database"
     verify_service_name "$2"
-    SERVICE="$2"; DATABASE="$3"; SERVICE_NAME="$(get_service_name "$SERVICE")"
+    SERVICE="$2"; DATABASE="$3"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+    SERVICE_NAME="$(get_service_name "$SERVICE")"
 
+    [[ -e $SERVICE_ROOT/databases/$DATABASE ]] && dokku_log_fail "This database already exists"
     docker exec "$SERVICE_NAME" su - postgres -c "createdb -O $POSTGRES_USER $DATABASE"
+    touch "$SERVICE_ROOT/databases/$DATABASE"
+    ;;
+
+  $PLUGIN_COMMAND_PREFIX:list:users)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    verify_service_name "$2"
+    SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+    find "$SERVICE_ROOT/auth" -depth -type f -exec basename {} \; | sort
+    ;;
+
+  $PLUGIN_COMMAND_PREFIX:list:databases)
+    [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+    verify_service_name "$2"
+    SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+    find "$SERVICE_ROOT/databases" -depth -type f -exec basename {} \; | sort
     ;;
 
   help | $PLUGIN_COMMAND_PREFIX:help)
@@ -276,6 +293,8 @@ case "$1" in
     $PLUGIN_COMMAND_PREFIX:promote <name> <app>, Promote service <name> as ${PLUGIN_DEFAULT_ALIAS}_URL in <app>
     $PLUGIN_COMMAND_PREFIX:create:user <service> <name>, Create a new user named <name> for the provided service
     $PLUGIN_COMMAND_PREFIX:create:database <service> <name>, Create a new database named <name> for the provided service
+    $PLUGIN_COMMAND_PREFIX:list:users <name>, List all users managed by this plugin for the provided service
+    $PLUGIN_COMMAND_PREFIX:list:databases <name>, List all databases managed by this plugin for the provided service
 EOF
 )
     if [[ -n $DOKKU_API_VERSION ]]; then
