@@ -39,7 +39,7 @@ teardown() {
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:promote) changes DATABASE_URL" {
-  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  password="$(< "$PLUGIN_DATA_ROOT/l/auth/postgres")"
   dokku config:set my_app "DATABASE_URL=postgres://u:p@host:5432/db" "DOKKU_POSTGRES_BLUE_URL=postgres://postgres:$password@dokku-postgres-l:5432/l"
   dokku "$PLUGIN_COMMAND_PREFIX:promote" l my_app
   url=$(dokku config:get my_app DATABASE_URL)
@@ -47,7 +47,7 @@ teardown() {
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:promote) creates new config url when needed" {
-  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  password="$(< "$PLUGIN_DATA_ROOT/l/auth/postgres")"
   dokku config:set my_app "DATABASE_URL=postgres://u:p@host:5432/db" "DOKKU_POSTGRES_BLUE_URL=postgres://postgres:$password@dokku-postgres-l:5432/l"
   dokku "$PLUGIN_COMMAND_PREFIX:promote" l my_app
   run dokku config my_app

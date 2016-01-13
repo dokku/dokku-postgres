@@ -25,8 +25,8 @@ if [[ $1 == $PLUGIN_COMMAND_PREFIX:* ]]; then
       *) echo "Internal error"; exit 1;;
     esac
   done
-  POSTGRES_USER=${POSTGRES_USER:="postgres"}
-  POSTGRES_DATABASE=${POSTGRES_DATABASE:=$(get_database_name "$2")}
+  POSTGRES_USER=${POSTGRES_USER:-"postgres"}
+  POSTGRES_DATABASE=${POSTGRES_DATABASE:-$(get_database_name "$2")}
 fi
 
 case "$1" in

@@ -21,14 +21,14 @@ teardown() {
 
 @test "($PLUGIN_COMMAND_PREFIX:info) success" {
   run dokku "$PLUGIN_COMMAND_PREFIX:info" l
-  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  password="$(< "$PLUGIN_DATA_ROOT/l/auth/postgres")"
   assert_contains "${lines[*]}" "DSN: postgres://postgres:$password@dokku-postgres-l:5432/l"
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:info) replaces underscores by dash in hostname" {
   dokku "$PLUGIN_COMMAND_PREFIX:create" test_with_underscores
   run dokku "$PLUGIN_COMMAND_PREFIX:info" test_with_underscores
-  password="$(cat "$PLUGIN_DATA_ROOT/test_with_underscores/PASSWORD")"
+  password="$(< "$PLUGIN_DATA_ROOT/test_with_underscores/auth/postgres")"
   assert_contains "${lines[*]}" "DSN: postgres://postgres:$password@dokku-postgres-test-with-underscores:5432/test_with_underscores"
   dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" test_with_underscores
 }

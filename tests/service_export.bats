@@ -24,7 +24,7 @@ teardown() {
 @test "($PLUGIN_COMMAND_PREFIX:export) success" {
   export ECHO_DOCKER_COMMAND="true"
   run dokku "$PLUGIN_COMMAND_PREFIX:export" l
-  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  password="$(< "$PLUGIN_DATA_ROOT/l/auth/postgres")"
   assert_output "docker exec dokku.postgres.l env PGPASSWORD=$password pg_dump -Fc --no-acl --no-owner -h localhost -U postgres -w l"
 }
 
