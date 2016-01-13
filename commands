@@ -13,20 +13,6 @@ if [[ $1 == $PLUGIN_COMMAND_PREFIX:* ]]; then
   if [[ ! -d $PLUGIN_DATA_ROOT ]]; then
     dokku_log_fail "$PLUGIN_SERVICE: Please run: sudo dokku plugin:install"
   fi
-
-  TEMP=$(getopt -o u:d: --long user:,database: -n "dokku $PLUGIN_COMMAND_PREFIX" -- "$@")
-  eval set -- "$TEMP"
-
-  while true; do
-    case "$1" in
-      -u|--user) POSTGRES_USER="$2"; shift 2 ;;
-      -d|--database) POSTGRES_DATABASE="$2"; shift 2 ;;
-      --) shift; break ;;
-      *) echo "Internal error"; exit 1;;
-    esac
-  done
-  POSTGRES_USER=${POSTGRES_USER:-"postgres"}
-  POSTGRES_DATABASE=${POSTGRES_DATABASE:-$(get_database_name "$2")}
 fi
 
 case "$1" in
@@ -120,6 +106,8 @@ case "$1" in
     [[ -z $3 ]] && dokku_log_fail "Please specify an app to run the command on"
     verify_app_name "$3"
     verify_service_name "$2"
+    # shellcheck disable=2068
+    database_options $@
     service_link "$2" "$3" "$POSTGRES_USER" "$POSTGRES_DATABASE"
     ;;
 
@@ -128,12 +116,16 @@ case "$1" in
     [[ -z $3 ]] && dokku_log_fail "Please specify an app to run the command on"
     verify_app_name "$3"
     verify_service_name "$2"
+    # shellcheck disable=2068
+    database_options $@
     service_unlink "$2" "$3" "$POSTGRES_USER" "$POSTGRES_DATABASE"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:export)
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     verify_service_name "$2"
+    # shellcheck disable=2068
+    database_options $@
     SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
     SERVICE_NAME="$(get_service_name "$SERVICE")"
     PASSWORD=$(<"$SERVICE_ROOT/auth/$POSTGRES_USER")
@@ -146,6 +138,8 @@ case "$1" in
   $PLUGIN_COMMAND_PREFIX:import)
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     verify_service_name "$2"
+    # shellcheck disable=2068
+    database_options $@
     SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
     SERVICE_NAME="$(get_service_name "$SERVICE")"
     PASSWORD=$(<"$SERVICE_ROOT/auth/$POSTGRES_USER")
@@ -185,6 +179,8 @@ case "$1" in
   $PLUGIN_COMMAND_PREFIX:connect)
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     verify_service_name "$2"
+    # shellcheck disable=2068
+    database_options $@
     SERVICE="$2"; SERVICE_NAME="$(get_service_name "$SERVICE")"
     has_tty && SERVICE_TTY_OPTS="-t"
 
@@ -194,6 +190,8 @@ case "$1" in
   $PLUGIN_COMMAND_PREFIX:info)
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     verify_service_name "$2"
+    # shellcheck disable=2068
+    database_options $@
     service_info "$2" "$POSTGRES_USER" "$POSTGRES_DATABASE"
     ;;
 
@@ -230,6 +228,8 @@ case "$1" in
     [[ -z $3 ]] && dokku_log_fail "Please specify an app to run the command on"
     verify_service_name "$2"
     verify_app_name "$3"
+    # shellcheck disable=2068
+    database_options $@
     promote "$2" "$3" "$POSTGRES_USER" "$POSTGRES_DATABASE"
     ;;
 
@@ -250,6 +250,8 @@ case "$1" in
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     [[ -z $3 ]] && dokku_log_fail "Please specify a name for the new database"
     verify_service_name "$2"
+    # shellcheck disable=2068
+    database_options $@
     SERVICE="$2"; DATABASE="$3"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
     SERVICE_NAME="$(get_service_name "$SERVICE")"
 

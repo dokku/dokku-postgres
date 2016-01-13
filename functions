@@ -357,3 +357,19 @@ service_linked_apps() {
 
   tr '\n' ' ' < "$LINKS_FILE"
 }
+
+database_options() {
+  local TEMP=$(getopt -o u:d: --long user:,database: -n "dokku $PLUGIN_COMMAND_PREFIX" -- "$@")
+  eval set -- "$TEMP"
+
+  while true; do
+    case "$1" in
+      -u|--user) POSTGRES_USER="$2"; shift 2 ;;
+      -d|--database) POSTGRES_DATABASE="$2"; shift 2 ;;
+      --) shift; break ;;
+      *) echo "Internal error"; exit 1;;
+    esac
+  done
+  export POSTGRES_USER=${POSTGRES_USER:-"postgres"}
+  export POSTGRES_DATABASE=${POSTGRES_DATABASE:-$(get_database_name "$2")}
+}
