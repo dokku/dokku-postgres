@@ -15,6 +15,10 @@ if [[ $1 == $PLUGIN_COMMAND_PREFIX:* ]]; then
   fi
 fi
 
+if [[ -d "$PLUGIN_DATA_ROOT/*" ]]; then
+  rm -rf "$PLUGIN_DATA_ROOT/*"
+fi
+
 case "$1" in
   $PLUGIN_COMMAND_PREFIX:create)
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
