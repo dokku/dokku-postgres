@@ -1,4 +1,5 @@
 sudo: required
+dist: trusty
 language: bash
 env:
   - DOKKU_VERSION=master
