@@ -128,7 +128,9 @@ case "$1" in
 
     [[ -n $SSH_TTY ]] && stty -opost
     docker exec "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_dump -Fc --no-acl --no-owner -h localhost -U postgres -w "$DATABASE_NAME"
+    status=$?
     [[ -n $SSH_TTY ]] && stty opost
+    exit $status
     ;;
 
   $PLUGIN_COMMAND_PREFIX:import)
