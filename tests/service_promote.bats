@@ -53,3 +53,10 @@ teardown() {
   run dokku config my_app
   assert_contains "${lines[*]}" "DOKKU_POSTGRES_"
 }
+@test "($PLUGIN_COMMAND_PREFIX:promote) uses POSTGRES_DATABASE_SCHEME variable" {
+  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  dokku config:set my_app "POSTGRES_DATABASE_SCHEME=postgres2" "DATABASE_URL=postgres://u:p@host:5432/db" "DOKKU_POSTGRES_BLUE_URL=postgres2://postgres:$password@dokku-postgres-l:5432/l"
+  dokku "$PLUGIN_COMMAND_PREFIX:promote" l my_app
+  url=$(dokku config:get my_app DATABASE_URL)
+  assert_contains "$url" "postgres2://postgres:$password@dokku-postgres-l:5432/l"
+}

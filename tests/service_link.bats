@@ -59,3 +59,12 @@ teardown() {
   assert_contains "${lines[*]}" "--link dokku.postgres.l:dokku-postgres-l"
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
 }
+
+@test "($PLUGIN_COMMAND_PREFIX:link) uses apps POSTGRES_DATABASE_SCHEME variable" {
+  dokku config:set my_app POSTGRES_DATABASE_SCHEME=postgres2
+  dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app
+  url=$(dokku config:get my_app DATABASE_URL)
+  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  assert_contains "$url" "postgres2://postgres:$password@dokku-postgres-l:5432/l"
+  dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
+}
