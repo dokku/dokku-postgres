@@ -130,6 +130,33 @@ dokku postgres:clone lolipop new_database
 dokku postgres:destroy lolipop
 ```
 
+## Changing database adapter
+
+It's possible to change the protocol for DATABASE_URL by setting
+the environment variable POSTGRES_DATABASE_SCHEME on the app:
+
+```
+dokku config:set playground POSTGRES_DATABASE_SCHEME=postgres2
+dokku postgres:link lolipop playground
+```
+
+Will cause DATABASE_URL to be set as
+postgres2://postgres:SOME_PASSWORD@dokku-postgres-lolipop:5432/lolipop
+
+CAUTION: Changing POSTGRES_DATABASE_SCHEME after linking will cause dokku to
+believe the postgres is not linked when attempting to use `dokku postgres:unlink`
+or `dokku postgres:promote`.
+You should be able to fix this by
+
+- Changing DATABASE_URL manually to the new value.
+
+OR
+
+- Set POSTGRES_DATABASE_SCHEME back to its original setting
+- Unlink the service
+- Change POSTGRES_DATABASE_SCHEME to the desired setting
+- Relink the service
+
 ## upgrade/downgrade
 
 At the moment a database can’t be upgraded  (or downgraded) inplace. Instead a clone has to be made, like this:
