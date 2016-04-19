@@ -26,7 +26,7 @@ case "$1" in
     SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"; LINKS_FILE="$SERVICE_ROOT/LINKS"
 
     if ! docker images | grep -e "^$PLUGIN_IMAGE " | grep -q " $PLUGIN_IMAGE_VERSION " ; then
-      dokku_log_fail "$PLUGIN_SERVICE image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION not found"
+      docker pull $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION || dokku_log_fail "$PLUGIN_SERVICE image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION pull failed"
     fi
 
     mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
