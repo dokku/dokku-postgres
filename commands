@@ -48,9 +48,13 @@ case "$1" in
     dokku_log_verbose_quiet "Waiting for container to be ready"
     docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" dokkupaas/wait > /dev/null
 
+    dokku_log_verbose_quiet "Creating custom user"
+    USER_NAME="$(get_user_name "$SERVICE")"
+    echo "CREATE USER $USER_NAME WITH PASSWORD '$password' NOSUPERUSER CREATEDB;" | docker exec -i $SERVICE_NAME psql -U postgres > /dev/null
+
     dokku_log_verbose_quiet "Creating container database"
     DATABASE_NAME="$(get_database_name "$SERVICE")"
-    docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2> /dev/null || echo 'Already exists'
+    docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 -O $USER_NAME $DATABASE_NAME" 2> /dev/null || echo 'Already exists'
 
     dokku_log_verbose_quiet "Securing connection to database"
     service_stop "$SERVICE" > /dev/null

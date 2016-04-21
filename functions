@@ -40,8 +40,10 @@ service_alias() {
 service_info() {
   local SERVICE="$1"
   local SERVICE_URL=$(service_url "$SERVICE")
+  local SERVICE_CUSTOM_USER_URL=$(service_custom_user_url "$SERVICE")
 
   echo "       DSN: $SERVICE_URL"
+  echo "       DSN USER: $SERVICE_CUSTOM_USER_URL"
 }
 
 service_list() {
@@ -275,8 +277,20 @@ service_url() {
 
   local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
   local DATABASE_NAME="$(get_database_name "$SERVICE")"
+  local USER_NAME="$(get_user_name "$SERVICE")"
   local SERVICE_ALIAS="$(service_alias "$SERVICE")"
   echo "$PLUGIN_SCHEME://postgres:$PASSWORD@$SERVICE_ALIAS:${PLUGIN_DATASTORE_PORTS[0]}/$DATABASE_NAME"
+}
+
+service_custom_user_url() {
+  local SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+
+  local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
+  local DATABASE_NAME="$(get_database_name "$SERVICE")"
+  local USER_NAME="$(get_user_name "$SERVICE")"
+  local SERVICE_ALIAS="$(service_alias "$SERVICE")"
+  echo "$PLUGIN_SCHEME://$USER_NAME:$PASSWORD@$SERVICE_ALIAS:${PLUGIN_DATASTORE_PORTS[0]}/$DATABASE_NAME"
 }
 
 is_container_status () {
@@ -297,6 +311,12 @@ get_service_name() {
 }
 
 get_database_name() {
+  # postgres does not like special characters in database names
+  # so we need to normalize them out
+  echo "$1" | tr .- _
+}
+
+get_user_name() {
   # postgres does not like special characters in database names
   # so we need to normalize them out
   echo "$1" | tr .- _
