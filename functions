@@ -150,7 +150,7 @@ service_status() {
 }
 
 service_port_expose() {
-  service_start "$1"
+  service_start "$1" "true"
   service_port_unpause "$1" "true" "${@:2}"
 }
 
@@ -219,27 +219,65 @@ docker_ports_options() {
 
 service_start() {
   local SERVICE="$1"
+  local QUIET="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME=$(get_service_name "$SERVICE")
-  local ID=$(docker ps -f status=running | grep "$SERVICE_NAME" | awk '{print $1}') || true
-  [[ -n $ID ]] && dokku_log_warn "Service is already started" && return 0
+  local ID=$(docker ps -f status=running | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
+  if [[ -n $ID ]]; then
+    [[ -z $QUIET ]] && dokku_log_warn "Service is already started"
+    return 0
+  fi
 
   dokku_log_info1_quiet "Starting container"
-  local PREVIOUS_ID=$(docker ps -f status=exited | grep "$SERVICE_NAME" | awk '{print $1}') || true
+  local PREVIOUS_ID=$(docker ps -f status=exited | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
+  local IMAGE_EXISTS=$(docker images | grep -e "^$PLUGIN_IMAGE " | grep -q " $PLUGIN_IMAGE_VERSION " && true)
+  local PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
+
   if [[ -n $PREVIOUS_ID ]]; then
     docker start "$PREVIOUS_ID" > /dev/null
     service_port_unpause "$SERVICE"
     dokku_log_info2 "Container started"
+  elif $IMAGE_EXISTS && [[ -n "$PASSWORD" ]]; then
+    service_create_container "$SERVICE"
   else
-    dokku_log_verbose_quiet "No container exists for $SERVICE"
+    dokku_log_verbose_quiet "Neither container nor valid configuration exists for $SERVICE"
   fi
+}
+
+service_create_container() {
+  local SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  local PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
+  local PREVIOUS_ID
+
+  ID=$(docker run --name "$SERVICE_NAME" -v "$SERVICE_ROOT/data:/var/lib/postgresql/data" -e "POSTGRES_PASSWORD=$PASSWORD" --env-file="$SERVICE_ROOT/ENV" -d --restart always --label dokku=service --label dokku.service=postgres "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION")
+  echo "$ID" > "$SERVICE_ROOT/ID"
+
+  dokku_log_verbose_quiet "Waiting for container to be ready"
+  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" dokkupaas/wait > /dev/null
+
+  dokku_log_verbose_quiet "Creating container database"
+  DATABASE_NAME="$(get_database_name "$SERVICE")"
+  docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2> /dev/null || echo 'Already exists'
+
+  dokku_log_verbose_quiet "Securing connection to database"
+  service_stop "$SERVICE" > /dev/null
+  docker run --rm -i -v "$SERVICE_ROOT/data:/var/lib/postgresql/data" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" bash -s < "$(dirname "$0")/scripts/enable_ssl.sh" &> /dev/null
+
+  PREVIOUS_ID=$(docker ps -f status=exited | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
+  docker start "$PREVIOUS_ID" > /dev/null
+  service_port_unpause "$SERVICE"
+
+  dokku_log_info2 "$PLUGIN_SERVICE container created: $SERVICE"
+  dokku "$PLUGIN_COMMAND_PREFIX:info" "$SERVICE"
 }
 
 service_stop() {
   local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE";
   local SERVICE_NAME=$(get_service_name "$SERVICE")
-  local ID=$(docker ps -f status=running | grep "$SERVICE_NAME" | awk '{print $1}') || true
+  local ID=$(docker ps -f status=running | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
   [[ -z $ID ]] && dokku_log_warn "Service is already stopped" && return 0
 
   if [[ -n $ID ]]; then
