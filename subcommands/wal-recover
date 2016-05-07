@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+postgres-wal-recover-cmd() {
+  [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+  verify_service_name "$2"
+
+  local SERVICE="$2"
+  local TIME="$3"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  local PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
+  local BASE_BACKUP_HOST="$SERVICE_ROOT/backups/base/base.tar.gz"
+  local BASE_BACKUP_CONTAINER="/var/lib/postgresql/backups/base/base.tar.gz"
+  local DOCKER_RUN="docker run --rm -i -v $SERVICE_ROOT/data:/var/lib/postgresql/data -v $SERVICE_ROOT/backups:/var/lib/postgresql/backups $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
+
+  test -e "$SERVICE_ROOT/backups" || dokku_log_fail "No base backup available"
+
+  service_stop "$SERVICE"
+
+  dokku_log_verbose_quiet "Restoring base backup"
+
+  $DOCKER_RUN bash -c "rm -rf /var/lib/postgresql/data/*"
+  $DOCKER_RUN bash -c "cp $BASE_BACKUP_CONTAINER /var/lib/postgresql/data/"
+  $DOCKER_RUN bash -c "cd /var/lib/postgresql/data/ && tar zxf base.tar.gz"
+
+  dokku_log_verbose_quiet "Writing recovery.conf"
+  $DOCKER_RUN bash -c "echo \"restore_command = 'gunzip -c /var/lib/postgresql/backups/%f -q > %p'\" > /var/lib/postgresql/data/recovery.conf"
+
+  [[ -n $TIME ]] && dokku_log_verbose_quiet "Recover to $TIME"
+  [[ -n $TIME ]] && $DOCKER_RUN bash -c "echo \"recovery_target_time = '$TIME'\" >> /var/lib/postgresql/data/recovery.conf"
+
+  dokku_log_verbose_quiet "Restarting to start recovery"
+  service_start "$SERVICE"
+
+  dokku_log_info2 "Recovery started"
+  dokku_log_verbose_quiet "Use 'dokku $PLUGIN_COMMAND_PREFIX:logs $SERVICE -t' to monitor the progress"
+  dokku_log_verbose_quiet "It is normal to see several 'No such file or directory' messages at the "
+  dokku_log_verbose_quiet "beginning and the end of the log message. "
+}
+
+postgres-wal-recover-cmd "$@"
