@@ -33,7 +33,7 @@ verify_service_name() {
 
 service_alias() {
   local SERVICE="$1"
-  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
   echo "$SERVICE_NAME" | tr ._ -
 }
 
@@ -73,7 +73,7 @@ service_link() {
   local SERVICE="$1"
   update_plugin_scheme_for_app "$APP"
   local SERVICE_URL=$(service_url "$SERVICE")
-  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local EXISTING_CONFIG=$(config_all "$APP")
   local LINK=$(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1) || true
@@ -186,7 +186,7 @@ service_port_unexpose() {
 service_port_unpause() {
   local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local EXPOSED_NAME="${SERVICE_NAME}.ambassador"
   local PORT_FILE="$SERVICE_ROOT/PORT"
   local LOG_FAIL="$2"
@@ -225,7 +225,7 @@ service_start() {
   local SERVICE="$1"
   local QUIET="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local ID=$(docker ps -f status=running | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
   if [[ -n $ID ]]; then
     [[ -z $QUIET ]] && dokku_log_warn "Service is already started"
@@ -251,7 +251,7 @@ service_start() {
 service_create_container() {
   local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
   local PREVIOUS_ID
 
@@ -280,7 +280,7 @@ service_create_container() {
 service_stop() {
   local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE";
-  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local ID=$(docker ps -f status=running | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
   [[ -z $ID ]] && dokku_log_warn "Service is already stopped" && return 0
 
@@ -299,7 +299,7 @@ service_unlink() {
   local SERVICE="$1"
   update_plugin_scheme_for_app "$APP"
   local SERVICE_URL=$(service_url "$SERVICE")
-  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local EXISTING_CONFIG=$(config_all "$APP")
   local SERVICE_ALIAS=$(service_alias "$SERVICE")
   local LINK=($(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1)) || true
