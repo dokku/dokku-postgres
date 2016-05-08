@@ -3,5 +3,6 @@ dist: trusty
 language: bash
 env:
   - DOKKU_VERSION=master
+  - DOKKU_VERSION=v0.4.14
 before_install: make setup
 script: make test
