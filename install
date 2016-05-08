@@ -6,11 +6,11 @@ if ! docker images | grep -e "^$PLUGIN_IMAGE " | grep -q "$PLUGIN_IMAGE_VERSION"
   docker pull "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
 fi
 
-if ! docker images | grep -e "^svendowideit/ambassador "; then
+if ! docker images | grep -q -e "^svendowideit/ambassador "; then
   docker pull svendowideit/ambassador:latest
 fi
 
-if ! docker images | grep -e "^dokkupaas/wait "; then
+if ! docker images | grep -q -e "^dokkupaas/wait "; then
   docker pull dokkupaas/wait:latest
 fi
 
