@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 
 PLUGIN_BASE_PATH="$PLUGIN_PATH"
@@ -6,8 +7,7 @@ if [[ -n $DOKKU_API_VERSION ]]; then
   PLUGIN_BASE_PATH="$PLUGIN_ENABLED_PATH"
 fi
 source "$PLUGIN_BASE_PATH/common/functions"
-source "$(dirname "$0")/functions"
-source "$(dirname "$0")/config"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/functions"
 
 if [[ $1 == $PLUGIN_COMMAND_PREFIX:* ]]; then
   if [[ ! -d $PLUGIN_DATA_ROOT ]]; then
