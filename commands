@@ -57,7 +57,7 @@ case "$1" in
       dokku_log_warn "To proceed, type \"$SERVICE\""
       echo ""
 
-      read -p "> " service_name
+      read -rp "> " service_name
       if [[ "$service_name" != "$SERVICE" ]]; then
         dokku_log_warn "Confirmation did not match $SERVICE. Aborted."
         exit 1
