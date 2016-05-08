@@ -353,7 +353,7 @@ service_version() {
 get_url_from_config() {
   local EXISTING_CONFIG="$1"
   local CONFIG_VAR="$2"
-  echo "$EXISTING_CONFIG" | grep "$CONFIG_VAR" | sed "s/$CONFIG_VAR:\s*//"
+  echo "$EXISTING_CONFIG" | grep "$CONFIG_VAR" | sed "s/$CONFIG_VAR:\s*//" | xargs
 }
 
 promote() {
