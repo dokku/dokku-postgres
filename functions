@@ -392,7 +392,7 @@ remove_from_links_file() {
 
   mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
   touch "$LINKS_FILE"
-  sed -i "/^$APP\$/d" "$LINKS_FILE"
+  sed -i.bak "/^$APP\$/d" "$LINKS_FILE" && rm "$LINKS_FILE.bak"
   sort "$LINKS_FILE" -u -o "$LINKS_FILE"
 }
 
