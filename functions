@@ -33,7 +33,7 @@ verify_service_name() {
 
 service_alias() {
   local SERVICE="$1"
-  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
   echo "$SERVICE_NAME" | tr ._ -
 }
 
@@ -73,9 +73,9 @@ service_link() {
   local SERVICE="$1"
   update_plugin_scheme_for_app "$APP"
   local SERVICE_URL=$(service_url "$SERVICE")
-  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local EXISTING_CONFIG=$(dokku config "$APP")
+  local EXISTING_CONFIG=$(config_all "$APP")
   local LINK=$(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1) || true
   local DEFAULT_ALIAS=$(echo "$EXISTING_CONFIG" | grep "${PLUGIN_DEFAULT_ALIAS}_URL") || true
   local SERVICE_ALIAS=$(service_alias "$SERVICE")
@@ -92,7 +92,7 @@ service_link() {
     ALIAS=$(service_alternative_alias "$EXISTING_CONFIG")
   fi
   dokku docker-options:add "$APP" build,deploy,run "--link $SERVICE_NAME:$SERVICE_ALIAS"
-  dokku config:set "$APP" "${ALIAS}_URL=$SERVICE_URL"
+  config_set "$APP" "${ALIAS}_URL=$SERVICE_URL"
 }
 
 service_alternative_alias() {
@@ -123,6 +123,7 @@ service_logs() {
     DOKKU_LOGS_ARGS="--tail 100"
   fi
 
+  # shellcheck disable=SC2086
   docker logs $DOKKU_LOGS_ARGS "$ID"
 }
 
@@ -185,11 +186,13 @@ service_port_unexpose() {
 service_port_unpause() {
   local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local EXPOSED_NAME="${SERVICE_NAME}.ambassador"
   local PORT_FILE="$SERVICE_ROOT/PORT"
   local LOG_FAIL="$2"
+  # shellcheck disable=SC2068
   local PORTS=(${@:3})
+  # shellcheck disable=SC2068
   PORTS=(${PORTS[@]:-$(get_random_ports ${#PLUGIN_DATASTORE_PORTS[@]})})
   local ID=$(cat "$SERVICE_ROOT/ID")
 
@@ -204,7 +207,8 @@ service_port_unpause() {
 
   echo "${PORTS[@]}" > "$PORT_FILE"
 
-  docker run -d --link "$SERVICE_NAME:postgres" --name "$EXPOSED_NAME" $(docker_ports_options "${PORTS[@]}") --restart always --label dokku=ambassador --label dokku.ambassador=postgres svendowideit/ambassador > /dev/null
+  # shellcheck disable=SC2046
+  docker run -d --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" --name "$EXPOSED_NAME" $(docker_ports_options "${PORTS[@]}") --restart always --label dokku=ambassador --label "dokku.ambassador=$PLUGIN_COMMAND_PREFIX" svendowideit/ambassador > /dev/null
   if [[ "$LOG_FAIL" == "true" ]]; then
     dokku_log_info1 "Service $SERVICE exposed on port(s) ${PORTS[*]}"
   fi
@@ -221,7 +225,7 @@ service_start() {
   local SERVICE="$1"
   local QUIET="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local ID=$(docker ps -f status=running | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
   if [[ -n $ID ]]; then
     [[ -z $QUIET ]] && dokku_log_warn "Service is already started"
@@ -247,7 +251,7 @@ service_start() {
 service_create_container() {
   local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
   local PREVIOUS_ID
 
@@ -276,7 +280,7 @@ service_create_container() {
 service_stop() {
   local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE";
-  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local ID=$(docker ps -f status=running | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
   [[ -z $ID ]] && dokku_log_warn "Service is already stopped" && return 0
 
@@ -295,8 +299,8 @@ service_unlink() {
   local SERVICE="$1"
   update_plugin_scheme_for_app "$APP"
   local SERVICE_URL=$(service_url "$SERVICE")
-  local SERVICE_NAME=$(get_service_name "$SERVICE")
-  local EXISTING_CONFIG=$(dokku config "$APP")
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
+  local EXISTING_CONFIG=$(config_all "$APP")
   local SERVICE_ALIAS=$(service_alias "$SERVICE")
   local LINK=($(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1)) || true
 
@@ -304,7 +308,7 @@ service_unlink() {
   remove_from_links_file "$SERVICE" "$APP"
 
   dokku docker-options:remove "$APP" build,deploy,run "--link $SERVICE_NAME:$SERVICE_ALIAS"
-  dokku config:unset "$APP" "${LINK[*]}"
+  config_unset "$APP" "${LINK[*]}"
 }
 
 service_url() {
@@ -349,14 +353,14 @@ service_version() {
 get_url_from_config() {
   local EXISTING_CONFIG="$1"
   local CONFIG_VAR="$2"
-  echo "$EXISTING_CONFIG" | grep "$CONFIG_VAR" | sed "s/$CONFIG_VAR:\s*//"
+  echo "$EXISTING_CONFIG" | grep "$CONFIG_VAR" | sed "s/$CONFIG_VAR:\s*//" | xargs
 }
 
 promote() {
   local SERVICE="$1"
   local APP="$2"
   local PLUGIN_DEFAULT_CONFIG_VAR="${PLUGIN_DEFAULT_ALIAS}_URL"
-  local EXISTING_CONFIG=$(dokku config "$APP")
+  local EXISTING_CONFIG=$(config_all "$APP")
   update_plugin_scheme_for_app "$APP"
   local SERVICE_URL=$(service_url "$SERVICE")
   local CONFIG_VARS=($(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1)) || true
@@ -375,7 +379,9 @@ promote() {
   fi
   local PROMOTE_URL=$(get_url_from_config "$EXISTING_CONFIG" "${CONFIG_VARS[0]}")
   NEW_CONFIG_VARS+="$PLUGIN_DEFAULT_CONFIG_VAR=$PROMOTE_URL"
-  dokku config:set "$APP" $NEW_CONFIG_VARS
+
+  # shellcheck disable=SC2086
+  config_set "$APP" $NEW_CONFIG_VARS
 }
 
 remove_from_links_file() {
@@ -386,7 +392,7 @@ remove_from_links_file() {
 
   mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
   touch "$LINKS_FILE"
-  sed -i "/^$APP\$/d" "$LINKS_FILE"
+  sed -i.bak "/^$APP\$/d" "$LINKS_FILE" && rm "$LINKS_FILE.bak"
   sort "$LINKS_FILE" -u -o "$LINKS_FILE"
 }
 

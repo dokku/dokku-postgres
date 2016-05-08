@@ -15,7 +15,7 @@ if [[ ! -d $PLUGIN_DATA_ROOT ]]; then
 fi
 
 if [[ -d "$PLUGIN_DATA_ROOT/*" ]]; then
-  rm -rf "$PLUGIN_DATA_ROOT/*"
+  rm -rf "${PLUGIN_DATA_ROOT:?}/*"
 fi
 
 case "$1" in
@@ -25,7 +25,7 @@ case "$1" in
     SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"; LINKS_FILE="$SERVICE_ROOT/LINKS"
 
     if ! docker images | grep -e "^$PLUGIN_IMAGE " | grep -q " $PLUGIN_IMAGE_VERSION " ; then
-      docker pull $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION || dokku_log_fail "$PLUGIN_SERVICE image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION pull failed"
+      docker pull "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" || dokku_log_fail "$PLUGIN_SERVICE image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION pull failed"
     fi
 
     mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
@@ -46,7 +46,7 @@ case "$1" in
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     verify_service_name "$2"
     SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"; LINKS_FILE="$SERVICE_ROOT/LINKS"
-    SERVICE_NAME=$(get_service_name "$SERVICE")
+    SERVICE_NAME="$(get_service_name "$SERVICE")"
 
     [[ -s "$LINKS_FILE" ]] && dokku_log_fail "Cannot delete linked service"
 
@@ -57,7 +57,7 @@ case "$1" in
       dokku_log_warn "To proceed, type \"$SERVICE\""
       echo ""
 
-      read -p "> " service_name
+      read -rp "> " service_name
       if [[ "$service_name" != "$SERVICE" ]]; then
         dokku_log_warn "Confirmation did not match $SERVICE. Aborted."
         exit 1
@@ -104,7 +104,7 @@ case "$1" in
     verify_service_name "$2"
     SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
     SERVICE_NAME="$(get_service_name "$SERVICE")"
-    DATABASE_NAME="$(get_database_name $SERVICE)"
+    DATABASE_NAME="$(get_database_name "$SERVICE")"
     PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
 
     [[ -n $SSH_TTY ]] && stty -opost
@@ -119,7 +119,7 @@ case "$1" in
     verify_service_name "$2"
     SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
     SERVICE_NAME="$(get_service_name "$SERVICE")"
-    DATABASE_NAME="$(get_database_name $SERVICE)"
+    DATABASE_NAME="$(get_database_name "$SERVICE")"
     PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
 
     if [[ -t 0 ]]; then
@@ -158,7 +158,7 @@ case "$1" in
     [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
     verify_service_name "$2"
     SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-    DATABASE_NAME="$(get_database_name $SERVICE)"
+    DATABASE_NAME="$(get_database_name "$SERVICE")"
     SERVICE_NAME="$(get_service_name "$SERVICE")"
     has_tty && SERVICE_TTY_OPTS="-t"
 
