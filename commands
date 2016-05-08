@@ -15,7 +15,7 @@ if [[ ! -d $PLUGIN_DATA_ROOT ]]; then
 fi
 
 if [[ -d "$PLUGIN_DATA_ROOT/*" ]]; then
-  rm -rf "$PLUGIN_DATA_ROOT/*"
+  rm -rf "${PLUGIN_DATA_ROOT:?}/*"
 fi
 
 case "$1" in
