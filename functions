@@ -123,6 +123,7 @@ service_logs() {
     DOKKU_LOGS_ARGS="--tail 100"
   fi
 
+  # shellcheck disable=SC2086
   docker logs $DOKKU_LOGS_ARGS "$ID"
 }
 
@@ -189,7 +190,9 @@ service_port_unpause() {
   local EXPOSED_NAME="${SERVICE_NAME}.ambassador"
   local PORT_FILE="$SERVICE_ROOT/PORT"
   local LOG_FAIL="$2"
+  # shellcheck disable=SC2068
   local PORTS=(${@:3})
+  # shellcheck disable=SC2068
   PORTS=(${PORTS[@]:-$(get_random_ports ${#PLUGIN_DATASTORE_PORTS[@]})})
   local ID=$(cat "$SERVICE_ROOT/ID")
 
@@ -204,7 +207,8 @@ service_port_unpause() {
 
   echo "${PORTS[@]}" > "$PORT_FILE"
 
-  docker run -d --link "$SERVICE_NAME:postgres" --name "$EXPOSED_NAME" $(docker_ports_options "${PORTS[@]}") --restart always --label dokku=ambassador --label dokku.ambassador=postgres svendowideit/ambassador > /dev/null
+  # shellcheck disable=SC2046
+  docker run -d --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" --name "$EXPOSED_NAME" $(docker_ports_options "${PORTS[@]}") --restart always --label dokku=ambassador --label "dokku.ambassador=$PLUGIN_COMMAND_PREFIX" svendowideit/ambassador > /dev/null
   if [[ "$LOG_FAIL" == "true" ]]; then
     dokku_log_info1 "Service $SERVICE exposed on port(s) ${PORTS[*]}"
   fi
