@@ -12,10 +12,12 @@ echo "Dokku version $DOKKU_VERSION"
 git checkout $DOKKU_VERSION > /dev/null
 cd -
 
-rm -rf $DOKKU_ROOT/plugins/service
-mkdir -p $DOKKU_ROOT/plugins/service
-find ./ -maxdepth 1 -type f -exec cp '{}' $DOKKU_ROOT/plugins/service \;
-cp -r ./scripts "$DOKKU_ROOT/plugins/service"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+rm -rf $DOKKU_ROOT/plugins/$PLUGIN_COMMAND_PREFIX
+mkdir -p $DOKKU_ROOT/plugins/$PLUGIN_COMMAND_PREFIX $DOKKU_ROOT/plugins/$PLUGIN_COMMAND_PREFIX/subcommands
+find ./ -maxdepth 1 -type f -exec cp '{}' $DOKKU_ROOT/plugins/$PLUGIN_COMMAND_PREFIX \;
+find ./subcommands -maxdepth 1 -type f -exec cp '{}' $DOKKU_ROOT/plugins/$PLUGIN_COMMAND_PREFIX/subcommands \;
+find ./scripts -maxdepth 1 -type f -exec cp '{}' $DOKKU_ROOT/plugins/$PLUGIN_COMMAND_PREFIX/scripts \;
 
 if [[ ! -f $BIN_STUBS/plugn ]]; then
   wget -O- "$PLUGN_URL" | tar xzf - -C "$BIN_STUBS"
