@@ -278,7 +278,7 @@ service_create_container() {
   service_port_unpause "$SERVICE"
 
   dokku_log_info2 "$PLUGIN_SERVICE container created: $SERVICE"
-  dokku "$PLUGIN_COMMAND_PREFIX:info" "$SERVICE"
+  service_info "$SERVICE"
 }
 
 service_stop() {
