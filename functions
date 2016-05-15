@@ -2,6 +2,7 @@
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_AVAILABLE_PATH/config/functions"
+source "$PLUGIN_AVAILABLE_PATH/docker-options/functions"
 
 get_random_ports() {
   local iterations="${1:-1}"
@@ -91,7 +92,10 @@ service_link() {
   if [[ -n $DEFAULT_ALIAS ]]; then
     ALIAS=$(service_alternative_alias "$EXISTING_CONFIG")
   fi
-  dokku docker-options:add "$APP" build,deploy,run "--link $SERVICE_NAME:$SERVICE_ALIAS"
+
+  # shellcheck disable=SC2034
+  local passed_phases=(build deploy run)
+  add_passed_docker_option passed_phases[@] "--link $SERVICE_NAME:$SERVICE_ALIAS"
   config_set "$APP" "${ALIAS}_URL=$SERVICE_URL"
 }
 
@@ -307,7 +311,9 @@ service_unlink() {
   [[ -z ${LINK[*]} ]] && dokku_log_fail "Not linked to app $APP"
   remove_from_links_file "$SERVICE" "$APP"
 
-  dokku docker-options:remove "$APP" build,deploy,run "--link $SERVICE_NAME:$SERVICE_ALIAS"
+  # shellcheck disable=SC2034
+  local passed_phases=(build deploy run)
+  remove_passed_docker_option passed_phases[@] "--link $SERVICE_NAME:$SERVICE_ALIAS"
   config_unset "$APP" "${LINK[*]}"
 }
 
