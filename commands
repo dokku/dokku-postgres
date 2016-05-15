@@ -204,30 +204,53 @@ case "$1" in
     ;;
 
   help | $PLUGIN_COMMAND_PREFIX:help)
-    HELP=$(cat<<EOF
+    help_content_func() {
+      # shellcheck disable=SC2034
+      declare desc="return $PLUGIN_COMMAND_PREFIX plugin help content"
+      cat<<help_content
+    $PLUGIN_COMMAND_PREFIX:clone <name> <new-name>, Create container <new-name> then copy data from <name> into <new-name>
+    $PLUGIN_COMMAND_PREFIX:connect <name>, Connect via psql to a $PLUGIN_SERVICE service
     $PLUGIN_COMMAND_PREFIX:create <name>, Create a $PLUGIN_SERVICE service
     $PLUGIN_COMMAND_PREFIX:destroy <name>, Delete the $PLUGIN_SERVICE service and stop its container if there are no links left
-    $PLUGIN_COMMAND_PREFIX:link <name> <app>, Link the $PLUGIN_SERVICE service to the app
-    $PLUGIN_COMMAND_PREFIX:unlink <name> <app>, Unlink the $PLUGIN_SERVICE service from the app
     $PLUGIN_COMMAND_PREFIX:export <name>, Export a dump of the $PLUGIN_SERVICE service database
-    $PLUGIN_COMMAND_PREFIX:import <name> < <file>, Import a dump into the $PLUGIN_SERVICE service database
-    $PLUGIN_COMMAND_PREFIX:connect <name>, Connect via psql to a $PLUGIN_SERVICE service
-    $PLUGIN_COMMAND_PREFIX:logs <name> [-t], Print the most recent log(s) for this service
-    $PLUGIN_COMMAND_PREFIX:restart <name>, Graceful shutdown and restart of the $PLUGIN_SERVICE service container
-    $PLUGIN_COMMAND_PREFIX:info <name>, Print the connection information
-    $PLUGIN_COMMAND_PREFIX:list, List all $PLUGIN_SERVICE services
-    $PLUGIN_COMMAND_PREFIX:clone <name> <new-name>, Create container <new-name> then copy data from <name> into <new-name>
     $PLUGIN_COMMAND_PREFIX:expose <name> [port], Expose a $PLUGIN_SERVICE service on custom port if provided (random port otherwise)
-    $PLUGIN_COMMAND_PREFIX:unexpose <name>, Unexpose a previously exposed $PLUGIN_SERVICE service
+    $PLUGIN_COMMAND_PREFIX:import <name> < <file>, Import a dump into the $PLUGIN_SERVICE service database
+    $PLUGIN_COMMAND_PREFIX:info <name>, Print the connection information
+    $PLUGIN_COMMAND_PREFIX:link <name> <app>, Link the $PLUGIN_SERVICE service to the app
+    $PLUGIN_COMMAND_PREFIX:list, List all $PLUGIN_SERVICE services
+    $PLUGIN_COMMAND_PREFIX:logs <name> [-t], Print the most recent log(s) for this service
+    $PLUGIN_COMMAND_PREFIX:promote <name> <app>, Promote service <name> as ${PLUGIN_DEFAULT_ALIAS}_URL in <app>
+    $PLUGIN_COMMAND_PREFIX:restart <name>, Graceful shutdown and restart of the $PLUGIN_SERVICE service container
     $PLUGIN_COMMAND_PREFIX:start <name>, Start a previously stopped $PLUGIN_SERVICE service
     $PLUGIN_COMMAND_PREFIX:stop <name>, Stop a running $PLUGIN_SERVICE service
-    $PLUGIN_COMMAND_PREFIX:promote <name> <app>, Promote service <name> as ${PLUGIN_DEFAULT_ALIAS}_URL in <app>
-EOF
-)
-    if [[ -n $DOKKU_API_VERSION ]]; then
-      echo "$HELP"
+    $PLUGIN_COMMAND_PREFIX:unexpose <name>, Unexpose a previously exposed $PLUGIN_SERVICE service
+    $PLUGIN_COMMAND_PREFIX:unlink <name> <app>, Unlink the $PLUGIN_SERVICE service from the app
+help_content
+    }
+
+    help_list_func() {
+      # shellcheck disable=SC2034
+      declare desc="return $PLUGIN_COMMAND_PREFIX plugin help content"
+      cat<<help_list
+      NAME, VERSION, STATUS, EXPOSED PORTS, LINKS
+      service-name, $PLUGIN_COMMAND_PREFIX:$PLUGIN_IMAGE_VERSION, running, -, app-name
+help_list
+    }
+
+    if [[ $1 = "$PLUGIN_COMMAND_PREFIX:help" ]] ; then
+      echo -e "Usage: dokku $PLUGIN_COMMAND_PREFIX[:COMMAND]"
+      echo ''
+      echo "List your $PLUGIN_COMMAND_PREFIX services."
+      echo ''
+      echo 'Example:'
+      echo ''
+      echo "\$ dokku $PLUGIN_COMMAND_PREFIX:list"
+      help_list_func | column -c5 -t -s,
+      echo ''
+      echo 'Additional commands:'
+      help_content_func | sort | column -c2 -t -s,
     else
-      cat && echo "$HELP"
+      help_content_func
     fi
     ;;
 
