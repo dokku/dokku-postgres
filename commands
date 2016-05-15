@@ -3,10 +3,6 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 [[ " help $PLUGIN_COMMAND_PREFIX:help " == *" $1 "* ]] || [[ "$1" == "$PLUGIN_COMMAND_PREFIX:"* ]] || exit "$DOKKU_NOT_IMPLEMENTED_EXIT"
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 
-PLUGIN_BASE_PATH="$PLUGIN_PATH"
-if [[ -n $DOKKU_API_VERSION ]]; then
-  PLUGIN_BASE_PATH="$PLUGIN_ENABLED_PATH"
-fi
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/functions"
 
