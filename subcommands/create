@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+postgres-create-cmd() {
+  [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+  [[ ! -d "$PLUGIN_DATA_ROOT/$2" ]] || dokku_log_fail "$PLUGIN_SERVICE service $2 already exists"
+  SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"; LINKS_FILE="$SERVICE_ROOT/LINKS"
+
+  if ! docker images | grep -e "^$PLUGIN_IMAGE " | grep -q " $PLUGIN_IMAGE_VERSION " ; then
+    docker pull "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" || dokku_log_fail "$PLUGIN_SERVICE image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION pull failed"
+  fi
+
+  mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
+  password=$(openssl rand -hex 16)
+  echo "$password" > "$SERVICE_ROOT/PASSWORD"
+  chmod 640 "$SERVICE_ROOT/PASSWORD"
+  touch "$LINKS_FILE"
+
+  if [[ -n $POSTGRES_CUSTOM_ENV ]]; then
+    echo "$POSTGRES_CUSTOM_ENV" | tr ';' "\n" > "$SERVICE_ROOT/ENV"
+  else
+    echo "" > "$SERVICE_ROOT/ENV"
+  fi
+  service_create_container "$SERVICE"
+}
+
+postgres-create-cmd "$@"

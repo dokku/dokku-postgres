@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+postgres-export-cmd() {
+  [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+  verify_service_name "$2"
+  SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  SERVICE_NAME="$(get_service_name "$SERVICE")"
+  DATABASE_NAME="$(get_database_name "$SERVICE")"
+  PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
+
+  [[ -n $SSH_TTY ]] && stty -opost
+  docker exec "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_dump -Fc --no-acl --no-owner -h localhost -U postgres -w "$DATABASE_NAME"
+  status=$?
+  [[ -n $SSH_TTY ]] && stty opost
+  exit $status
+}
+
+postgres-export-cmd "$@"

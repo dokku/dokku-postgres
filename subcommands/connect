@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+postgres-connect-cmd() {
+  [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+  verify_service_name "$2"
+  SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  DATABASE_NAME="$(get_database_name "$SERVICE")"
+  SERVICE_NAME="$(get_service_name "$SERVICE")"
+  has_tty && SERVICE_TTY_OPTS="-t"
+
+  docker exec -i $SERVICE_TTY_OPTS "$SERVICE_NAME" psql -h localhost -U postgres "$DATABASE_NAME"
+}
+
+postgres-connect-cmd "$@"

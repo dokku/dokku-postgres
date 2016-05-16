@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+postgres-clone-cmd() {
+  [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+  [[ -z $3 ]] && dokku_log_fail "Please specify a name for the new service"
+  verify_service_name "$2"
+  SERVICE="$2"
+  NEW_SERVICE="$3"
+  dokku "$PLUGIN_COMMAND_PREFIX:create" "$NEW_SERVICE"
+  dokku_log_info1 "Copying data from $SERVICE to $NEW_SERVICE"
+  dokku "$PLUGIN_COMMAND_PREFIX:export" "$SERVICE" | dokku "$PLUGIN_COMMAND_PREFIX:import" "$NEW_SERVICE" > /dev/null 2>&1 || true
+  dokku_log_info1 "Done"
+}
+
+postgres-clone-cmd "$@"

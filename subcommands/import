@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+postgres-import-cmd() {
+  [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+  verify_service_name "$2"
+  SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  SERVICE_NAME="$(get_service_name "$SERVICE")"
+  DATABASE_NAME="$(get_database_name "$SERVICE")"
+  PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
+
+  if [[ -t 0 ]]; then
+    dokku_log_fail "No data provided on stdin."
+  fi
+  docker exec -i "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_restore -h localhost -cO -d "$DATABASE_NAME" -U postgres -w
+}
+
+postgres-import-cmd "$@"
