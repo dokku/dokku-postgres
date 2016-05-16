@@ -5,11 +5,16 @@ source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 postgres-promote-cmd() {
-  [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
-  [[ -z $3 ]] && dokku_log_fail "Please specify an app to run the command on"
-  verify_service_name "$2"
-  verify_app_name "$3"
-  promote "$2" "$3"
+  declare desc="promote service <name> as ${PLUGIN_DEFAULT_ALIAS}_URL in <app>"
+  local cmd="$PLUGIN_COMMAND_PREFIX:promote" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  declare SERVICE="$1" APP="$2"
+  APP=${APP:="$DOKKU_APP_NAME"}
+
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  [[ -z "$APP" ]] && dokku_log_fail "Please specify an app to run the command on"
+  verify_service_name "$SERVICE"
+  verify_app_name "$APP"
+  promote "$SERVICE" "$APP"
 }
 
 postgres-promote-cmd "$@"

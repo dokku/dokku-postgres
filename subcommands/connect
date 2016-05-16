@@ -5,9 +5,13 @@ source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 postgres-connect-cmd() {
-  [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
-  verify_service_name "$2"
-  SERVICE="$2"; SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  declare desc="connect via psql to a $PLUGIN_SERVICE service"
+  local cmd="$PLUGIN_COMMAND_PREFIX:connect" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  declare SERVICE="$1"
+
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  verify_service_name "$SERVICE"
+  SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   DATABASE_NAME="$(get_database_name "$SERVICE")"
   SERVICE_NAME="$(get_service_name "$SERVICE")"
   has_tty && SERVICE_TTY_OPTS="-t"

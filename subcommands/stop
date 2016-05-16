@@ -5,9 +5,13 @@ source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 postgres-stop-cmd() {
-  [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
-  verify_service_name "$2"
-  service_stop "$2"
+  declare desc="stop a running $PLUGIN_SERVICE service"
+  local cmd="$PLUGIN_COMMAND_PREFIX:stop" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  declare SERVICE="$1"
+
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  verify_service_name "$SERVICE"
+  service_stop "$SERVICE"
 }
 
 postgres-stop-cmd "$@"

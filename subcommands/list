@@ -5,6 +5,9 @@ source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 postgres-list-cmd() {
+  declare desc="list all $PLUGIN_SERVICE services"
+  local cmd="$PLUGIN_COMMAND_PREFIX:list" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+
   service_list
 }
 
