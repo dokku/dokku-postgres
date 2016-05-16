@@ -11,16 +11,7 @@ postgres-export-cmd() {
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   verify_service_name "$SERVICE"
-  SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  SERVICE_NAME="$(get_service_name "$SERVICE")"
-  DATABASE_NAME="$(get_database_name "$SERVICE")"
-  PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
-
-  [[ -n $SSH_TTY ]] && stty -opost
-  docker exec "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_dump -Fc --no-acl --no-owner -h localhost -U postgres -w "$DATABASE_NAME"
-  status=$?
-  [[ -n $SSH_TTY ]] && stty opost
-  exit $status
+  service_export "$SERVICE"
 }
 
 postgres-export-cmd "$@"

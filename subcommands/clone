@@ -13,9 +13,9 @@ postgres-clone-cmd() {
   [[ -z "$NEW_SERVICE" ]] && dokku_log_fail "Please specify a name for the new service"
 
   verify_service_name "$SERVICE"
-  dokku "$PLUGIN_COMMAND_PREFIX:create" "$NEW_SERVICE"
+  service_create "$NEW_SERVICE"
   dokku_log_info1 "Copying data from $SERVICE to $NEW_SERVICE"
-  dokku "$PLUGIN_COMMAND_PREFIX:export" "$SERVICE" | dokku "$PLUGIN_COMMAND_PREFIX:import" "$NEW_SERVICE" > /dev/null 2>&1 || true
+  service_export "$SERVICE" | service_import "$NEW_SERVICE" > /dev/null 2>&1 || true
   dokku_log_info1 "Done"
 }
 
