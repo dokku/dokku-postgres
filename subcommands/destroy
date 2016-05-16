@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+postgres-destroy-cmd() {
+  declare desc="delete the $PLUGIN_SERVICE service and stop its container if there are no links left"
+  local cmd="$PLUGIN_COMMAND_PREFIX:destroy" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  declare SERVICE="$1" FORCE_DESTROY="$2"
+
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  verify_service_name "$SERVICE"
+  SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"; LINKS_FILE="$SERVICE_ROOT/LINKS"
+  SERVICE_NAME="$(get_service_name "$SERVICE")"
+
+  [[ -s "$LINKS_FILE" ]] && dokku_log_fail "Cannot delete linked service"
+
+  [[ "$FORCE_DESTROY" == "force" ]] && DOKKU_APPS_FORCE_DELETE=1
+  if [[ -z "$DOKKU_APPS_FORCE_DELETE" ]]; then
+    dokku_log_warn "WARNING: Potentially Destructive Action"
+    dokku_log_warn "This command will destroy $SERVICE $PLUGIN_SERVICE service."
+    dokku_log_warn "To proceed, type \"$SERVICE\""
+    echo ""
+
+    read -rp "> " service_name
+    if [[ "$service_name" != "$SERVICE" ]]; then
+      dokku_log_warn "Confirmation did not match $SERVICE. Aborted."
+      exit 1
+    fi
+  fi
+
+  dokku_log_info1 "Deleting $SERVICE"
+  if [[ -n $(docker ps -aq -f name="$SERVICE_NAME") ]]; then
+    dokku_log_verbose_quiet "Deleting container data"
+    service_stop "$SERVICE"
+    sleep 1
+
+    dokku_log_verbose_quiet "Removing container"
+    docker rm -v "$SERVICE_NAME" > /dev/null
+    sleep 1
+  else
+    dokku_log_verbose_quiet "No container exists for $SERVICE"
+  fi
+
+  dokku_log_verbose_quiet "Removing data"
+  docker run --rm -v "$SERVICE_ROOT/data:/data" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" chmod 777 -R /data
+  rm -rf "$SERVICE_ROOT"
+
+  dokku_log_info2 "$PLUGIN_SERVICE container deleted: $SERVICE"
+}
+
+postgres-destroy-cmd "$@"
