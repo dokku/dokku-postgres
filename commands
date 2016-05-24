@@ -10,10 +10,6 @@ if [[ ! -d $PLUGIN_DATA_ROOT ]]; then
   dokku_log_fail "$PLUGIN_SERVICE: Please run: sudo dokku plugin:install"
 fi
 
-if [[ -d "$PLUGIN_DATA_ROOT/*" ]]; then
-  rm -rf "${PLUGIN_DATA_ROOT:?}/*"
-fi
-
 case "$1" in
   $PLUGIN_COMMAND_PREFIX:clone)
     "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/subcommands/clone" "$@"
