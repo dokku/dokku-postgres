@@ -1,6 +1,6 @@
 # dokku postgres (beta) [![Build Status](https://img.shields.io/travis/dokku/dokku-postgres.svg?branch=master "Build Status")](https://travis-ci.org/dokku/dokku-postgres) [![IRC Network](https://img.shields.io/badge/irc-freenode-blue.svg "IRC Freenode")](https://webchat.freenode.net/?channels=dokku)
 
-Official postgres plugin for dokku. Currently defaults to installing [postgres 9.5.2](https://hub.docker.com/_/postgres/).
+Official postgres plugin for dokku. Currently defaults to installing [postgres 9.5.4](https://hub.docker.com/_/postgres/).
 
 ## requirements
 
@@ -47,7 +47,7 @@ dokku postgres:create lolipop
 # it *must* be compatible with the
 # official postgres image
 export POSTGRES_IMAGE="postgres"
-export POSTGRES_IMAGE_VERSION="9.5.2"
+export POSTGRES_IMAGE_VERSION="9.5.4"
 
 # you can also specify custom environment
 # variables to start the postgres service
@@ -157,7 +157,7 @@ OR
 At the moment a database can’t be upgraded  (or downgraded) inplace. Instead a clone has to be made, like this:
 
 ```shell
-# Our original DB using default PG 9.5.2
+# Our original DB using default PG 9.5.4
 $ dokku postgres:create db9.4
 
 # Migrate it like this for example
