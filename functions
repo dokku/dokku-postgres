@@ -393,7 +393,7 @@ service_create_container() {
   echo "$ID" > "$SERVICE_ROOT/ID"
 
   dokku_log_verbose_quiet "Waiting for container to be ready"
-  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" dokkupaas/wait > /dev/null
+  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" dokkupaas/wait -p "$PLUGIN_DATASTORE_WAIT_PORT" > /dev/null
 
   dokku_log_verbose_quiet "Creating container database"
   DATABASE_NAME="$(get_database_name "$SERVICE")"
