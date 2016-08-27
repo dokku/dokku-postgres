@@ -143,6 +143,8 @@ service_info() {
   local SERVICE_URL=$(service_url "$SERVICE")
 
   echo "       DSN: $SERVICE_URL"
+  echo "       Config dir: $SERVICE_ROOT/config"
+  echo "       Data dir: $SERVICE_ROOT/data"
 }
 
 service_link() {
