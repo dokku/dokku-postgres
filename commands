@@ -125,8 +125,12 @@ help_list
       echo ''
       echo 'Additional commands:'
       help_content_func | sort | column -c2 -t -s,
-    else
+    elif [[ $(ps -o command= $PPID) == *"--all"* ]]; then
       help_content_func
+    else
+      cat<<help_desc
+    $PLUGIN_COMMAND_PREFIX, Plugin for managing $PLUGIN_SERVICE services.
+help_desc
     fi
     ;;
 
