@@ -41,7 +41,7 @@ case "$1" in
       echo '7f899b723c08        postgres:9.5.4                             "/docker-entrypoint."      11 seconds ago       Up 10 seconds       5432/tcp                                   dokku.postgres.l'
       echo '5e50a462661e        rabbitmq:3.6.5-management                  "/docker-entrypoint."      11 seconds ago       Up 10 seconds       5672/tcp, 15672/tcp                        dokku.rabbitmq.l'
       echo 'c39ca00fa3c6        redis:3.2.3                                "/entrypoint.sh redi"      11 seconds ago       Up 10 seconds       6379/tcp                                   dokku.redis.l'
-      echo 'dc98c2939a80        rethinkdb:2.3.5                            "rethinkdb --bind al"      11 seconds ago       Up 10 seconds       8080/tcp, 28015/tcp, 29015/tcp             dokku.rethinkdb.l'
+      echo 'dc98c2939a80        rethinkdb:2.3.4                            "rethinkdb --bind al"      11 seconds ago       Up 10 seconds       8080/tcp, 28015/tcp, 29015/tcp             dokku.rethinkdb.l'
     fi
     ;;
   exec)
@@ -83,7 +83,7 @@ case "$1" in
     echo "postgres                             9.5.4               6412eb70175e        2 days ago          265.7 MB"
     echo "rabbitmq                             3.6.5-management    327b803301e9        2 days ago          143.5 MB"
     echo "redis                                3.2.3               9216d5a4eec8        2 days ago          109.3 MB"
-    echo "rethinkdb                            2.3.5               f27010a550ec        2 days ago          196.3 MB"
+    echo "rethinkdb                            2.3.4               f27010a550ec        2 days ago          196.3 MB"
     echo "svendowideit/ambassador              latest              0d2200edc53e        2 days ago          7.241 MB"
     ;;
   pull)

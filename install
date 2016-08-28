@@ -2,17 +2,16 @@
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 
-if ! docker images | grep -e "^$PLUGIN_IMAGE " | grep -q "$PLUGIN_IMAGE_VERSION" ; then
-  docker pull "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
-fi
+pull-docker-image() {
+  declare IMAGE="$1"
+  if [[ "$(docker images -q "${IMAGE}" 2> /dev/null)" == "" ]]; then
+    docker pull "${IMAGE}"
+  fi
+}
 
-if ! docker images | grep -q -e "^svendowideit/ambassador "; then
-  docker pull svendowideit/ambassador:latest
-fi
-
-if ! docker images | grep -q -e "^dokkupaas/wait "; then
-  docker pull dokkupaas/wait:latest
-fi
+pull-docker-image "${PLUGIN_IMAGE}:${PLUGIN_IMAGE_VERSION}"
+pull-docker-image "svendowideit/ambassador:latest"
+pull-docker-image "dokkupaas/wait:0.2"
 
 mkdir -p "$PLUGIN_DATA_ROOT" || echo "Failed to create $PLUGIN_SERVICE directory"
 chown dokku:dokku "$PLUGIN_DATA_ROOT"
