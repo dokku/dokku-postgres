@@ -129,7 +129,7 @@ help_list
       help_content_func
     else
       cat<<help_desc
-    $PLUGIN_COMMAND_PREFIX, Plugin for managing $PLUGIN_SERVICE services.
+    $PLUGIN_COMMAND_PREFIX, Plugin for managing $PLUGIN_SERVICE services
 help_desc
     fi
     ;;
