@@ -150,6 +150,7 @@ service_info() {
     "--data-dir: ${SERVICE_ROOT}/data"
     "--dsn: ${SERVICE_URL}"
     "--exposed-ports: $(service_exposed_ports "$SERVICE")"
+    "--id: $(cat "$SERVICE_ROOT/ID")"
     "--links: $(service_linked_apps "$SERVICE")"
     "--status: $(service_status "$SERVICE")"
     "--version: $(service_version "$SERVICE")"
