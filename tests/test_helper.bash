@@ -47,6 +47,14 @@ assert_success() {
   fi
 }
 
+assert_failure() {
+  if [[ "$status" -eq 0 ]]; then
+    flunk "expected failed exit status"
+  elif [[ "$#" -gt 0 ]]; then
+    assert_output "$1"
+  fi
+}
+
 assert_exists() {
   if [ ! -f "$1" ]; then
     flunk "expected file to exist: $1"

@@ -48,17 +48,25 @@ dokku postgres:create lolipop
 # official postgres image
 export POSTGRES_IMAGE="postgres"
 export POSTGRES_IMAGE_VERSION="9.5.4"
+dokku postgres:create lolipop
 
 # you can also specify custom environment
 # variables to start the postgres service
 # in semi-colon separated forma
 export POSTGRES_CUSTOM_ENV="USER=alpha;HOST=beta"
-
-# create a postgres service
 dokku postgres:create lolipop
 
 # get connection information as follows
 dokku postgres:info lolipop
+
+# you can also retrieve a specific piece of service info via flags
+dokku postgres:info lolipop --config-dir
+dokku postgres:info lolipop --data-dir
+dokku postgres:info lolipop --dsn
+dokku postgres:info lolipop --exposed-ports
+dokku postgres:info lolipop --links
+dokku postgres:info lolipop --status
+dokku postgres:info lolipop --version
 
 # a postgres service can be linked to a
 # container this will use native docker

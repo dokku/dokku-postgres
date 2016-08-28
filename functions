@@ -139,13 +139,37 @@ service_exposed_ports() {
 }
 
 service_info() {
-  local SERVICE="$1"
+  local SERVICE="$1" INFO_FLAG="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_URL=$(service_url "$SERVICE")
+  local PORT_FILE="$SERVICE_ROOT/PORT"
+  local flag key valid_flags
 
-  echo "       DSN: $SERVICE_URL"
-  echo "       Config dir: $SERVICE_ROOT/config"
-  echo "       Data dir: $SERVICE_ROOT/data"
+  local flag_map=(
+    "--config-dir: ${SERVICE_ROOT}/config"
+    "--data-dir: ${SERVICE_ROOT}/data"
+    "--dsn: ${SERVICE_URL}"
+    "--exposed-ports: $(service_exposed_ports "$SERVICE")"
+    "--links: $(service_linked_apps "$SERVICE")"
+    "--status: $(service_status "$SERVICE")"
+    "--version: $(service_version "$SERVICE")"
+  )
+  if [[ -z "$INFO_FLAG" ]]; then
+    dokku_log_info2 "Container Information"
+    for flag in "${flag_map[@]}"; do
+      key="$(echo "${flag#--}" | cut -f1 -d' ' | tr - ' ')"
+      dokku_log_verbose "$(printf "%-20s %-25s" "${key^}" "${flag#*: }")"
+    done
+  else
+    local match=false
+    for flag in "${flag_map[@]}"; do
+      valid_flags="${valid_flags} $(echo "$flag" | cut -d':' -f1)"
+      if [[ "$flag" == "${INFO_FLAG}:"* ]]; then
+        echo "${flag#*: }" && match=true
+      fi
+    done
+    [[ "$match" == "true" ]] || dokku_log_fail "Invalid flag passed, valid flags:${valid_flags}"
+  fi
 }
 
 service_link() {
@@ -435,7 +459,7 @@ service_import() {
   SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   SERVICE_NAME="$(get_service_name "$SERVICE")"
   DATABASE_NAME="$(get_database_name "$SERVICE")"
-  PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
+  PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
 
   if [[ -t 0 ]]; then
     dokku_log_fail "No data provided on stdin."
