@@ -314,7 +314,7 @@ service_port_unpause() {
   PORTS=(${PORTS[@]:-$(get_random_ports ${#PLUGIN_DATASTORE_PORTS[@]})})
   local ID=$(cat "$SERVICE_ROOT/ID")
 
-  [[ "${#PORTS[@]}" != "${#PLUGIN_DATASTORE_PORTS[@]}" ]] && dokku_log_fail "${#PLUGIN_DATASTORE_PORTS[@]} ports to be exposed need to be provided"
+  [[ "${#PORTS[@]}" != "${#PLUGIN_DATASTORE_PORTS[@]}" ]] && dokku_log_fail "${#PLUGIN_DATASTORE_PORTS[@]} ports to be exposed need to be provided in the following order: ${PLUGIN_DATASTORE_PORTS[*]}"
 
   if [[ "$LOG_FAIL" == "true" ]]; then
     [[ -f "$PORT_FILE" ]] && PORTS=($(cat "$PORT_FILE")) && dokku_log_fail "Service $SERVICE already exposed on port(s) ${PORTS[*]}"
@@ -328,7 +328,7 @@ service_port_unpause() {
   # shellcheck disable=SC2046
   docker run -d --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" --name "$EXPOSED_NAME" $(docker_ports_options "${PORTS[@]}") --restart always --label dokku=ambassador --label "dokku.ambassador=$PLUGIN_COMMAND_PREFIX" svendowideit/ambassador > /dev/null
   if [[ "$LOG_FAIL" == "true" ]]; then
-    dokku_log_info1 "Service $SERVICE exposed on port(s) ${PORTS[*]}"
+    dokku_log_info1 "Service $SERVICE exposed on port(s) [container~>host]: $(service_exposed_ports "$SERVICE")"
   fi
 }
 
