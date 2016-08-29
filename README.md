@@ -65,6 +65,7 @@ dokku postgres:info lolipop --data-dir
 dokku postgres:info lolipop --dsn
 dokku postgres:info lolipop --exposed-ports
 dokku postgres:info lolipop --id
+dokku postgres:info lolipop --internal-ip
 dokku postgres:info lolipop --links
 dokku postgres:info lolipop --status
 dokku postgres:info lolipop --version

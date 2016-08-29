@@ -143,6 +143,7 @@ service_info() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_URL=$(service_url "$SERVICE")
   local PORT_FILE="$SERVICE_ROOT/PORT"
+  local SERVICE_CONTAINER_ID="$(cat "$SERVICE_ROOT/ID")"
   local flag key valid_flags
 
   local flag_map=(
@@ -150,7 +151,8 @@ service_info() {
     "--data-dir: ${SERVICE_ROOT}/data"
     "--dsn: ${SERVICE_URL}"
     "--exposed-ports: $(service_exposed_ports "$SERVICE")"
-    "--id: $(cat "$SERVICE_ROOT/ID")"
+    "--id: ${SERVICE_CONTAINER_ID}"
+    "--internal-ip: $(get_container_ip "${SERVICE_CONTAINER_ID}")"
     "--links: $(service_linked_apps "$SERVICE")"
     "--status: $(service_status "$SERVICE")"
     "--version: $(service_version "$SERVICE")"
