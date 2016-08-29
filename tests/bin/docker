@@ -9,43 +9,24 @@ if [[ $ECHO_DOCKER_COMMAND == "true" ]]; then
 fi
 
 case "$1" in
-  stop)
-    echo "testid"
-    ;;
-  start)
-    echo "testid"
-    ;;
-  kill)
-    echo "testid"
-    ;;
-  run)
-    echo "testid"
-    ;;
-  rm)
-    echo "testid"
-    ;;
-  ps)
-    if [[ $@ = *"no-trunc"* ]]; then
-      echo "1479bbd60ade8a92617d2aeb4935bd3ff3179bd0fd71c22c3102c421f4bc221f"
-      exit 0
-    else
-      echo 'CONTAINER ID        IMAGE                      COMMAND                CREATED             STATUS                         PORTS               NAMES'
-      echo '4eeaae231d5e        elasticsearch:1.7.5                        "/docker-entrypoint."      11 seconds ago       Up 10 seconds       9200/tcp, 9300/tcp                         dokku.elasticsearch.l'
-      echo '2b20a383226d        frodenas/couchdb:1.6                       "/scripts/run.sh"          11 seconds ago       Up 10 seconds       5984/tcp                                   dokku.couchdb.l'
-      echo '76a0e7154483        jlachowski/grafana-graphite-statsd:2.5.0   "/usr/bin/supervisor"      11 seconds ago       Up 10 seconds       80/tcp, 2003/tcp, 8126/tcp, 8125/udp       dokku.graphite.l'
-      echo '94df08fe5550        mariadb:10.1.16                            "/docker-entrypoint."      11 seconds ago       Up 10 seconds       3306/tcp                                   dokku.mariadb.l'
-      echo 'ef27fec191ba        memcached:1.4.31                           "/entrypoint.sh memc"      11 seconds ago       Up 10 seconds       11211/tcp                                  dokku.memcached.l'
-      echo 'c0f74fc90377        mongo:3.2.9                                "/entrypoint.sh mong"      11 seconds ago       Up 10 seconds       27017/tcp                                  dokku.mongo.l'
-      echo '0f33b1c86da9        mysql:5.7.12                               "/entrypoint.sh mysq"      11 seconds ago       Up 10 seconds       3306/tcp                                   dokku.mysql.l'
-      echo '9f10b6dc12d5        nats:0.9.4                                 "/entrypoint.sh redi"      11 seconds ago       Up 10 seconds       4222/tcp                                   dokku.nats.l'
-      echo '7f899b723c08        postgres:9.5.4                             "/docker-entrypoint."      11 seconds ago       Up 10 seconds       5432/tcp                                   dokku.postgres.l'
-      echo '5e50a462661e        rabbitmq:3.6.5-management                  "/docker-entrypoint."      11 seconds ago       Up 10 seconds       5672/tcp, 15672/tcp                        dokku.rabbitmq.l'
-      echo 'c39ca00fa3c6        redis:3.2.3                                "/entrypoint.sh redi"      11 seconds ago       Up 10 seconds       6379/tcp                                   dokku.redis.l'
-      echo 'dc98c2939a80        rethinkdb:2.3.4                            "rethinkdb --bind al"      11 seconds ago       Up 10 seconds       8080/tcp, 28015/tcp, 29015/tcp             dokku.rethinkdb.l'
-    fi
-    ;;
   exec)
     echo "exec called with $@"
+    ;;
+  images)
+    echo "REPOSITORY                           TAG                 IMAGE ID            CREATED             VIRTUAL SIZE"
+    echo "elasticsearch                        2.3.5               89ed89918502        2 days ago          522.1 MB"
+    echo "frodenas/couchdb                     1.6                 cb9a62e007eb        2 days ago          537 MB"
+    echo "jlachowski/grafana-graphite-statsd   2.5.0               75dcd48a5eef        2 days ago          936.4 MB"
+    echo "mariadb                              10.1.16             f2485761e714        2 days ago          302.2 MB"
+    echo "memcached                            1.4.31              8a05b51f8876        2 days ago          132.4 MB"
+    echo "mongo                                3.2.9               12eadb136159        2 days ago          291.1 MB"
+    echo "mysql                                5.7.12              57d56ac47bed        2 days ago          321.3 MB"
+    echo "nats                                 0.9.4               9216d5a4eec8        2 days ago          109.3 MB"
+    echo "postgres                             9.5.4               6412eb70175e        2 days ago          265.7 MB"
+    echo "rabbitmq                             3.6.5-management    327b803301e9        2 days ago          143.5 MB"
+    echo "redis                                3.2.3               9216d5a4eec8        2 days ago          109.3 MB"
+    echo "rethinkdb                            2.3.4               f27010a550ec        2 days ago          196.3 MB"
+    echo "svendowideit/ambassador              latest              0d2200edc53e        2 days ago          7.241 MB"
     ;;
   inspect)
     if [[ $@ = *"IPAddress"* ]]; then
@@ -70,27 +51,49 @@ case "$1" in
     # running
     echo "true"
     ;;
-  images)
-    echo "REPOSITORY                           TAG                 IMAGE ID            CREATED             VIRTUAL SIZE"
-    echo "elasticsearch                        1.7.5               89ed89918502        2 days ago          522.1 MB"
-    echo "frodenas/couchdb                     1.6                 cb9a62e007eb        2 days ago          537 MB"
-    echo "jlachowski/grafana-graphite-statsd   2.5.0               75dcd48a5eef        2 days ago          936.4 MB"
-    echo "mariadb                              10.1.16             f2485761e714        2 days ago          302.2 MB"
-    echo "memcached                            1.4.31              8a05b51f8876        2 days ago          132.4 MB"
-    echo "mongo                                3.2.9               12eadb136159        2 days ago          291.1 MB"
-    echo "mysql                                5.7.12              57d56ac47bed        2 days ago          321.3 MB"
-    echo "nats                                 0.9.4               9216d5a4eec8        2 days ago          109.3 MB"
-    echo "postgres                             9.5.4               6412eb70175e        2 days ago          265.7 MB"
-    echo "rabbitmq                             3.6.5-management    327b803301e9        2 days ago          143.5 MB"
-    echo "redis                                3.2.3               9216d5a4eec8        2 days ago          109.3 MB"
-    echo "rethinkdb                            2.3.4               f27010a550ec        2 days ago          196.3 MB"
-    echo "svendowideit/ambassador              latest              0d2200edc53e        2 days ago          7.241 MB"
+  kill)
+    echo "testid"
+    ;;
+  logs)
+    echo "$PLUGIN_SERVICE $PLUGIN_IMAGE_VERSION"
+    ;;
+  ps)
+    if [[ $@ = *"no-trunc"* ]]; then
+      echo "1479bbd60ade8a92617d2aeb4935bd3ff3179bd0fd71c22c3102c421f4bc221f"
+      exit 0
+    else
+      echo 'CONTAINER ID        IMAGE                      COMMAND                CREATED             STATUS                         PORTS               NAMES'
+      echo '4eeaae231d5e        elasticsearch:2.3.5                        "/docker-entrypoint."      11 seconds ago       Up 10 seconds       9200/tcp, 9300/tcp                         dokku.elasticsearch.l'
+      echo '2b20a383226d        frodenas/couchdb:1.6                       "/scripts/run.sh"          11 seconds ago       Up 10 seconds       5984/tcp                                   dokku.couchdb.l'
+      echo '76a0e7154483        jlachowski/grafana-graphite-statsd:2.5.0   "/usr/bin/supervisor"      11 seconds ago       Up 10 seconds       80/tcp, 2003/tcp, 8126/tcp, 8125/udp       dokku.graphite.l'
+      echo '94df08fe5550        mariadb:10.1.16                            "/docker-entrypoint."      11 seconds ago       Up 10 seconds       3306/tcp                                   dokku.mariadb.l'
+      echo 'ef27fec191ba        memcached:1.4.31                           "/entrypoint.sh memc"      11 seconds ago       Up 10 seconds       11211/tcp                                  dokku.memcached.l'
+      echo 'c0f74fc90377        mongo:3.2.9                                "/entrypoint.sh mong"      11 seconds ago       Up 10 seconds       27017/tcp                                  dokku.mongo.l'
+      echo '0f33b1c86da9        mysql:5.7.12                               "/entrypoint.sh mysq"      11 seconds ago       Up 10 seconds       3306/tcp                                   dokku.mysql.l'
+      echo '9f10b6dc12d5        nats:0.9.4                                 "/entrypoint.sh redi"      11 seconds ago       Up 10 seconds       4222/tcp                                   dokku.nats.l'
+      echo '7f899b723c08        postgres:9.5.4                             "/docker-entrypoint."      11 seconds ago       Up 10 seconds       5432/tcp                                   dokku.postgres.l'
+      echo '5e50a462661e        rabbitmq:3.6.5-management                  "/docker-entrypoint."      11 seconds ago       Up 10 seconds       5672/tcp, 15672/tcp                        dokku.rabbitmq.l'
+      echo 'c39ca00fa3c6        redis:3.2.3                                "/entrypoint.sh redi"      11 seconds ago       Up 10 seconds       6379/tcp                                   dokku.redis.l'
+      echo 'dc98c2939a80        rethinkdb:2.3.4                            "rethinkdb --bind al"      11 seconds ago       Up 10 seconds       8080/tcp, 28015/tcp, 29015/tcp             dokku.rethinkdb.l'
+    fi
     ;;
   pull)
     exit 0
     ;;
-  logs)
-    echo "$PLUGIN_SERVICE $PLUGIN_IMAGE_VERSION"
+  restart)
+    echo "testid"
+    ;;
+  rm)
+    echo "testid"
+    ;;
+  run)
+    echo "testid"
+    ;;
+  start)
+    echo "testid"
+    ;;
+  stop)
+    echo "testid"
     ;;
   *)
     exit "$DOKKU_NOT_IMPLEMENTED_EXIT"
