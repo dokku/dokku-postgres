@@ -2,14 +2,16 @@
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 
 docker_ports_options() {
-  local PORTS=("$@")
+  declare desc="Exports a list of exposed ports"
+  declare PORTS=("$@")
   for (( i=0; i < ${#PLUGIN_DATASTORE_PORTS[@]}; i++ )); do
     echo -n "-p ${PORTS[i]}:${PLUGIN_DATASTORE_PORTS[i]} "
   done
 }
 
 get_random_ports() {
-  local iterations="${1:-1}"
+  declare desc="Retrieves N random ports"
+  declare iterations="${1:-1}"
   for (( i=0; i < iterations; i++ )); do
     local port=$RANDOM
     local quit=0
@@ -26,41 +28,46 @@ get_random_ports() {
 }
 
 get_container_ip() {
-  docker inspect --format '{{ .NetworkSettings.IPAddress }}' "$1"
+  declare desc="Retrieves the ip address of a container"
+  declare CONTAINER_ID="$1"
+  docker inspect --format '{{ .NetworkSettings.IPAddress }}' "$CONTAINER_ID"
 }
 
 get_database_name() {
+  declare desc="Retrieves a sanitized database name"
+  declare DATABASE="$1"
   # some datastores do not like special characters in database names
   # so we need to normalize them out
-  echo "$1" | tr .- _
+  echo "$DATABASE" | tr .- _
 }
 
 get_service_name() {
-  local SERVICE="$1"
+  declare desc="Retrieves a docker service label"
+  declare SERVICE="$1"
   echo "dokku.${PLUGIN_COMMAND_PREFIX}.$SERVICE"
 }
 
 get_url_from_config() {
-  local EXISTING_CONFIG="$1"
-  local CONFIG_VAR="$2"
+  declare desc="Retrieves a given _URL from a list of configuration variables"
+  declare EXISTING_CONFIG="$1" CONFIG_VAR="$2"
   echo "$EXISTING_CONFIG" | grep "$CONFIG_VAR" | sed "s/$CONFIG_VAR:\s*//" | xargs
 }
 
 is_container_status() {
-  local CID="$1"
-  local TEMPLATE="{{.State.$2}}"
+  declare desc="Returns 0 or 1 depending upon whether a given container has a certain status"
+  declare CID="$1" STATUS="$2"
+  local TEMPLATE="{{.State.$STATUS}}"
   local CONTAINER_STATUS=$(docker inspect -f "$TEMPLATE" "$CID" || true)
 
   if [[ "$CONTAINER_STATUS" == "true" ]]; then
     return 0
-  else
-    return 1
   fi
+  return 1
 }
 
 remove_from_links_file() {
-  local SERVICE="$1"
-  local APP="$2"
+  declare desc="Removes an app from the service link file"
+  declare SERVICE="$1" APP="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local LINKS_FILE="$SERVICE_ROOT/LINKS"
 
@@ -71,20 +78,23 @@ remove_from_links_file() {
 }
 
 verify_service_name() {
-  local SERVICE="$1"
+  declare desc="Verifies that a service exists"
+  declare SERVICE="$1"
   [[ ! -n "$SERVICE" ]] && dokku_log_fail "(verify_service_name) SERVICE must not be null"
   [[ ! -d "$PLUGIN_DATA_ROOT/$SERVICE" ]] && dokku_log_fail "$PLUGIN_SERVICE service $SERVICE does not exist"
   return 0
 }
 
 service_alias() {
-  local SERVICE="$1"
+  declare desc="Retrieves the alias of a service"
+  declare SERVICE="$1"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   echo "$SERVICE_NAME" | tr ._ -
 }
 
 service_alternative_alias() {
-  local EXISTING_CONFIG="$1"
+  declare desc="Retrieves an alternative alias for a service"
+  declare EXISTING_CONFIG="$1"
   local COLORS=(AQUA BLACK BLUE FUCHSIA GRAY GREEN LIME MAROON NAVY OLIVE PURPLE RED SILVER TEAL WHITE YELLOW)
   local ALIAS;
 
@@ -101,7 +111,8 @@ service_alternative_alias() {
 }
 
 service_exposed_ports() {
-  local SERVICE="$1"
+  declare desc="Lists exposed ports for a service"
+  declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local PORT_FILE="$SERVICE_ROOT/PORT"
   [[ ! -f $PORT_FILE ]] && echo '-' && return 0
@@ -112,7 +123,8 @@ service_exposed_ports() {
 }
 
 service_info() {
-  local SERVICE="$1" INFO_FLAG="$2"
+  declare desc="Retrieves information about a given service"
+  declare SERVICE="$1" INFO_FLAG="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_URL=$(service_url "$SERVICE")
   local PORT_FILE="$SERVICE_ROOT/PORT"
@@ -149,8 +161,8 @@ service_info() {
 }
 
 service_link() {
-  local APP="$2"
-  local SERVICE="$1"
+  declare desc="Links a service to an application"
+  declare SERVICE="$1" APP="$2"
   update_plugin_scheme_for_app "$APP"
   local SERVICE_URL=$(service_url "$SERVICE")
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
@@ -183,7 +195,8 @@ service_link() {
 }
 
 service_linked_apps() {
-  local SERVICE="$1"
+  declare desc="Lists all applications linked to a service"
+  declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local LINKS_FILE="$SERVICE_ROOT/LINKS"
 
@@ -193,6 +206,7 @@ service_linked_apps() {
 }
 
 service_list() {
+  declare desc="Lists all services and their status"
   local SERVICES=$(ls "$PLUGIN_DATA_ROOT" 2> /dev/null)
   if [[ -z $SERVICES ]]; then
     dokku_log_warn "There are no $PLUGIN_SERVICE services"
@@ -206,7 +220,8 @@ service_list() {
 }
 
 service_logs() {
-  local SERVICE="$1"
+  declare desc="Displays logs for a service"
+  declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local ID=$(cat "$SERVICE_ROOT/ID")
 
@@ -221,17 +236,19 @@ service_logs() {
 }
 
 service_set_alias() {
-  local SERVICE="$1"
+  declare desc="Sets the alias in use for a service"
+  declare SERVICE="$1" ALIAS="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local ALIAS_FILE="$SERVICE_ROOT/ALIAS"
 
   mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
   touch "$ALIAS_FILE"
-  echo "$2" > "$ALIAS_FILE"
+  echo "$ALIAS" > "$ALIAS_FILE"
 }
 
 service_status() {
-  local SERVICE="$1"
+  declare desc="Displays the status of a service"
+  declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local ID="$(cat "$SERVICE_ROOT/ID")"
 
@@ -244,16 +261,18 @@ service_status() {
 }
 
 service_port_expose() {
-  service_start "$1" "true"
-  service_port_unpause "$1" "true" "${@:2}"
+  declare desc="Wrapper for exposing service ports"
+  declare SERVICE="$1"
+  service_start "$SERVICE" "true"
+  service_port_unpause "$SERVICE" "true" "${@:2}"
 }
 
 service_port_pause() {
-  local SERVICE="$1"
+  declare desc="Pauses service exposure"
+  declare SERVICE="$1" LOG_FAIL="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local EXPOSED_NAME="$(get_service_name "$SERVICE").ambassador"
   local PORT_FILE="$SERVICE_ROOT/PORT"
-  local LOG_FAIL="$2"
 
   if [[ "$LOG_FAIL" == "true" ]]; then
     [[ ! -f "$PORT_FILE" ]] && dokku_log_fail "Service not exposed"
@@ -269,7 +288,8 @@ service_port_pause() {
 }
 
 service_port_unexpose() {
-  local SERVICE="$1"
+  declare desc="Wrapper for pausing exposed service ports"
+  declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local PORT_FILE="$SERVICE_ROOT/PORT"
   service_port_pause "$SERVICE" "true"
@@ -277,12 +297,12 @@ service_port_unexpose() {
 }
 
 service_port_unpause() {
-  local SERVICE="$1"
+  declare desc="Starts service exposure"
+  declare SERVICE="$1" LOG_FAIL="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local EXPOSED_NAME="${SERVICE_NAME}.ambassador"
   local PORT_FILE="$SERVICE_ROOT/PORT"
-  local LOG_FAIL="$2"
   # shellcheck disable=SC2068
   local PORTS=(${@:3})
   # shellcheck disable=SC2068
@@ -308,8 +328,8 @@ service_port_unpause() {
 }
 
 service_promote() {
-  local SERVICE="$1"
-  local APP="$2"
+  declare desc="Promotes a secondary service to the primary env var"
+  declare SERVICE="$1" APP="$2"
   local PLUGIN_DEFAULT_CONFIG_VAR="${PLUGIN_DEFAULT_ALIAS}_URL"
   local EXISTING_CONFIG=$(config_all "$APP")
   update_plugin_scheme_for_app "$APP"
@@ -336,7 +356,8 @@ service_promote() {
 }
 
 service_stop() {
-  local SERVICE="$1"
+  declare desc="Stops a running service"
+  declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE";
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local ID=$(docker ps -f status=running | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
@@ -353,8 +374,8 @@ service_stop() {
 }
 
 service_unlink() {
-  local APP="$2"
-  local SERVICE="$1"
+  declare desc="Unlinks an application from a service"
+  declare SERVICE="$1" APP="$2"
   update_plugin_scheme_for_app "$APP"
   local SERVICE_URL=$(service_url "$SERVICE")
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
@@ -376,7 +397,8 @@ service_unlink() {
 }
 
 service_version() {
-  local SERVICE="$1"
+  declare desc="Displays the running version for an image"
+  declare SERVICE="$1"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   docker inspect -f '{{.Config.Image}}' "$SERVICE_NAME"
 }
