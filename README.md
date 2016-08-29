@@ -21,7 +21,7 @@ postgres:clone <name> <new-name>  Create container <new-name> then copy data fro
 postgres:connect <name>           Connect via psql to a postgres service
 postgres:create <name>            Create a postgres service with environment variables
 postgres:destroy <name>           Delete the service and stop its container if there are no links left
-postgres:enter <name> [command]   Enter a running couchdb service or run a command
+postgres:enter <name> [command]   Enter or run a command in a running postgres service container
 postgres:export <name> > <file>   Export a dump of the postgres service database
 postgres:expose <name> [port]     Expose a postgres service on custom port if provided (random port otherwise)
 postgres:import <name> < <file>   Import a dump into the postgres service database
@@ -72,11 +72,11 @@ dokku postgres:info lolipop --service-root
 dokku postgres:info lolipop --status
 dokku postgres:info lolipop --version
 
-# a bash prompt can be opened against a running service
+# a bash prompt can be opened against a running service container
 # filesystem changes will not be saved to disk
 dokku postgres:enter lolipop
 
-# you may also run a command directly against the service
+# you may also run a command directly against the service container
 # filesystem changes will not be saved to disk
 dokku postgres:enter lolipop ls -lah /
 
