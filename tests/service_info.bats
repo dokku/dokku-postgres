@@ -59,6 +59,9 @@ teardown() {
   run dokku "$PLUGIN_COMMAND_PREFIX:info" l --links
   assert_success
 
+  run dokku "$PLUGIN_COMMAND_PREFIX:info" l --service-root
+  assert_success
+
   run dokku "$PLUGIN_COMMAND_PREFIX:info" l --status
   assert_success
 
