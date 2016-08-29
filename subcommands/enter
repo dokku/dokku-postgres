@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+enter-cmd() {
+  declare desc="enter a running $PLUGIN_SERVICE service or run a command"
+  local cmd="$PLUGIN_COMMAND_PREFIX:enter" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  declare SERVICE="$1" && shift 1
+
+  dokku_log_info1_quiet "Filesystem changes may not persist after container restarts"
+  service_enter "$SERVICE" "$@"
+}
+
+enter-cmd "$@"

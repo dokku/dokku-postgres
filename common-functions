@@ -102,6 +102,21 @@ service_alternative_alias() {
   echo "$ALIAS"
 }
 
+service_enter() {
+  declare desc="enters running app container of specified proc type"
+  declare SERVICE="$1" && shift 1
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local ID="$(cat "$SERVICE_ROOT/ID")"
+
+  docker inspect "$ID" &> /dev/null || dokku_log_fail "Container does not exist"
+  is_container_status "$ID" "Running" || dokku_log_fail "Container is not running"
+
+  local EXEC_CMD=""
+  has_tty && local DOKKU_RUN_OPTS+=" -i -t"
+  # shellcheck disable=SC2086
+  docker exec $DOKKU_RUN_OPTS $ID $EXEC_CMD "${@:-/bin/bash}"
+}
+
 service_exposed_ports() {
   declare desc="Lists exposed ports for a service"
   declare SERVICE="$1"
