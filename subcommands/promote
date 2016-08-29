@@ -14,7 +14,7 @@ postgres-promote-cmd() {
   [[ -z "$APP" ]] && dokku_log_fail "Please specify an app to run the command on"
   verify_service_name "$SERVICE"
   verify_app_name "$APP"
-  promote "$SERVICE" "$APP"
+  service_promote "$SERVICE" "$APP"
 }
 
 postgres-promote-cmd "$@"

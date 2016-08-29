@@ -58,34 +58,6 @@ is_container_status() {
   fi
 }
 
-promote() {
-  local SERVICE="$1"
-  local APP="$2"
-  local PLUGIN_DEFAULT_CONFIG_VAR="${PLUGIN_DEFAULT_ALIAS}_URL"
-  local EXISTING_CONFIG=$(config_all "$APP")
-  update_plugin_scheme_for_app "$APP"
-  local SERVICE_URL=$(service_url "$SERVICE")
-  local CONFIG_VARS=($(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1)) || true
-  local PREVIOUS_DEFAULT_URL=$(get_url_from_config "$EXISTING_CONFIG" "$PLUGIN_DEFAULT_CONFIG_VAR")
-
-  [[ -z ${CONFIG_VARS[*]} ]] && dokku_log_fail "Not linked to app $APP"
-  [[ ${CONFIG_VARS[*]} =~ $PLUGIN_DEFAULT_CONFIG_VAR ]] && dokku_log_fail "Service $1 already promoted as $PLUGIN_DEFAULT_CONFIG_VAR"
-
-  local NEW_CONFIG_VARS=""
-  if [[ -n $PREVIOUS_DEFAULT_URL ]]; then
-    local PREVIOUS_ALIAS=$(echo "$EXISTING_CONFIG" | grep "$PREVIOUS_DEFAULT_URL" | grep -v "$PLUGIN_DEFAULT_CONFIG_VAR") || true
-    if [[ -z $PREVIOUS_ALIAS ]]; then
-      local ALIAS=$(service_alternative_alias "$EXISTING_CONFIG")
-      NEW_CONFIG_VARS+="${ALIAS}_URL=$PREVIOUS_DEFAULT_URL "
-    fi
-  fi
-  local PROMOTE_URL=$(get_url_from_config "$EXISTING_CONFIG" "${CONFIG_VARS[0]}")
-  NEW_CONFIG_VARS+="$PLUGIN_DEFAULT_CONFIG_VAR=$PROMOTE_URL"
-
-  # shellcheck disable=SC2086
-  config_set "$APP" $NEW_CONFIG_VARS
-}
-
 remove_from_links_file() {
   local SERVICE="$1"
   local APP="$2"
@@ -333,6 +305,34 @@ service_port_unpause() {
   if [[ "$LOG_FAIL" == "true" ]]; then
     dokku_log_info1 "Service $SERVICE exposed on port(s) [container->host]: $(service_exposed_ports "$SERVICE")"
   fi
+}
+
+service_promote() {
+  local SERVICE="$1"
+  local APP="$2"
+  local PLUGIN_DEFAULT_CONFIG_VAR="${PLUGIN_DEFAULT_ALIAS}_URL"
+  local EXISTING_CONFIG=$(config_all "$APP")
+  update_plugin_scheme_for_app "$APP"
+  local SERVICE_URL=$(service_url "$SERVICE")
+  local CONFIG_VARS=($(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1)) || true
+  local PREVIOUS_DEFAULT_URL=$(get_url_from_config "$EXISTING_CONFIG" "$PLUGIN_DEFAULT_CONFIG_VAR")
+
+  [[ -z ${CONFIG_VARS[*]} ]] && dokku_log_fail "Not linked to app $APP"
+  [[ ${CONFIG_VARS[*]} =~ $PLUGIN_DEFAULT_CONFIG_VAR ]] && dokku_log_fail "Service $1 already promoted as $PLUGIN_DEFAULT_CONFIG_VAR"
+
+  local NEW_CONFIG_VARS=""
+  if [[ -n $PREVIOUS_DEFAULT_URL ]]; then
+    local PREVIOUS_ALIAS=$(echo "$EXISTING_CONFIG" | grep "$PREVIOUS_DEFAULT_URL" | grep -v "$PLUGIN_DEFAULT_CONFIG_VAR") || true
+    if [[ -z $PREVIOUS_ALIAS ]]; then
+      local ALIAS=$(service_alternative_alias "$EXISTING_CONFIG")
+      NEW_CONFIG_VARS+="${ALIAS}_URL=$PREVIOUS_DEFAULT_URL "
+    fi
+  fi
+  local PROMOTE_URL=$(get_url_from_config "$EXISTING_CONFIG" "${CONFIG_VARS[0]}")
+  NEW_CONFIG_VARS+="$PLUGIN_DEFAULT_CONFIG_VAR=$PROMOTE_URL"
+
+  # shellcheck disable=SC2086
+  config_set "$APP" $NEW_CONFIG_VARS
 }
 
 service_stop() {
