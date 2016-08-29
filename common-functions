@@ -9,6 +9,20 @@ docker_ports_options() {
   done
 }
 
+get_container_ip() {
+  declare desc="Retrieves the ip address of a container"
+  declare CONTAINER_ID="$1"
+  docker inspect --format '{{ .NetworkSettings.IPAddress }}' "$CONTAINER_ID"
+}
+
+get_database_name() {
+  declare desc="Retrieves a sanitized database name"
+  declare DATABASE="$1"
+  # some datastores do not like special characters in database names
+  # so we need to normalize them out
+  echo "$DATABASE" | tr .- _
+}
+
 get_random_ports() {
   declare desc="Retrieves N random ports"
   declare iterations="${1:-1}"
@@ -25,20 +39,6 @@ get_random_ports() {
     done
     echo $port
   done
-}
-
-get_container_ip() {
-  declare desc="Retrieves the ip address of a container"
-  declare CONTAINER_ID="$1"
-  docker inspect --format '{{ .NetworkSettings.IPAddress }}' "$CONTAINER_ID"
-}
-
-get_database_name() {
-  declare desc="Retrieves a sanitized database name"
-  declare DATABASE="$1"
-  # some datastores do not like special characters in database names
-  # so we need to normalize them out
-  echo "$DATABASE" | tr .- _
 }
 
 get_service_name() {
@@ -75,14 +75,6 @@ remove_from_links_file() {
   touch "$LINKS_FILE"
   sed -i.bak "/^$APP\$/d" "$LINKS_FILE" && rm "$LINKS_FILE.bak"
   sort "$LINKS_FILE" -u -o "$LINKS_FILE"
-}
-
-verify_service_name() {
-  declare desc="Verifies that a service exists"
-  declare SERVICE="$1"
-  [[ ! -n "$SERVICE" ]] && dokku_log_fail "(verify_service_name) SERVICE must not be null"
-  [[ ! -d "$PLUGIN_DATA_ROOT/$SERVICE" ]] && dokku_log_fail "$PLUGIN_SERVICE service $SERVICE does not exist"
-  return 0
 }
 
 service_alias() {
@@ -235,31 +227,6 @@ service_logs() {
   docker logs $DOKKU_LOGS_ARGS "$ID"
 }
 
-service_set_alias() {
-  declare desc="Sets the alias in use for a service"
-  declare SERVICE="$1" ALIAS="$2"
-  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local ALIAS_FILE="$SERVICE_ROOT/ALIAS"
-
-  mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
-  touch "$ALIAS_FILE"
-  echo "$ALIAS" > "$ALIAS_FILE"
-}
-
-service_status() {
-  declare desc="Displays the status of a service"
-  declare SERVICE="$1"
-  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local ID="$(cat "$SERVICE_ROOT/ID")"
-
-  is_container_status "$ID" "Dead" && echo "dead" && return 0
-  is_container_status "$ID" "OOMKilled" && echo "oomkilled" && return 0
-  is_container_status "$ID" "Paused" && echo "paused" && return 0
-  is_container_status "$ID" "Restarting" && echo "restarting" && return 0
-  is_container_status "$ID" "Running" && echo "running" && return 0
-  echo "stopped" && return 0
-}
-
 service_port_expose() {
   declare desc="Wrapper for exposing service ports"
   declare SERVICE="$1"
@@ -355,6 +322,31 @@ service_promote() {
   config_set "$APP" $NEW_CONFIG_VARS
 }
 
+service_set_alias() {
+  declare desc="Sets the alias in use for a service"
+  declare SERVICE="$1" ALIAS="$2"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local ALIAS_FILE="$SERVICE_ROOT/ALIAS"
+
+  mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
+  touch "$ALIAS_FILE"
+  echo "$ALIAS" > "$ALIAS_FILE"
+}
+
+service_status() {
+  declare desc="Displays the status of a service"
+  declare SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local ID="$(cat "$SERVICE_ROOT/ID")"
+
+  is_container_status "$ID" "Dead" && echo "dead" && return 0
+  is_container_status "$ID" "OOMKilled" && echo "oomkilled" && return 0
+  is_container_status "$ID" "Paused" && echo "paused" && return 0
+  is_container_status "$ID" "Restarting" && echo "restarting" && return 0
+  is_container_status "$ID" "Running" && echo "running" && return 0
+  echo "stopped" && return 0
+}
+
 service_stop() {
   declare desc="Stops a running service"
   declare SERVICE="$1"
@@ -401,4 +393,12 @@ service_version() {
   declare SERVICE="$1"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   docker inspect -f '{{.Config.Image}}' "$SERVICE_NAME"
+}
+
+verify_service_name() {
+  declare desc="Verifies that a service exists"
+  declare SERVICE="$1"
+  [[ ! -n "$SERVICE" ]] && dokku_log_fail "(verify_service_name) SERVICE must not be null"
+  [[ ! -d "$PLUGIN_DATA_ROOT/$SERVICE" ]] && dokku_log_fail "$PLUGIN_SERVICE service $SERVICE does not exist"
+  return 0
 }
