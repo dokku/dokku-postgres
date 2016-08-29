@@ -44,7 +44,7 @@ postgres-destroy-cmd() {
   fi
 
   dokku_log_verbose_quiet "Removing data"
-  docker run --rm -v "$SERVICE_ROOT/data:/data" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" chmod 777 -R /data
+  docker run --rm -v "$SERVICE_ROOT/data:/data" -v "$SERVICE_ROOT/config:/config" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" chmod 777 -R /config /data
   rm -rf "$SERVICE_ROOT"
 
   dokku_log_info2 "$PLUGIN_SERVICE container deleted: $SERVICE"
