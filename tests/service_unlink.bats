@@ -8,7 +8,7 @@ setup() {
 
 teardown() {
   dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l >&2
-  rm "$DOKKU_ROOT/my_app" -rf
+  rm -rf "$DOKKU_ROOT/my_app"
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:unlink) error when there are no arguments" {
@@ -49,6 +49,6 @@ teardown() {
 @test "($PLUGIN_COMMAND_PREFIX:unlink) unsets config url from app" {
   dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app >&2
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
-  config=$(dokku config:get my_app DATABASE_URL)
+  config=$(dokku config:get my_app DATABASE_URL || true)
   assert_equal "$config" ""
 }

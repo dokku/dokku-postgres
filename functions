@@ -127,9 +127,3 @@ service_url() {
   local SERVICE_ALIAS="$(service_alias "$SERVICE")"
   echo "$PLUGIN_SCHEME://postgres:$PASSWORD@$SERVICE_ALIAS:${PLUGIN_DATASTORE_PORTS[0]}/$DATABASE_NAME"
 }
-
-update_plugin_scheme_for_app() {
-  local APP="$1"
-  local POSTGRES_DATABASE_SCHEME=$(config_get "$APP" POSTGRES_DATABASE_SCHEME)
-  PLUGIN_SCHEME=${POSTGRES_DATABASE_SCHEME:-$PLUGIN_SCHEME}
-}

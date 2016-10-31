@@ -2,16 +2,36 @@
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 
-pull-docker-image() {
-  declare IMAGE="$1"
-  if [[ "$(docker images -q "${IMAGE}" 2> /dev/null)" == "" ]]; then
-    docker pull "${IMAGE}"
-  fi
+plugin-install() {
+  pull-docker-image() {
+    declare IMAGE="$1"
+    if [[ "$(docker images -q "${IMAGE}" 2> /dev/null)" == "" ]]; then
+      docker pull "${IMAGE}"
+    fi
+  }
+
+  pull-docker-image "${PLUGIN_IMAGE}:${PLUGIN_IMAGE_VERSION}"
+  pull-docker-image "svendowideit/ambassador:latest"
+  pull-docker-image "dokkupaas/wait:0.2"
+  pull-docker-image "dokkupaas/s3backup:0.5.0-1"
+  pull-docker-image "busybox:latest"
+
+  mkdir -p "$PLUGIN_DATA_ROOT" || echo "Failed to create $PLUGIN_SERVICE directory"
+  chown dokku:dokku "$PLUGIN_DATA_ROOT"
+
+  rm -f "/etc/sudoers.d/dokku-${PLUGIN_COMMAND_PREFIX}*"
+  _SUDOERS_FILE="/etc/sudoers.d/dokku-${PLUGIN_COMMAND_PREFIX}"
+
+  touch "$_SUDOERS_FILE"
+  cat > "$_SUDOERS_FILE" <<EOL
+%dokku ALL=(ALL) NOPASSWD:/bin/rm -f /etc/cron.d/dokku-${PLUGIN_COMMAND_PREFIX}-*
+%dokku ALL=(ALL) NOPASSWD:/bin/chown root\:root /etc/cron.d/dokku-${PLUGIN_COMMAND_PREFIX}-*
+%dokku ALL=(ALL) NOPASSWD:/bin/mv ${PLUGIN_DATA_ROOT}/.TMP_CRON_FILE /etc/cron.d/dokku-${PLUGIN_COMMAND_PREFIX}-*
+%dokku ALL=(ALL) NOPASSWD:/bin/chown 8983 $PLUGIN_DATA_ROOT/*
+%dokku ALL=(ALL) NOPASSWD:/bin/chgrp 8983 $PLUGIN_DATA_ROOT/*
+EOL
+
+  chmod 0440 "$_SUDOERS_FILE"
 }
 
-pull-docker-image "${PLUGIN_IMAGE}:${PLUGIN_IMAGE_VERSION}"
-pull-docker-image "svendowideit/ambassador:latest"
-pull-docker-image "dokkupaas/wait:0.2"
-
-mkdir -p "$PLUGIN_DATA_ROOT" || echo "Failed to create $PLUGIN_SERVICE directory"
-chown dokku:dokku "$PLUGIN_DATA_ROOT"
+plugin-install "$@"
