@@ -17,6 +17,11 @@ sudo dokku plugin:install https://github.com/dokku/dokku-postgres.git postgres
 ## commands
 
 ```
+postgres:backup <name> <bucket>   Create a backup of the postgres service to an existing s3 bucket
+postgres:backup-auth <name> <aws_access_key_id> <aws_secret_access_key> Sets up authentication for backups on the postgres service
+postgres:backup-deauth <name>     Removes backup authentication for the postgres service
+postgres:backup-schedule <name> <schedule>  <aws_access_key_id> <aws_secret_access_key> <bucket> Schedules a backup of the postgres service
+postgres:backup-unschedule <name> Unschedules the backup of the postgres service
 postgres:clone <name> <new-name>  Create container <new-name> then copy data from <name> into <new-name>
 postgres:connect <name>           Connect via psql to a postgres service
 postgres:create <name>            Create a postgres service with environment variables
@@ -208,3 +213,24 @@ custom certificate by overwriting the `server.crt` and `server.key` files in
 `/var/lib/dokku/services/postgres/<DB_NAME>/data`.
 The `server.key` must be chmoded to 600 and must be owned by the postgres user
 or root.
+
+## Backups
+
+Backups can be performed using the backup commands:
+
+```
+# setup s3 backup authentication
+dokku postgres:backup-auth lolipop AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
+
+# remove s3 authentication
+dokku postgres:backup-deauth lolipop
+
+# backup the `lolipop` service to the `BUCKET_NAME` bucket on AWS
+dokku postgres:backup lolipop BUCKET_NAME
+
+# schedule a backup
+dokku postgres:backup-schedule lolipop CRON_SCHEDULE BUCKET_NAME
+
+# remove the scheduled backup from cron
+dokku postgres:backup-unschedule lolipop
+```

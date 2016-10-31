@@ -11,6 +11,26 @@ if [[ ! -d $PLUGIN_DATA_ROOT ]]; then
 fi
 
 case "$1" in
+  $PLUGIN_COMMAND_PREFIX:backup)
+    "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/subcommands/backup" "$@"
+    ;;
+
+  $PLUGIN_COMMAND_PREFIX:backup-auth)
+    "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/subcommands/backup-auth" "$@"
+    ;;
+
+  $PLUGIN_COMMAND_PREFIX:backup-deauth)
+    "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/subcommands/backup-deauth" "$@"
+    ;;
+
+  $PLUGIN_COMMAND_PREFIX:backup-schedule)
+    "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/subcommands/backup-schedule" "$@"
+    ;;
+
+  $PLUGIN_COMMAND_PREFIX:backup-unschedule)
+    "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/subcommands/backup-unschedule" "$@"
+    ;;
+
   $PLUGIN_COMMAND_PREFIX:clone)
     "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/subcommands/clone" "$@"
     ;;
@@ -84,6 +104,11 @@ case "$1" in
       # shellcheck disable=SC2034
       declare desc="return $PLUGIN_COMMAND_PREFIX plugin help content"
       cat<<help_content
+    $PLUGIN_COMMAND_PREFIX:backup <name> <bucket>, Create a backup of the $PLUGIN_COMMAND_PREFIX service to an existing s3 bucket
+    $PLUGIN_COMMAND_PREFIX:backup-auth <name> <aws_access_key_id> <aws_secret_access_key>, Sets up authentication for backups on the $PLUGIN_COMMAND_PREFIX service
+    $PLUGIN_COMMAND_PREFIX:backup-deauth <name>, Removes backup authentication for the $PLUGIN_COMMAND_PREFIX service
+    $PLUGIN_COMMAND_PREFIX:backup-schedule <name> <schedule> <bucket>, Schedules a backup of the $PLUGIN_COMMAND_PREFIX service
+    $PLUGIN_COMMAND_PREFIX:backup-unschedule <name>, Unschedules the backup of the $PLUGIN_COMMAND_PREFIX service
     $PLUGIN_COMMAND_PREFIX:clone <name> <new-name>, Create container <new-name> then copy data from <name> into <new-name>
     $PLUGIN_COMMAND_PREFIX:connect <name>, Connect via psql to a $PLUGIN_SERVICE service
     $PLUGIN_COMMAND_PREFIX:create <name>, Create a $PLUGIN_SERVICE service

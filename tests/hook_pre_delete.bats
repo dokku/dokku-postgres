@@ -10,7 +10,7 @@ setup() {
 teardown() {
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app >&2
   dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l >&2
-  rm "$DOKKU_ROOT/my_app" -rf
+  rm -rf "$DOKKU_ROOT/my_app"
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:hook:pre-delete) removes app from links file when destroying app" {

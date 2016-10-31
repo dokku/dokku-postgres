@@ -102,6 +102,68 @@ service_alternative_alias() {
   echo "$ALIAS"
 }
 
+service_backup() {
+  declare desc="Creates a backup of a service to an existing s3 bucket"
+  declare SERVICE="$1" BUCKET_NAME="$2"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local AWS_ACCESS_KEY_ID_FILE="$SERVICE_ROOT/backup/AWS_ACCESS_KEY_ID"
+  local AWS_SECRET_ACCESS_KEY_FILE="$SERVICE_ROOT/backup/AWS_SECRET_ACCESS_KEY"
+
+  [[ ! -f "$AWS_ACCESS_KEY_ID_FILE" ]] && dokku_log_fail "Missing AWS_ACCESS_KEY_ID file"
+  [[ ! -f "$AWS_SECRET_ACCESS_KEY_FILE" ]] && dokku_log_fail "Missing AWS_SECRET_ACCESS_KEY file"
+
+  TMPDIR=$(mktemp -d)
+  trap 'rm -rf "$TMP_WORK_DIR" > /dev/null' RETURN INT TERM EXIT
+
+  (service_export "$SERVICE" > "${TMPDIR}/export")
+  docker run \
+      -e AWS_ACCESS_KEY_ID="$(cat "$AWS_ACCESS_KEY_ID_FILE")" \
+      -e AWS_SECRET_ACCESS_KEY="$(cat "$AWS_SECRET_ACCESS_KEY_FILE")" \
+      -e BUCKET_NAME="$BUCKET_NAME" \
+      -e BACKUP_NAME="${PLUGIN_COMMAND_PREFIX}-${SERVICE}" \
+      -v "${TMPDIR}:/backup" dokkupaas/s3backup:0.5.0-1
+}
+
+service_backup_auth() {
+  declare desc="Sets up authentication"
+  declare SERVICE="$1" AWS_ACCESS_KEY_ID="$2" AWS_SECRET_ACCESS_KEY="$3"
+  local SERVICE_ROOT="${PLUGIN_DATA_ROOT}/${SERVICE}"
+  local SERVICE_BACKUP_ROOT="${SERVICE_ROOT}/backup/"
+
+  mkdir -p "$SERVICE_BACKUP_ROOT"
+  echo "$AWS_ACCESS_KEY_ID" > "${SERVICE_BACKUP_ROOT}/AWS_ACCESS_KEY_ID"
+  echo "$AWS_SECRET_ACCESS_KEY" > "${SERVICE_BACKUP_ROOT}/AWS_SECRET_ACCESS_KEY"
+}
+
+service_backup_deauth() {
+  declare desc="Removes authentication"
+  declare SERVICE="$1"
+  local SERVICE_ROOT="${PLUGIN_DATA_ROOT}/${SERVICE}"
+  local SERVICE_BACKUP_ROOT="${SERVICE_ROOT}/backup/"
+
+  rm -rf "$SERVICE_BACKUP_ROOT"
+}
+
+service_backup_schedule() {
+  declare desc="schedules a backup of the service"
+  declare SERVICE="$1" SCHEDULE="$2" BUCKET_NAME="$3"
+  local DOKKU_BIN="$(which dokku)"
+  local CRON_FILE="/etc/cron.d/dokku-${PLUGIN_COMMAND_PREFIX}-${SERVICE}"
+  local TMP_CRON_FILE="${PLUGIN_DATA_ROOT}/.TMP_CRON_FILE"
+
+  echo "${SCHEDULE} dokku ${DOKKU_BIN} ${PLUGIN_COMMAND_PREFIX}:backup ${SERVICE} ${BUCKET_NAME}" > "$TMP_CRON_FILE"
+  sudo /bin/mv "$TMP_CRON_FILE" "$CRON_FILE"
+  sudo /bin/chown root:root "$CRON_FILE"
+}
+
+service_backup_unschedule() {
+  declare desc="unschedules the backup of the service"
+  declare SERVICE="$1"
+  local CRON_FILE="/etc/cron.d/dokku-${PLUGIN_COMMAND_PREFIX}-${SERVICE}"
+
+  sudo /bin/rm -f "$CRON_FILE"
+}
+
 service_enter() {
   declare desc="enters running app container of specified proc type"
   declare SERVICE="$1" && shift 1
@@ -409,6 +471,15 @@ service_version() {
   declare SERVICE="$1"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   docker inspect -f '{{.Config.Image}}' "$SERVICE_NAME"
+}
+
+update_plugin_scheme_for_app() {
+  declare desc="Retrieves the updated plugin scheme"
+  declare APP="$1"
+  local DATABASE_SCHEME
+
+  DATABASE_SCHEME=$(config_get "$APP" "${PLUGIN_VARIABLE}_DATABASE_SCHEME" || true)
+  PLUGIN_SCHEME=${DATABASE_SCHEME:-$PLUGIN_SCHEME}
 }
 
 verify_service_name() {

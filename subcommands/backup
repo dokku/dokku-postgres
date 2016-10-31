@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+postgres-backup-cmd() {
+  declare desc="creates a backup of the $PLUGIN_SERVICE service to an existing s3 bucket"
+  local cmd="$PLUGIN_COMMAND_PREFIX:backup" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  declare SERVICE="$1" BUCKET_NAME="$2"
+
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  [[ -z "$BUCKET_NAME" ]] && dokku_log_fail "Please specify an aws bucket for the backup"
+  verify_service_name "$SERVICE"
+  service_backup "$SERVICE" "$BUCKET_NAME"
+}
+
+postgres-backup-cmd "$@"

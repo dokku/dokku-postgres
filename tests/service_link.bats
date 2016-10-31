@@ -8,7 +8,7 @@ setup() {
 
 teardown() {
   dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l >&2
-  rm "$DOKKU_ROOT/my_app" -rf
+  rm -rf "$DOKKU_ROOT/my_app"
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:link) error when there are no arguments" {

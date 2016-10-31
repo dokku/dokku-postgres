@@ -10,7 +10,7 @@ setup() {
 teardown() {
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
   dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l >&2
-  rm "$DOKKU_ROOT/my_app" -rf
+  rm -rf "$DOKKU_ROOT/my_app"
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:promote) error when there are no arguments" {
