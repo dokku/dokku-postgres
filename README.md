@@ -216,7 +216,9 @@ or root.
 
 ## Backups
 
-Datastore backups are supported via AWS S3. The only supported region is `us-east-1`, and using an S3 bucket in another region will result in an error. If you would like to sponsor work to enable support for other regions, please contact [@josegonzalez](http://github.com/josegonzalez/).
+Datastore backups are supported via AWS S3. The only supported region is `us-east-1`, and using an S3 bucket in another region will result in an error.
+
+> If you would like to sponsor work to enable support for other regions, please contact [@josegonzalez](http://github.com/josegonzalez/).
 
 Backups can be performed using the backup commands:
 
