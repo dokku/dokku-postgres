@@ -233,7 +233,7 @@ dokku postgres:backup-deauth lolipop
 dokku postgres:backup lolipop BUCKET_NAME
 
 # schedule a backup
-# CRON_SCHEDULE is the crontab expression, eg. "0 0 1 1/1 * ? *" for each day at 1am
+# CRON_SCHEDULE is the crontab expression, eg. "0 3 * * *" for each day at 3am
 dokku postgres:backup-schedule lolipop CRON_SCHEDULE BUCKET_NAME
 
 # remove the scheduled backup from cron
