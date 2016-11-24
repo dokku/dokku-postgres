@@ -205,7 +205,7 @@ The `import` command should be used with any non-plain-text files exported by `p
 $ dokku postgres:connect db < ./dump.sql
 ```
 
-## security
+## Security
 
 The connection to the database is done over SSL. A self-signed certificate is
 automatically generated when creating the service.  It can be replaced by a
@@ -233,7 +233,7 @@ dokku postgres:backup-deauth lolipop
 dokku postgres:backup lolipop BUCKET_NAME
 
 # schedule a backup
-# CRON_SCHEDULE is the crontab expression, eg. "0 3 * * *" for each day at 3am
+# CRON_SCHEDULE is a crontab expression, eg. "0 3 * * *" for each day at 3am
 dokku postgres:backup-schedule lolipop CRON_SCHEDULE BUCKET_NAME
 
 # remove the scheduled backup from cron
