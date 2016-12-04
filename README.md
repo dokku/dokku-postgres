@@ -182,19 +182,19 @@ OR
 At the moment a database can’t be upgraded  (or downgraded) inplace. Instead a clone has to be made, like this:
 
 ```shell
-# Our original DB using default PG 9.6.0
-$ dokku postgres:create db9.4
+# Our original DB using PG 9.5
+$ dokku postgres:create db9.5
 
 # Migrate it like this for example
-$ POSTGRES_IMAGE_VERSION=9.5 dokku postgres:clone db9.4 db9.5
+$ POSTGRES_IMAGE_VERSION=9.6 dokku postgres:clone db9.5 db9.6
 
 # If it was linked to an application, first link the new DB
-$ dokku postgres:link db9.5 my_app
+$ dokku postgres:link db9.6 my_app
 # Then unlink the old one
-$ dokku postgres:unlink db9.4 my_app
+$ dokku postgres:unlink db9.5 my_app
 
 # And last, destroy the old container
-$ dokku postgres:destroy db9.4
+$ dokku postgres:destroy db9.5
 ```
 
 ## importing data
