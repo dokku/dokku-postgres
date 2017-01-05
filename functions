@@ -53,6 +53,33 @@ service_create() {
   service_create_container "$SERVICE"
 }
 
+database_create() {
+  local SERVICE="$1"
+  local NAME="$2"
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  [[ -z "$NAME" ]] && dokku_log_fail "Please specify a name for the database"
+
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
+
+  dokku_log_verbose_quiet "Creating user"
+  password=$(openssl rand -hex 16)
+  if docker exec "$SERVICE_NAME" su - postgres -c "psql -c \"CREATE USER $NAME WITH PASSWORD '$password';\"" 2> /dev/null; then
+    echo "$password" > "$SERVICE_ROOT/auth/$NAME"
+    chmod 640 "$SERVICE_ROOT/auth/$NAME"
+  else
+    echo 'Already exists'
+  fi
+
+  dokku_log_verbose_quiet "Creating database"
+  if docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $NAME" 2> /dev/null; then
+    touch "$SERVICE_ROOT/databases/$NAME"
+  else
+    echo 'Already exists'
+  fi
+  docker exec "$SERVICE_NAME" su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE $NAME TO $NAME;\"" > /dev/null
+}
+
 service_create_container() {
   local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
