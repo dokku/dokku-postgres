@@ -250,6 +250,28 @@ service_exposed_ports() {
   done
 }
 
+service_databases() {
+  declare desc="Lists databases for a service"
+  declare SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local DATABASE_DIR="$SERVICE_ROOT/databases"
+  [[ ! -d $DATABASE_DIR ]] && echo '-' && return 0
+  for DATABASE in $DATABASE_DIR/*; do
+    echo -n "$(basename "$DATABASE") "
+  done
+}
+
+service_users() {
+  declare desc="Lists users for a service"
+  declare SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local USER_DIR="$SERVICE_ROOT/auth"
+  [[ ! -d $USER_DIR ]] && echo '-' && return 0
+  for USER in $USER_DIR/*; do
+    echo -n "$(basename "$USER") "
+  done
+}
+
 service_info() {
   declare desc="Retrieves information about a given service"
   declare SERVICE="$1" INFO_FLAG="$2"
@@ -360,9 +382,9 @@ service_list() {
   if [[ -z $SERVICES ]]; then
     dokku_log_warn "There are no $PLUGIN_SERVICE services"
   else
-    LIST="NAME,VERSION,STATUS,EXPOSED PORTS,LINKS\n"
+    LIST="NAME,VERSION,STATUS,EXPOSED PORTS,DATABASES,USERS,LINKS\n"
     for SERVICE in $SERVICES; do
-      LIST+="$SERVICE,$(service_version "$SERVICE"),$(service_status "$SERVICE"),$(service_exposed_ports "$SERVICE"),$(service_linked_apps "$SERVICE")\n"
+      LIST+="$SERVICE,$(service_version "$SERVICE"),$(service_status "$SERVICE"),$(service_exposed_ports "$SERVICE"),$(service_databases "$SERVICE"),$(service_users "$SERVICE"),$(service_linked_apps "$SERVICE")\n"
     done
     printf "%b" "$LIST" | column -t -s,
   fi

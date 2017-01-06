@@ -66,7 +66,7 @@ database_create() {
 
   dokku_log_verbose_quiet "Creating user"
   password=$(openssl rand -hex 16)
-  if docker exec "$SERVICE_NAME" su - postgres -c "psql -c \"CREATE USER $NAME WITH PASSWORD '$password';\"" > /dev/null 2>&1; then
+  if docker exec "$SERVICE_NAME" su - postgres -c "psql -c \"CREATE USER \\\"$NAME\\\" WITH PASSWORD '$password';\"" > /dev/null 2>&1; then
     echo "$password" > "$SERVICE_ROOT/auth/$NAME"
     chmod 640 "$SERVICE_ROOT/auth/$NAME"
   else
@@ -79,7 +79,7 @@ database_create() {
   else
     echo 'Already exists'
   fi
-  docker exec "$SERVICE_NAME" su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE $NAME TO $NAME;\"" > /dev/null
+  docker exec "$SERVICE_NAME" su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE \\\"$NAME\\\" TO \\\"$NAME\\\";\"" > /dev/null
 }
 
 service_create_container() {
