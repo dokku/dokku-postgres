@@ -51,6 +51,10 @@ case "$1" in
     "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/subcommands/destroy" "$@"
     ;;
 
+  $PLUGIN_COMMAND_PREFIX:destroy-database)
+    "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/subcommands/destroy-database" "$@"
+    ;;
+
   $PLUGIN_COMMAND_PREFIX:export)
     "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/subcommands/export" "$@"
     ;;
@@ -118,6 +122,7 @@ case "$1" in
     $PLUGIN_COMMAND_PREFIX:create <name>, Create a $PLUGIN_SERVICE service
     $PLUGIN_COMMAND_PREFIX:create-database <name> <db>, Create a $PLUGIN_SERVICE database in the specified service
     $PLUGIN_COMMAND_PREFIX:destroy <name>, Delete the $PLUGIN_SERVICE service and stop its container if there are no links left
+    $PLUGIN_COMMAND_PREFIX:destroy-database <name> <db>, Delete a $PLUGIN_SERVICE database on the specified service
     $PLUGIN_COMMAND_PREFIX:export <name>, Export a dump of the $PLUGIN_SERVICE service database
     $PLUGIN_COMMAND_PREFIX:expose <name> [port], Expose a $PLUGIN_SERVICE service on custom port if provided (random port otherwise)
     $PLUGIN_COMMAND_PREFIX:import <name> < <file>, Import a dump into the $PLUGIN_SERVICE service database
