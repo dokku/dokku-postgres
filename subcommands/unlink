@@ -15,11 +15,34 @@ service-unlink-cmd() {
   declare SERVICE="$1" APP="$2"
   APP=${APP:="$DOKKU_APP_NAME"}
 
+  local USER=''
+
+  local next_index=1; local skip=false; local args=("$@"); local positional=()
+  for arg in "$@"; do
+    $skip && skip=false && local next_index=$(( next_index + 1 )) && continue
+    case "$arg" in
+      --user)
+        USER=${args[$next_index]}; skip=true
+        ;;
+      --database)
+        DATABASE=${args[$next_index]}; skip=true
+        ;;
+      *)
+        positional+=("$arg")
+    esac
+    local next_index=$(( next_index + 1 ))
+  done
+
+  declare SERVICE="${positional[0]}" APP="${positional[1]}"
+
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   [[ -z "$APP" ]] && dokku_log_fail "Please specify an app to run the command on"
   verify_service_name "$SERVICE"
   verify_app_name "$APP"
-  service_unlink "$SERVICE" "$APP"
+  [[ -z "$DATABASE" ]] || verify_database_name "$SERVICE" "$DATABASE"
+  [[ -z "$USER" ]] || verify_user_name "$SERVICE" "$USER"
+  service_unlink "$SERVICE" "$APP" "$USER" "$DATABASE"
+
 }
 
 service-unlink-cmd "$@"
