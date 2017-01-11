@@ -154,6 +154,7 @@ service_backup_schedule() {
   echo "${SCHEDULE} dokku ${DOKKU_BIN} ${PLUGIN_COMMAND_PREFIX}:backup ${SERVICE} ${BUCKET_NAME}" > "$TMP_CRON_FILE"
   sudo /bin/mv "$TMP_CRON_FILE" "$CRON_FILE"
   sudo /bin/chown root:root "$CRON_FILE"
+  sudo /bin/chmod 644 "$CRON_FILE"
 }
 
 service_backup_unschedule() {
