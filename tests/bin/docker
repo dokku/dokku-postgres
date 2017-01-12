@@ -16,7 +16,7 @@ case "$1" in
     echo "REPOSITORY                           TAG                 IMAGE ID            CREATED             VIRTUAL SIZE"
     echo "elasticsearch                        2.3.5               89ed89918502        2 days ago          522.1 MB"
     echo "frodenas/couchdb                     1.6                 cb9a62e007eb        2 days ago          537 MB"
-    echo "jlachowski/grafana-graphite-statsd   2.5.0               75dcd48a5eef        2 days ago          936.4 MB"
+    echo "dokkupaas/docker-grafana-graphite    3.0.1               75dcd48a5eef        2 days ago          936.4 MB"
     echo "mariadb                              10.1.16             f2485761e714        2 days ago          302.2 MB"
     echo "memcached                            1.4.31              8a05b51f8876        2 days ago          132.4 MB"
     echo "mongo                                3.2.9               12eadb136159        2 days ago          291.1 MB"
@@ -65,7 +65,7 @@ case "$1" in
       echo 'CONTAINER ID        IMAGE                      COMMAND                CREATED             STATUS                         PORTS               NAMES'
       echo '4eeaae231d5e        elasticsearch:2.3.5                        "/docker-entrypoint."      11 seconds ago       Up 10 seconds       9200/tcp, 9300/tcp                         dokku.elasticsearch.l'
       echo '2b20a383226d        frodenas/couchdb:1.6                       "/scripts/run.sh"          11 seconds ago       Up 10 seconds       5984/tcp                                   dokku.couchdb.l'
-      echo '76a0e7154483        jlachowski/grafana-graphite-statsd:2.5.0   "/usr/bin/supervisor"      11 seconds ago       Up 10 seconds       80/tcp, 2003/tcp, 8126/tcp, 8125/udp       dokku.graphite.l'
+      echo '76a0e7154483        dokkupaas/docker-grafana-graphite:3.0.1    "/usr/bin/supervisor"      11 seconds ago       Up 10 seconds       80/tcp, 2003/tcp, 8126/tcp, 8125/udp       dokku.graphite.l'
       echo '94df08fe5550        mariadb:10.1.16                            "/docker-entrypoint."      11 seconds ago       Up 10 seconds       3306/tcp                                   dokku.mariadb.l'
       echo 'ef27fec191ba        memcached:1.4.31                           "/entrypoint.sh memc"      11 seconds ago       Up 10 seconds       11211/tcp                                  dokku.memcached.l'
       echo 'c0f74fc90377        mongo:3.2.9                                "/entrypoint.sh mong"      11 seconds ago       Up 10 seconds       27017/tcp                                  dokku.mongo.l'
