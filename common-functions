@@ -113,7 +113,7 @@ service_backup() {
   [[ ! -f "$AWS_SECRET_ACCESS_KEY_FILE" ]] && dokku_log_fail "Missing AWS_SECRET_ACCESS_KEY file"
 
   TMPDIR=$(mktemp -d)
-  trap 'rm -rf "$TMP_WORK_DIR" > /dev/null' RETURN INT TERM EXIT
+  trap 'rm -rf "$TMPDIR" > /dev/null' RETURN INT TERM EXIT
 
   (service_export "$SERVICE" > "${TMPDIR}/export")
   docker run \
