@@ -239,3 +239,18 @@ dokku postgres:backup-schedule lolipop CRON_SCHEDULE BUCKET_NAME
 # remove the scheduled backup from cron
 dokku postgres:backup-unschedule lolipop
 ```
+
+## Postgres Configuration
+
+If you wish to tune the postgres instances various .conf files, you can find them by using the postgres:info command.
+
+> BEWARE: The earlier documentation tries to mislead you.  You will find the config files in the data directory __not__ the config directory.
+
+```shell
+dokku postgres:info lolipop 
+# or
+dokku postgres:info lolipop --data-dir
+```
+
+
+
