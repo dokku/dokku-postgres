@@ -66,8 +66,7 @@ dokku postgres:create lolipop
 dokku postgres:info lolipop
 
 # you can also retrieve a specific piece of service info via flags
-dokku postgres:info lolipop --config-dir
-dokku postgres:info lolipop --data-dir
+dokku postgres:info lolipop --config-dir  
 dokku postgres:info lolipop --dsn
 dokku postgres:info lolipop --exposed-ports
 dokku postgres:info lolipop --id
@@ -243,8 +242,6 @@ dokku postgres:backup-unschedule lolipop
 ## Postgres Configuration
 
 If you wish to tune the postgres instances various .conf files, you can find them by using the postgres:info command.
-
-> BEWARE: The earlier documentation tries to mislead you.  You will find the config files in the data directory __not__ the config directory.
 
 ```shell
 dokku postgres:info lolipop 
