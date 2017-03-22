@@ -66,7 +66,7 @@ dokku postgres:create lolipop
 dokku postgres:info lolipop
 
 # you can also retrieve a specific piece of service info via flags
-dokku postgres:info lolipop --config-dir  
+dokku postgres:info lolipop --data-dir
 dokku postgres:info lolipop --dsn
 dokku postgres:info lolipop --exposed-ports
 dokku postgres:info lolipop --id
