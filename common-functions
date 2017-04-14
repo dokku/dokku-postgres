@@ -121,7 +121,7 @@ service_backup() {
       -e AWS_SECRET_ACCESS_KEY="$(cat "$AWS_SECRET_ACCESS_KEY_FILE")" \
       -e BUCKET_NAME="$BUCKET_NAME" \
       -e BACKUP_NAME="${PLUGIN_COMMAND_PREFIX}-${SERVICE}" \
-      -v "${TMPDIR}:/backup" dokkupaas/s3backup:0.5.0-2
+      -v "${TMPDIR}:/backup" dokkupaas/s3backup:0.6.0
 }
 
 service_backup_auth() {
