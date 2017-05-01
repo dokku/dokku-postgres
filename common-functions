@@ -104,21 +104,26 @@ service_alternative_alias() {
 
 service_backup() {
   declare desc="Creates a backup of a service to an existing s3 bucket"
-  declare SERVICE="$1" BUCKET_NAME="$2"
+  declare SERVICE="$1" BUCKET_NAME="$2" S3_FLAG="$3"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local AWS_ACCESS_KEY_ID_FILE="$SERVICE_ROOT/backup/AWS_ACCESS_KEY_ID"
   local AWS_SECRET_ACCESS_KEY_FILE="$SERVICE_ROOT/backup/AWS_SECRET_ACCESS_KEY"
+  local AWS_VARS=""
 
-  [[ ! -f "$AWS_ACCESS_KEY_ID_FILE" ]] && dokku_log_fail "Missing AWS_ACCESS_KEY_ID file"
-  [[ ! -f "$AWS_SECRET_ACCESS_KEY_FILE" ]] && dokku_log_fail "Missing AWS_SECRET_ACCESS_KEY file"
+  if [[ -z "$S3_FLAG" ]]; then
+    [[ ! -f "$AWS_ACCESS_KEY_ID_FILE" ]] && dokku_log_fail "Missing AWS_ACCESS_KEY_ID file"
+    [[ ! -f "$AWS_SECRET_ACCESS_KEY_FILE" ]] && dokku_log_fail "Missing AWS_SECRET_ACCESS_KEY file"
+    AWS_VARS="-e AWS_ACCESS_KEY_ID=$(cat "$AWS_ACCESS_KEY_ID_FILE") -e AWS_SECRET_ACCESS_KEY=$(cat "$AWS_SECRET_ACCESS_KEY_FILE")"
+  elif [[ $S3_FLAG != "--use-iam" ]]; then
+    dokku_log_fail "Provide AWS credentials or use the --use-iam flag"
+  fi
 
   TMPDIR=$(mktemp -d)
   trap 'rm -rf "$TMPDIR" > /dev/null' RETURN INT TERM EXIT
 
   (service_export "$SERVICE" > "${TMPDIR}/export")
   docker run \
-      -e AWS_ACCESS_KEY_ID="$(cat "$AWS_ACCESS_KEY_ID_FILE")" \
-      -e AWS_SECRET_ACCESS_KEY="$(cat "$AWS_SECRET_ACCESS_KEY_FILE")" \
+      "${AWS_VARS}" \
       -e BUCKET_NAME="$BUCKET_NAME" \
       -e BACKUP_NAME="${PLUGIN_COMMAND_PREFIX}-${SERVICE}" \
       -v "${TMPDIR}:/backup" dokkupaas/s3backup:0.6.0

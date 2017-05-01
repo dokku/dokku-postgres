@@ -17,7 +17,7 @@ sudo dokku plugin:install https://github.com/dokku/dokku-postgres.git postgres
 ## commands
 
 ```
-postgres:backup <name> <bucket>   Create a backup of the postgres service to an existing s3 bucket
+postgres:backup <name> <bucket> [--use-iam]  Create a backup of the postgres service to an existing s3 bucket
 postgres:backup-auth <name> <aws_access_key_id> <aws_secret_access_key> Sets up authentication for backups on the postgres service
 postgres:backup-deauth <name>     Removes backup authentication for the postgres service
 postgres:backup-schedule <name> <schedule> <bucket> Schedules a backup of the postgres service
@@ -219,6 +219,10 @@ or root.
 Datastore backups are supported via AWS S3. The only supported region is `us-east-1`, and using an S3 bucket in another region will result in an error.
 
 > If you would like to sponsor work to enable support for other regions, please contact [@josegonzalez](http://github.com/josegonzalez/).
+
+You may skip the `backup-auth` step if your dokku install is running within EC2
+and has access to the bucket via an IAM profile. In that case, use the `--use-iam`
+option with the `backup` command.
 
 Backups can be performed using the backup commands:
 
