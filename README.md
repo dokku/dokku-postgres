@@ -17,7 +17,7 @@ sudo dokku plugin:install https://github.com/dokku/dokku-postgres.git postgres
 ## commands
 
 ```
-postgres:backup <name> <bucket> [--use-iam] Create a backup of the postgres service to an existing s3 bucket
+postgres:backup <name> <bucket> (--use-iam) Create a backup of the postgres service to an existing s3 bucket
 postgres:backup-auth <name> <aws_access_key_id> <aws_secret_access_key> (<aws_default_region>) (<aws_signature_version>) (<endpoint_url>) Sets up authentication for backups on the postgres service
 postgres:backup-deauth <name>     Removes backup authentication for the postgres service
 postgres:backup-schedule <name> <schedule> <bucket> Schedules a backup of the postgres service

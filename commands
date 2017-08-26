@@ -104,7 +104,7 @@ case "$1" in
       # shellcheck disable=SC2034
       declare desc="return $PLUGIN_COMMAND_PREFIX plugin help content"
       cat<<help_content
-    $PLUGIN_COMMAND_PREFIX:backup <name> <bucket>, Create a backup of the $PLUGIN_COMMAND_PREFIX service to an existing s3 bucket
+    $PLUGIN_COMMAND_PREFIX:backup <name> <bucket> (--use-iam), Create a backup of the $PLUGIN_COMMAND_PREFIX service to an existing s3 bucket
     $PLUGIN_COMMAND_PREFIX:backup-auth <name> <aws_access_key_id> <aws_secret_access_key> (<aws_default_region>) (<aws_signature_version>) (<endpoint_url>), Sets up authentication for backups on the $PLUGIN_COMMAND_PREFIX service
     $PLUGIN_COMMAND_PREFIX:backup-deauth <name>, Removes backup authentication for the $PLUGIN_COMMAND_PREFIX service
     $PLUGIN_COMMAND_PREFIX:backup-schedule <name> <schedule> <bucket>, Schedules a backup of the $PLUGIN_COMMAND_PREFIX service
