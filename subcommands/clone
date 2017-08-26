@@ -12,10 +12,11 @@ postgres-clone-cmd() {
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   [[ -z "$NEW_SERVICE" ]] && dokku_log_fail "Please specify a name for the new service"
 
+  verify_service_name "$SERVICE"
+
   PLUGIN_IMAGE=$(service_version "$SERVICE" |  grep -o "^.*:" | sed -r "s/://g")
   PLUGIN_IMAGE_VERSION=$(service_version "$SERVICE" |  grep -o ":.*$" | sed -r "s/://g")
 
-  verify_service_name "$SERVICE"
   service_create "$NEW_SERVICE"
   dokku_log_info1 "Copying data from $SERVICE to $NEW_SERVICE"
   service_export "$SERVICE" | service_import "$NEW_SERVICE" > /dev/null 2>&1 || true
