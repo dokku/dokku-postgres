@@ -31,6 +31,7 @@ get_random_ports() {
     local quit=0
     while [ "$quit" -ne 1 ]; do
       netstat -an | grep $port > /dev/null
+      # shellcheck disable=SC2181
       if [ $? -gt 0 ]; then
         quit=1
       else
@@ -105,9 +106,9 @@ service_alternative_alias() {
 service_backup() {
   declare desc="Creates a backup of a service to an existing s3 bucket"
   declare SERVICE="$1" BUCKET_NAME="$2"
-  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local AWS_ACCESS_KEY_ID_FILE="$SERVICE_ROOT/backup/AWS_ACCESS_KEY_ID"
-  local AWS_SECRET_ACCESS_KEY_FILE="$SERVICE_ROOT/backup/AWS_SECRET_ACCESS_KEY"
+  local BACKUP_CONFIG_ROOT="$PLUGIN_DATA_ROOT/$SERVICE/backup"
+  local AWS_ACCESS_KEY_ID_FILE="$BACKUP_CONFIG_ROOT/AWS_ACCESS_KEY_ID"
+  local AWS_SECRET_ACCESS_KEY_FILE="$BACKUP_CONFIG_ROOT/AWS_SECRET_ACCESS_KEY"
 
   [[ ! -f "$AWS_ACCESS_KEY_ID_FILE" ]] && dokku_log_fail "Missing AWS_ACCESS_KEY_ID file"
   [[ ! -f "$AWS_SECRET_ACCESS_KEY_FILE" ]] && dokku_log_fail "Missing AWS_SECRET_ACCESS_KEY file"
@@ -116,23 +117,51 @@ service_backup() {
   trap 'rm -rf "$TMPDIR" > /dev/null' RETURN INT TERM EXIT
 
   (service_export "$SERVICE" > "${TMPDIR}/export")
-  docker run \
-      -e AWS_ACCESS_KEY_ID="$(cat "$AWS_ACCESS_KEY_ID_FILE")" \
-      -e AWS_SECRET_ACCESS_KEY="$(cat "$AWS_SECRET_ACCESS_KEY_FILE")" \
-      -e BUCKET_NAME="$BUCKET_NAME" \
-      -e BACKUP_NAME="${PLUGIN_COMMAND_PREFIX}-${SERVICE}" \
-      -v "${TMPDIR}:/backup" dokkupaas/s3backup:0.6.0
+
+  # Build parameter list for s3backup tool
+  BACKUP_PARAMETERS="-e AWS_ACCESS_KEY_ID=$(cat "$AWS_ACCESS_KEY_ID_FILE") \
+                     -e AWS_SECRET_ACCESS_KEY=$(cat "$AWS_SECRET_ACCESS_KEY_FILE") \
+                     -e BUCKET_NAME=$BUCKET_NAME \
+                     -e BACKUP_NAME=${PLUGIN_COMMAND_PREFIX}-${SERVICE} \
+                     -v ${TMPDIR}:/backup"
+
+  if [[ -f "$BACKUP_CONFIG_ROOT/AWS_DEFAULT_REGION" ]]; then
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_DEFAULT_REGION=$(cat "$BACKUP_CONFIG_ROOT/AWS_DEFAULT_REGION")"
+  fi
+
+  if [[ -f "$BACKUP_CONFIG_ROOT/AWS_SIGNATURE_VERSION" ]]; then
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_SIGNATURE_VERSION=$(cat "$BACKUP_CONFIG_ROOT/AWS_SIGNATURE_VERSION")"
+  fi
+
+  if [[ -f "$BACKUP_CONFIG_ROOT/ENDPOINT_URL" ]]; then
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e ENDPOINT_URL=$(cat "$BACKUP_CONFIG_ROOT/ENDPOINT_URL")"
+  fi
+
+  # shellcheck disable=SC2086
+  docker run $BACKUP_PARAMETERS dokkupaas/s3backup:0.7.0
 }
 
 service_backup_auth() {
   declare desc="Sets up authentication"
-  declare SERVICE="$1" AWS_ACCESS_KEY_ID="$2" AWS_SECRET_ACCESS_KEY="$3"
+  declare SERVICE="$1" AWS_ACCESS_KEY_ID="$2" AWS_SECRET_ACCESS_KEY="$3" AWS_DEFAULT_REGION="$4" AWS_SIGNATURE_VERSION="$5" ENDPOINT_URL="$6"
   local SERVICE_ROOT="${PLUGIN_DATA_ROOT}/${SERVICE}"
   local SERVICE_BACKUP_ROOT="${SERVICE_ROOT}/backup/"
 
   mkdir -p "$SERVICE_BACKUP_ROOT"
   echo "$AWS_ACCESS_KEY_ID" > "${SERVICE_BACKUP_ROOT}/AWS_ACCESS_KEY_ID"
   echo "$AWS_SECRET_ACCESS_KEY" > "${SERVICE_BACKUP_ROOT}/AWS_SECRET_ACCESS_KEY"
+
+  if [[ -n "$AWS_DEFAULT_REGION" ]]; then
+    echo "$AWS_DEFAULT_REGION" > "${SERVICE_BACKUP_ROOT}/AWS_DEFAULT_REGION"
+  fi
+
+  if [[ -n "$AWS_SIGNATURE_VERSION" ]]; then
+    echo "$AWS_SIGNATURE_VERSION" > "${SERVICE_BACKUP_ROOT}/AWS_SIGNATURE_VERSION"
+  fi
+
+  if [[ -n "$ENDPOINT_URL" ]]; then
+    echo "$ENDPOINT_URL" > "${SERVICE_BACKUP_ROOT}/ENDPOINT_URL"
+  fi
 }
 
 service_backup_deauth() {

@@ -13,7 +13,7 @@ plugin-install() {
   pull-docker-image "${PLUGIN_IMAGE}:${PLUGIN_IMAGE_VERSION}"
   pull-docker-image "svendowideit/ambassador:latest"
   pull-docker-image "dokkupaas/wait:0.2"
-  pull-docker-image "dokkupaas/s3backup:0.6.0"
+  pull-docker-image "dokkupaas/s3backup:0.7.0"
   pull-docker-image "busybox:latest"
 
   mkdir -p "$PLUGIN_DATA_ROOT" || echo "Failed to create $PLUGIN_SERVICE directory"
