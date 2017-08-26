@@ -21,7 +21,6 @@ service_create() {
 
   mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
   mkdir -p "$SERVICE_ROOT/data" || dokku_log_fail "Unable to create service data directory"
-  mkdir -p "$SERVICE_ROOT/config" || dokku_log_fail "Unable to create service config directory"
   touch "$LINKS_FILE"
   password=$(openssl rand -hex 16)
   echo "$password" > "$SERVICE_ROOT/PASSWORD"
