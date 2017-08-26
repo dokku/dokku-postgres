@@ -20,7 +20,15 @@ else
 endif
 endif
 
-ci-dependencies: shellcheck bats
+readlink:
+ifeq ($(shell uname),Darwin)
+ifeq ($(shell greadlink > /dev/null 2>&1 ; echo $$?),127)
+	brew install coreutils
+endif
+	ln -nfs `which greadlink` tests/bin/readlink
+endif
+ 
+ci-dependencies: shellcheck bats readlink
 
 lint:
 	# these are disabled due to their expansive existence in the codebase. we should clean it up though
