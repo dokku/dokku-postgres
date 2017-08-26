@@ -5,7 +5,7 @@ source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 postgres-destroy-cmd() {
-  declare desc="delete the $PLUGIN_SERVICE service and stop its container if there are no links left"
+  declare desc="delete the $PLUGIN_SERVICE service, delete the data and stop its container if there are no links left"
   local cmd="$PLUGIN_COMMAND_PREFIX:destroy" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" FORCE_DESTROY="$2"
 
