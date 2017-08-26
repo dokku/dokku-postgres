@@ -58,7 +58,7 @@ dokku postgres:create lolipop
 
 # you can also specify custom environment
 # variables to start the postgres service
-# in semi-colon separated forma
+# in semi-colon separated form
 export POSTGRES_CUSTOM_ENV="USER=alpha;HOST=beta"
 dokku postgres:create lolipop
 
