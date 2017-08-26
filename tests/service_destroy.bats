@@ -23,5 +23,5 @@ load test_helper
   dokku "$PLUGIN_COMMAND_PREFIX:link" l app
   run dokku "$PLUGIN_COMMAND_PREFIX:destroy" l
   assert_contains "${lines[*]}" "Cannot delete linked service"
-  rm "$DOKKU_ROOT/app" -rf
+  rm -rf "$DOKKU_ROOT/app"
 }
