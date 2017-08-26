@@ -11,9 +11,9 @@ export PLUGIN_CORE_AVAILABLE_PATH="$PLUGIN_PATH"
 export POSTGRES_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fixtures"
 export PLUGIN_DATA_ROOT="$POSTGRES_ROOT"
 if [[ "$(uname)" == "Darwin" ]]; then
-  export PLUGN_URL="https://github.com/dokku/plugn/releases/download/v0.2.1/plugn_0.2.1_darwin_x86_64.tgz"
+  export PLUGN_URL="https://github.com/dokku/plugn/releases/download/v0.3.0/plugn_0.3.0_darwin_x86_64.tgz"
 else
-  export PLUGN_URL="https://github.com/dokku/plugn/releases/download/v0.2.1/plugn_0.2.1_linux_x86_64.tgz"
+  export PLUGN_URL="https://github.com/dokku/plugn/releases/download/v0.3.0/plugn_0.3.0_linux_x86_64.tgz"
 fi
 
 mkdir -p "$PLUGIN_DATA_ROOT"

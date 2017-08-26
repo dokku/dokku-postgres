@@ -1,6 +1,6 @@
 # dokku postgres (beta) [![Build Status](https://img.shields.io/travis/dokku/dokku-postgres.svg?branch=master "Build Status")](https://travis-ci.org/dokku/dokku-postgres) [![IRC Network](https://img.shields.io/badge/irc-freenode-blue.svg "IRC Freenode")](https://webchat.freenode.net/?channels=dokku)
 
-Official postgres plugin for dokku. Currently defaults to installing [postgres 9.6.1](https://hub.docker.com/_/postgres/).
+Official postgres plugin for dokku. Currently defaults to installing [postgres 9.6.4](https://hub.docker.com/_/postgres/).
 
 ## requirements
 
@@ -17,8 +17,8 @@ sudo dokku plugin:install https://github.com/dokku/dokku-postgres.git postgres
 ## commands
 
 ```
-postgres:backup <name> <bucket>   Create a backup of the postgres service to an existing s3 bucket
-postgres:backup-auth <name> <aws_access_key_id> <aws_secret_access_key> Sets up authentication for backups on the postgres service
+postgres:backup <name> <bucket> [--use-iam] Create a backup of the postgres service to an existing s3 bucket
+postgres:backup-auth <name> <aws_access_key_id> <aws_secret_access_key> (<aws_default_region>) (<aws_signature_version>) (<endpoint_url>) Sets up authentication for backups on the postgres service
 postgres:backup-deauth <name>     Removes backup authentication for the postgres service
 postgres:backup-schedule <name> <schedule> <bucket> Schedules a backup of the postgres service
 postgres:backup-unschedule <name> Unschedules the backup of the postgres service
@@ -53,12 +53,12 @@ dokku postgres:create lolipop
 # it *must* be compatible with the
 # official postgres image
 export POSTGRES_IMAGE="postgres"
-export POSTGRES_IMAGE_VERSION="9.6.1"
+export POSTGRES_IMAGE_VERSION="9.6.4"
 dokku postgres:create lolipop
 
 # you can also specify custom environment
 # variables to start the postgres service
-# in semi-colon separated forma
+# in semi-colon separated form
 export POSTGRES_CUSTOM_ENV="USER=alpha;HOST=beta"
 dokku postgres:create lolipop
 
@@ -196,28 +196,23 @@ $ dokku postgres:unlink db9.5 my_app
 $ dokku postgres:destroy db9.5
 ```
 
-## importing data
+## Configuration
 
-The `import` command should be used with any non-plain-text files exported by `pg_dump`. To import a SQL file, use `connect` like this:
+If you wish to tune the postgres instances various .conf files, you can find them by using the postgres:info command.
 
 ```shell
-$ dokku postgres:connect db < ./dump.sql
+dokku postgres:info lolipop 
+# or
+dokku postgres:info lolipop --data-dir
 ```
-
-## Security
-
-The connection to the database is done over SSL. A self-signed certificate is
-automatically generated when creating the service.  It can be replaced by a
-custom certificate by overwriting the `server.crt` and `server.key` files in
-`/var/lib/dokku/services/postgres/<DB_NAME>/data`.
-The `server.key` must be chmoded to 600 and must be owned by the postgres user
-or root.
 
 ## Backups
 
-Datastore backups are supported via AWS S3. The only supported region is `us-east-1`, and using an S3 bucket in another region will result in an error.
+Datastore backups are supported via AWS S3 and S3 compatible services like [minio](https://github.com/minio/minio).
 
-> If you would like to sponsor work to enable support for other regions, please contact [@josegonzalez](http://github.com/josegonzalez/).
+You may skip the `backup-auth` step if your dokku install is running within EC2
+and has access to the bucket via an IAM profile. In that case, use the `--use-iam`
+option with the `backup` command.
 
 Backups can be performed using the backup commands:
 
@@ -239,15 +234,32 @@ dokku postgres:backup-schedule lolipop CRON_SCHEDULE BUCKET_NAME
 dokku postgres:backup-unschedule lolipop
 ```
 
-## Postgres Configuration
-
-If you wish to tune the postgres instances various .conf files, you can find them by using the postgres:info command.
-
-```shell
-dokku postgres:info lolipop 
-# or
-dokku postgres:info lolipop --data-dir
+Backup auth can also be set up for different regions, signature versions and endpoints (e.g. for minio):
+ 
+```
+# setup s3 backup authentication with different region
+dokku postgres:backup-auth lolipop AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION
+ 
+# setup s3 backup authentication with different signature version and endpoint
+dokku postgres:backup-auth lolipop AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION AWS_SIGNATURE_VERSION ENDPOINT_URL
+ 
+# more specific example for minio auth
+dokku postgres:backup-auth lolipop MINIO_ACCESS_KEY_ID MINIO_SECRET_ACCESS_KEY us-east-1 s3v4 https://YOURMINIOSERVICE
 ```
 
+## Importing Data
 
+The `import` command should be used with any non-plain-text files exported by `pg_dump`. To import a SQL file, use `connect` like this:
 
+```shell
+dokku postgres:connect db < ./dump.sql
+```
+
+## Security
+
+The connection to the database is done over SSL. A self-signed certificate is
+automatically generated when creating the service.  It can be replaced by a
+custom certificate by overwriting the `server.crt` and `server.key` files in
+`/var/lib/dokku/services/postgres/<DB_NAME>/data`.
+The `server.key` must be chmoded to 600 and must be owned by the postgres user
+or root.
