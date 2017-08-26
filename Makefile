@@ -27,7 +27,7 @@ ifeq ($(shell greadlink > /dev/null 2>&1 ; echo $$?),127)
 endif
 	ln -nfs `which greadlink` tests/bin/readlink
 endif
- 
+
 ci-dependencies: shellcheck bats readlink
 
 lint:
