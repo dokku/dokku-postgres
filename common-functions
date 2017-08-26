@@ -105,13 +105,19 @@ service_alternative_alias() {
 
 service_backup() {
   declare desc="Creates a backup of a service to an existing s3 bucket"
-  declare SERVICE="$1" BUCKET_NAME="$2"
+  declare SERVICE="$1" BUCKET_NAME="$2" S3_FLAG="$3"
   local BACKUP_CONFIG_ROOT="$PLUGIN_DATA_ROOT/$SERVICE/backup"
   local AWS_ACCESS_KEY_ID_FILE="$BACKUP_CONFIG_ROOT/AWS_ACCESS_KEY_ID"
   local AWS_SECRET_ACCESS_KEY_FILE="$BACKUP_CONFIG_ROOT/AWS_SECRET_ACCESS_KEY"
+  local BACKUP_PARAMETERS=""
 
-  [[ ! -f "$AWS_ACCESS_KEY_ID_FILE" ]] && dokku_log_fail "Missing AWS_ACCESS_KEY_ID file"
-  [[ ! -f "$AWS_SECRET_ACCESS_KEY_FILE" ]] && dokku_log_fail "Missing AWS_SECRET_ACCESS_KEY file"
+  if [[ -z "$S3_FLAG" ]]; then
+    [[ ! -f "$AWS_ACCESS_KEY_ID_FILE" ]] && dokku_log_fail "Missing AWS_ACCESS_KEY_ID file"
+    [[ ! -f "$AWS_SECRET_ACCESS_KEY_FILE" ]] && dokku_log_fail "Missing AWS_SECRET_ACCESS_KEY file"
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_ACCESS_KEY_ID=$(cat "$AWS_ACCESS_KEY_ID_FILE") -e AWS_SECRET_ACCESS_KEY=$(cat "$AWS_SECRET_ACCESS_KEY_FILE")"
+  elif [[ $S3_FLAG != "--use-iam" ]]; then
+    dokku_log_fail "Provide AWS credentials or use the --use-iam flag"
+  fi
 
   TMPDIR=$(mktemp -d)
   trap 'rm -rf "$TMPDIR" > /dev/null' RETURN INT TERM EXIT
@@ -119,11 +125,9 @@ service_backup() {
   (service_export "$SERVICE" > "${TMPDIR}/export")
 
   # Build parameter list for s3backup tool
-  BACKUP_PARAMETERS="-e AWS_ACCESS_KEY_ID=$(cat "$AWS_ACCESS_KEY_ID_FILE") \
-                     -e AWS_SECRET_ACCESS_KEY=$(cat "$AWS_SECRET_ACCESS_KEY_FILE") \
-                     -e BUCKET_NAME=$BUCKET_NAME \
-                     -e BACKUP_NAME=${PLUGIN_COMMAND_PREFIX}-${SERVICE} \
-                     -v ${TMPDIR}:/backup"
+  BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e BUCKET_NAME=$BUCKET_NAME"
+  BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e BACKUP_NAME=${PLUGIN_COMMAND_PREFIX}-${SERVICE}"
+  BACKUP_PARAMETERS="$BACKUP_PARAMETERS -v ${TMPDIR}:/backup"
 
   if [[ -f "$BACKUP_CONFIG_ROOT/AWS_DEFAULT_REGION" ]]; then
     BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_DEFAULT_REGION=$(cat "$BACKUP_CONFIG_ROOT/AWS_DEFAULT_REGION")"
