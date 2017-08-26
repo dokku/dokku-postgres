@@ -66,7 +66,6 @@ dokku postgres:create lolipop
 dokku postgres:info lolipop
 
 # you can also retrieve a specific piece of service info via flags
-dokku postgres:info lolipop --config-dir
 dokku postgres:info lolipop --data-dir
 dokku postgres:info lolipop --dsn
 dokku postgres:info lolipop --exposed-ports
@@ -197,22 +196,15 @@ $ dokku postgres:unlink db9.5 my_app
 $ dokku postgres:destroy db9.5
 ```
 
-## importing data
+## Configuration
 
-The `import` command should be used with any non-plain-text files exported by `pg_dump`. To import a SQL file, use `connect` like this:
+If you wish to tune the postgres instances various .conf files, you can find them by using the postgres:info command.
 
 ```shell
-$ dokku postgres:connect db < ./dump.sql
+dokku postgres:info lolipop 
+# or
+dokku postgres:info lolipop --data-dir
 ```
-
-## Security
-
-The connection to the database is done over SSL. A self-signed certificate is
-automatically generated when creating the service.  It can be replaced by a
-custom certificate by overwriting the `server.crt` and `server.key` files in
-`/var/lib/dokku/services/postgres/<DB_NAME>/data`.
-The `server.key` must be chmoded to 600 and must be owned by the postgres user
-or root.
 
 ## Backups
 
@@ -254,3 +246,20 @@ dokku postgres:backup-auth lolipop AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_R
 # more specific example for minio auth
 dokku postgres:backup-auth lolipop MINIO_ACCESS_KEY_ID MINIO_SECRET_ACCESS_KEY us-east-1 s3v4 https://YOURMINIOSERVICE
 ```
+
+## Importing Data
+
+The `import` command should be used with any non-plain-text files exported by `pg_dump`. To import a SQL file, use `connect` like this:
+
+```shell
+dokku postgres:connect db < ./dump.sql
+```
+
+## Security
+
+The connection to the database is done over SSL. A self-signed certificate is
+automatically generated when creating the service.  It can be replaced by a
+custom certificate by overwriting the `server.crt` and `server.key` files in
+`/var/lib/dokku/services/postgres/<DB_NAME>/data`.
+The `server.key` must be chmoded to 600 and must be owned by the postgres user
+or root.
