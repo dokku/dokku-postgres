@@ -43,8 +43,16 @@ case "$1" in
     "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/subcommands/create" "$@"
     ;;
 
+  $PLUGIN_COMMAND_PREFIX:create-database)
+    "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/subcommands/create-database" "$@"
+    ;;
+
   $PLUGIN_COMMAND_PREFIX:destroy)
     "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/subcommands/destroy" "$@"
+    ;;
+
+  $PLUGIN_COMMAND_PREFIX:destroy-database)
+    "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/subcommands/destroy-database" "$@"
     ;;
 
   $PLUGIN_COMMAND_PREFIX:export)
@@ -112,12 +120,14 @@ case "$1" in
     $PLUGIN_COMMAND_PREFIX:clone <name> <new-name>, Create container <new-name> then copy data from <name> into <new-name>
     $PLUGIN_COMMAND_PREFIX:connect <name>, Connect via psql to a $PLUGIN_SERVICE service
     $PLUGIN_COMMAND_PREFIX:create <name>, Create a $PLUGIN_SERVICE service
+    $PLUGIN_COMMAND_PREFIX:create-database <name> <db>, Create a $PLUGIN_SERVICE database in the specified service
     $PLUGIN_COMMAND_PREFIX:destroy <name>, Delete the $PLUGIN_SERVICE service and stop its container if there are no links left
+    $PLUGIN_COMMAND_PREFIX:destroy-database <name> <db>, Delete a $PLUGIN_SERVICE database in the specified service
     $PLUGIN_COMMAND_PREFIX:export <name>, Export a dump of the $PLUGIN_SERVICE service database
     $PLUGIN_COMMAND_PREFIX:expose <name> [port], Expose a $PLUGIN_SERVICE service on custom port if provided (random port otherwise)
     $PLUGIN_COMMAND_PREFIX:import <name> < <file>, Import a dump into the $PLUGIN_SERVICE service database
     $PLUGIN_COMMAND_PREFIX:info <name>, Print the connection information
-    $PLUGIN_COMMAND_PREFIX:link <name> <app>, Link the $PLUGIN_SERVICE service to the app
+    $PLUGIN_COMMAND_PREFIX:link <name> <app> [--user user] [--database database], Link the $PLUGIN_SERVICE service to the app
     $PLUGIN_COMMAND_PREFIX:list, List all $PLUGIN_SERVICE services
     $PLUGIN_COMMAND_PREFIX:logs <name> [-t], Print the most recent log(s) for this service
     $PLUGIN_COMMAND_PREFIX:promote <name> <app>, Promote service <name> as ${PLUGIN_DEFAULT_ALIAS}_URL in <app>
@@ -125,7 +135,7 @@ case "$1" in
     $PLUGIN_COMMAND_PREFIX:start <name>, Start a previously stopped $PLUGIN_SERVICE service
     $PLUGIN_COMMAND_PREFIX:stop <name>, Stop a running $PLUGIN_SERVICE service
     $PLUGIN_COMMAND_PREFIX:unexpose <name>, Unexpose a previously exposed $PLUGIN_SERVICE service
-    $PLUGIN_COMMAND_PREFIX:unlink <name> <app>, Unlink the $PLUGIN_SERVICE service from the app
+    $PLUGIN_COMMAND_PREFIX:unlink <name> <app> [--user user] [--database database], Unlink the $PLUGIN_SERVICE service from the app
 help_content
     }
 

@@ -225,11 +225,34 @@ service_exposed_ports() {
   done
 }
 
+service_databases() {
+  declare desc="Lists databases for a service"
+  declare SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local DATABASE_DIR="$SERVICE_ROOT/databases"
+  [[ ! -d $DATABASE_DIR ]] && echo '-' && return 0
+  for DATABASE in $DATABASE_DIR/*; do
+    echo -n "$(basename "$DATABASE") "
+  done
+}
+
+service_users() {
+  declare desc="Lists users for a service"
+  declare SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local USER_DIR="$SERVICE_ROOT/auth"
+  [[ ! -d $USER_DIR ]] && echo '-' && return 0
+  for USER in $USER_DIR/*; do
+    echo -n "$(basename "$USER") "
+  done
+}
+
 service_info() {
   declare desc="Retrieves information about a given service"
   declare SERVICE="$1" INFO_FLAG="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local SERVICE_URL=$(service_url "$SERVICE")
+  local PASSWORD=$(cat "$SERVICE_ROOT/auth/postgres")
+  local SERVICE_URL=$(service_url "$SERVICE" postgres "$PASSWORD" "$SERVICE")
   local PORT_FILE="$SERVICE_ROOT/PORT"
   local SERVICE_CONTAINER_ID="$(cat "$SERVICE_ROOT/ID")"
   local flag key valid_flags
@@ -268,9 +291,13 @@ service_link() {
   declare desc="Links a service to an application"
   declare SERVICE="$1" APP="$2"
   update_plugin_scheme_for_app "$APP"
-  local SERVICE_URL=$(service_url "$SERVICE")
-  local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  check_auth_migration "$SERVICE"
+  local USER=${3:-postgres}
+  local DATABASE=${4:-$(get_database_name "$SERVICE")}
+  local PASSWORD=$(cat "$SERVICE_ROOT/auth/$USER")
+  local SERVICE_URL=$(service_url "$SERVICE" "$USER" "$PASSWORD" "$DATABASE")
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local EXISTING_CONFIG=$(config_all "$APP")
   local LINK=$(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1) || true
   local DEFAULT_ALIAS=$(echo "$EXISTING_CONFIG" | grep "${PLUGIN_DEFAULT_ALIAS}_URL") || true
@@ -315,9 +342,9 @@ service_list() {
   if [[ -z $SERVICES ]]; then
     dokku_log_warn "There are no $PLUGIN_SERVICE services"
   else
-    LIST="NAME,VERSION,STATUS,EXPOSED PORTS,LINKS\n"
+    LIST="NAME,VERSION,STATUS,EXPOSED PORTS,DATABASES,USERS,LINKS\n"
     for SERVICE in $SERVICES; do
-      LIST+="$SERVICE,$(service_version "$SERVICE"),$(service_status "$SERVICE"),$(service_exposed_ports "$SERVICE"),$(service_linked_apps "$SERVICE")\n"
+      LIST+="$SERVICE,$(service_version "$SERVICE"),$(service_status "$SERVICE"),$(service_exposed_ports "$SERVICE"),$(service_databases "$SERVICE"),$(service_users "$SERVICE"),$(service_linked_apps "$SERVICE")\n"
     done
     printf "%b" "$LIST" | column -t -s,
   fi
@@ -480,8 +507,12 @@ service_stop() {
 service_unlink() {
   declare desc="Unlinks an application from a service"
   declare SERVICE="$1" APP="$2"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local USER=${3:-postgres}
+  local PASSWORD=$(cat "$SERVICE_ROOT/auth/$USER")
+  local DATABASE=${4:-$(get_database_name "$SERVICE")}
   update_plugin_scheme_for_app "$APP"
-  local SERVICE_URL=$(service_url "$SERVICE")
+  local SERVICE_URL=$(service_url "$SERVICE" "$USER" "$PASSWORD" "$DATABASE")
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local EXISTING_CONFIG=$(config_all "$APP")
   local SERVICE_ALIAS=$(service_alias "$SERVICE")
@@ -522,4 +553,38 @@ verify_service_name() {
   [[ ! -n "$SERVICE" ]] && dokku_log_fail "(verify_service_name) SERVICE must not be null"
   [[ ! -d "$PLUGIN_DATA_ROOT/$SERVICE" ]] && dokku_log_fail "$PLUGIN_SERVICE service $SERVICE does not exist"
   return 0
+}
+
+verify_user_name() {
+  declare desc="Verifies that a user exists"
+  declare SERVICE="$1" USER="$2"
+  [[ ! -n "$SERVICE" ]] && dokku_log_fail "(verify_user_name) SERVICE must not be null"
+  [[ ! -n "$USER" ]] && dokku_log_fail "(verify_user_name) SERVICE must not be null"
+  [[ ! -f "$PLUGIN_DATA_ROOT/$SERVICE/auth/$USER" ]] && dokku_log_fail "$PLUGIN_SERVICE user $USER for service $SERVICE does not exist"
+  return 0
+}
+
+verify_database_name() {
+  declare desc="Verifies that a database exists"
+  declare SERVICE="$1"
+  declare DATABASE="$2"
+  [[ ! -n "$SERVICE" ]] && dokku_log_fail "(verify_service_name) SERVICE must not be null"
+  [[ ! -n "$DATABASE" ]] && dokku_log_fail "(verify_service_name) DATABASE must not be null"
+  [[ ! -f "$PLUGIN_DATA_ROOT/$SERVICE/databases/$DATABASE" ]] && dokku_log_fail "$PLUGIN_SERVICE database $DATABASE for service $SERVICE does not exist"
+  return 0
+}
+
+check_auth_migration() {
+  declare desc="Check whether root credentials need to be migrated into multi-user format and do so if needed"
+  declare SERVICE="$1"
+  [[ ! -n "$SERVICE" ]] && dokku_log_fail "(verify_service_name) SERVICE must not be null"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  if [ -f "$SERVICE_ROOT/PASSWORD" ]; then
+    dokku_log_verbose_quiet "Migrating root user to multi-user format"
+    local AUTH_DIR="$SERVICE_ROOT/auth"
+    mkdir -p "$AUTH_DIR"
+    chmod 750 "$AUTH_DIR"
+    mv "$SERVICE_ROOT/PASSWORD" "$AUTH_DIR/postgres"
+    touch "$SERVICE_ROOT/databases/$SERVICE"
+  fi
 }

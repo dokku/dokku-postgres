@@ -22,10 +22,13 @@ service_create() {
   mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
   mkdir -p "$SERVICE_ROOT/data" || dokku_log_fail "Unable to create service data directory"
   mkdir -p "$SERVICE_ROOT/config" || dokku_log_fail "Unable to create service config directory"
+  mkdir -p "$SERVICE_ROOT/databases" || dokku_log_fail "Unable to create service database directory"
+  mkdir -p "$SERVICE_ROOT/auth" || dokku_log_fail "Unable to create service auth directory"
+  chmod 750 "$SERVICE_ROOT/auth"
   touch "$LINKS_FILE"
   password=$(openssl rand -hex 16)
-  echo "$password" > "$SERVICE_ROOT/PASSWORD"
-  chmod 640 "$SERVICE_ROOT/PASSWORD"
+  echo "$password" > "$SERVICE_ROOT/auth/postgres"
+  chmod 640 "$SERVICE_ROOT/auth/postgres"
 
   if [[ -n $POSTGRES_CUSTOM_ENV ]]; then
     echo "$POSTGRES_CUSTOM_ENV" | tr ';' "\n" > "$SERVICE_ROOT/ENV"
@@ -35,11 +38,40 @@ service_create() {
   service_create_container "$SERVICE"
 }
 
+database_create() {
+  local SERVICE="$1"
+  local NAME="$2"
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  [[ -z "$NAME" ]] && dokku_log_fail "Please specify a name for the database"
+
+  check_auth_migration "$SERVICE"
+
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
+
+  dokku_log_verbose_quiet "Creating user"
+  password=$(openssl rand -hex 16)
+  if docker exec "$SERVICE_NAME" su - postgres -c "psql -c \"CREATE USER \\\"$NAME\\\" WITH PASSWORD '$password';\"" > /dev/null 2>&1; then
+    echo "$password" > "$SERVICE_ROOT/auth/$NAME"
+    chmod 640 "$SERVICE_ROOT/auth/$NAME"
+  else
+    echo 'Already exists'
+  fi
+
+  dokku_log_verbose_quiet "Creating database"
+  if docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $NAME" 2> /dev/null; then
+    touch "$SERVICE_ROOT/databases/$NAME"
+  else
+    echo 'Already exists'
+  fi
+  docker exec "$SERVICE_NAME" su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE \\\"$NAME\\\" TO \\\"$NAME\\\";\"" > /dev/null
+}
+
 service_create_container() {
   local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
-  local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
+  local PASSWORD="$(cat "$SERVICE_ROOT/auth/postgres")"
   local PREVIOUS_ID
 
   ID=$(docker run --name "$SERVICE_NAME" -v "$SERVICE_ROOT/data:/var/lib/postgresql/data" -e "POSTGRES_PASSWORD=$PASSWORD" --env-file="$SERVICE_ROOT/ENV" -d --restart always --label dokku=service --label dokku.service=postgres "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION")
@@ -69,7 +101,7 @@ service_export() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local DATABASE_NAME="$(get_database_name "$SERVICE")"
-  local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
+  local PASSWORD="$(cat "$SERVICE_ROOT/auth/postgres")"
 
   [[ -n $SSH_TTY ]] && stty -opost
   docker exec "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_dump -Fc --no-acl --no-owner -h localhost -U postgres -w "$DATABASE_NAME"
@@ -83,7 +115,7 @@ service_import() {
   SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   SERVICE_NAME="$(get_service_name "$SERVICE")"
   DATABASE_NAME="$(get_database_name "$SERVICE")"
-  PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
+  PASSWORD="$(cat "$SERVICE_ROOT/auth/postgres")"
 
   if [[ -t 0 ]]; then
     dokku_log_fail "No data provided on stdin."
@@ -105,7 +137,7 @@ service_start() {
   dokku_log_info1_quiet "Starting container"
   local PREVIOUS_ID=$(docker ps -f status=exited | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
   local IMAGE_EXISTS=$(docker images | grep -e "^$PLUGIN_IMAGE " | grep -q " $PLUGIN_IMAGE_VERSION " && true)
-  local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
+  local PASSWORD="$(cat "$SERVICE_ROOT/auth/postgres")"
 
   if [[ -n $PREVIOUS_ID ]]; then
     docker start "$PREVIOUS_ID" > /dev/null
@@ -122,8 +154,9 @@ service_url() {
   local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
 
-  local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
-  local DATABASE_NAME="$(get_database_name "$SERVICE")"
+  local USER="$2"  # postgres
+  local PASSWORD="$3"
+  local DATABASE_NAME="$4"
   local SERVICE_ALIAS="$(service_alias "$SERVICE")"
-  echo "$PLUGIN_SCHEME://postgres:$PASSWORD@$SERVICE_ALIAS:${PLUGIN_DATASTORE_PORTS[0]}/$DATABASE_NAME"
+  echo "$PLUGIN_SCHEME://$USER:$PASSWORD@$SERVICE_ALIAS:${PLUGIN_DATASTORE_PORTS[0]}/$DATABASE_NAME"
 }
