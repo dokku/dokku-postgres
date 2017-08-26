@@ -17,7 +17,7 @@ postgres-clone-cmd() {
   PLUGIN_IMAGE=$(service_version "$SERVICE" |  grep -o "^.*:" | sed -r "s/://g")
   PLUGIN_IMAGE_VERSION=$(service_version "$SERVICE" |  grep -o ":.*$" | sed -r "s/://g")
 
-  service_create "$NEW_SERVICE"
+  service_create "$NEW_SERVICE" "${@:3}"
   dokku_log_info1 "Copying data from $SERVICE to $NEW_SERVICE"
   service_export "$SERVICE" | service_import "$NEW_SERVICE" > /dev/null 2>&1 || true
   dokku_log_info1 "Done"

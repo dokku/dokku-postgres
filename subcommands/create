@@ -9,7 +9,7 @@ postgres-create-cmd() {
   local cmd="$PLUGIN_COMMAND_PREFIX:create" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"
 
-  service_create "$SERVICE"
+  service_create "$SERVICE" "${@:2}"
 }
 
 postgres-create-cmd "$@"

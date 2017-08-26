@@ -15,6 +15,8 @@ service_create() {
   [[ ! -d "$PLUGIN_DATA_ROOT/$SERVICE" ]] || dokku_log_fail "$PLUGIN_SERVICE service $SERVICE already exists"
   SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"; LINKS_FILE="$SERVICE_ROOT/LINKS"
 
+  service_parse_args "${@:2}"
+
   if ! docker images | grep -e "^$PLUGIN_IMAGE " | grep -q " $PLUGIN_IMAGE_VERSION " ; then
     docker pull "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" || dokku_log_fail "$PLUGIN_SERVICE image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION pull failed"
   fi
@@ -22,10 +24,15 @@ service_create() {
   mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
   mkdir -p "$SERVICE_ROOT/data" || dokku_log_fail "Unable to create service data directory"
   touch "$LINKS_FILE"
-  password=$(openssl rand -hex 16)
-  echo "$password" > "$SERVICE_ROOT/PASSWORD"
+  PASSWORD=$(openssl rand -hex 16)
+  if [[ -n "$SERVICE_PASSWORD" ]]; then
+    PASSWORD="$SERVICE_PASSWORD"
+    dokku_log_warn "Specified password may not be as secure as the auto-generated password"
+  fi
+  echo "$PASSWORD" > "$SERVICE_ROOT/PASSWORD"
   chmod 640 "$SERVICE_ROOT/PASSWORD"
 
+  [[ -n "$SERVICE_CUSTOM_ENV" ]] && POSTGRES_CUSTOM_ENV="$SERVICE_CUSTOM_ENV"
   if [[ -n $POSTGRES_CUSTOM_ENV ]]; then
     echo "$POSTGRES_CUSTOM_ENV" | tr ';' "\n" > "$SERVICE_ROOT/ENV"
   else

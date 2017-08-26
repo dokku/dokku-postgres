@@ -339,6 +339,59 @@ service_logs() {
   docker logs $DOKKU_LOGS_ARGS "$ID"
 }
 
+service_parse_args() {
+  declare desc="cli arg parser"
+  local next_index=1; local skip=false; local args=("$@")
+
+  for arg in "$@"; do
+    shift
+    case "$arg" in
+      "--config-options") set -- "$@" "-c" ;;
+      "--custom-env")     set -- "$@" "-C" ;;
+      "--image")          set -- "$@" "-i" ;;
+      "--image-version")  set -- "$@" "-I" ;;
+      "--password")       set -- "$@" "-p" ;;
+      "--root-password")  set -- "$@" "-r" ;;
+
+      "--alias")          set -- "$@" "-a" ;;
+      "--database")       set -- "$@" "-d" ;;
+      "--memory")         set -- "$@" "-m" ;;
+      "--querystring")    set -- "$@" "-q" ;;
+      "--user")           set -- "$@" "-u" ;;
+      *)                  set -- "$@" "$arg"
+    esac
+  done
+
+  OPTIND=1
+  while getopts "a:c:C:d:i:I:m:p:q:r:u:" opt; do
+    case "$opt" in
+      a) export SERVICE_ALIAS=$OPTARG
+         ;;
+      c) export PLUGIN_CONFIG_OPTIONS=$OPTARG
+         ;;
+      C) export SERVICE_CUSTOM_ENV=$OPTARG
+         ;;
+      d) export SERVICE_DATABASE=$OPTARG
+         ;;
+      i) export PLUGIN_IMAGE=$OPTARG
+         ;;
+      I) export PLUGIN_IMAGE_VERSION=$OPTARG
+         ;;
+      m) export SERVICE_MEMORY=$OPTARG
+         ;;
+      p) export SERVICE_PASSWORD=$OPTARG
+         ;;
+      q) export SERVICE_QUERYSTRING=$OPTARG
+         ;;
+      r) export SERVICE_ROOT_PASSWORD=$OPTARG
+         ;;
+      u) export SERVICE_USER=$OPTARG
+         ;;
+    esac
+  done
+  shift "$(( OPTIND - 1 ))" # remove options from positional parameters
+}
+
 service_port_expose() {
   declare desc="Wrapper for exposing service ports"
   declare SERVICE="$1"
