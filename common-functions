@@ -412,8 +412,17 @@ service_port_pause() {
     [[ ! -f "$PORT_FILE" ]] && return 0
   fi
 
-  docker stop "$EXPOSED_NAME" > /dev/null
-  docker rm "$EXPOSED_NAME" > /dev/null
+  local CONTAINER_NAME=$(docker ps -f name=^/${EXPOSED_NAME}$ --format "{{.Names}}")
+  if [[ -z "$CONTAINER_NAME" ]]; then
+    if [[ "$LOG_FAIL" == "true" ]]; then
+      dokku_log_info1 "Service $SERVICE unexposed"
+    fi
+
+    return
+  fi
+
+  docker stop "$EXPOSED_NAME" > /dev/null 2>&1 || true
+  docker rm "$EXPOSED_NAME" > /dev/null 2>&1 || true
   if [[ "$LOG_FAIL" == "true" ]]; then
     dokku_log_info1 "Service $SERVICE unexposed"
   fi
