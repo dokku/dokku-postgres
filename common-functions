@@ -196,6 +196,18 @@ service_backup_schedule() {
   sudo /bin/chmod 644 "$CRON_FILE"
 }
 
+service_backup_schedule_cat() {
+  declare desc="cat the contents of the configured backup cronfile for the service"
+  declare SERVICE="$1"
+  local CRON_FILE="/etc/cron.d/dokku-${PLUGIN_COMMAND_PREFIX}-${SERVICE}"
+
+  if [[ ! -f "$CRON_FILE" ]]; then
+    dokku_log_fail "There is no scheduled backup for ${SERVICE}."
+  fi
+
+  cat "$CRON_FILE"
+}
+
 service_backup_unschedule() {
   declare desc="unschedules the backup of the service"
   declare SERVICE="$1"

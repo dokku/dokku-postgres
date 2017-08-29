@@ -21,9 +21,10 @@ postgres:backup <name> <bucket> (--use-iam) Create a backup of the postgres serv
 postgres:backup-auth <name> <aws_access_key_id> <aws_secret_access_key> (<aws_default_region>) (<aws_signature_version>) (<endpoint_url>) Sets up authentication for backups on the postgres service
 postgres:backup-deauth <name>     Removes backup authentication for the postgres service
 postgres:backup-schedule <name> <schedule> <bucket> Schedules a backup of the postgres service
-postgres:backup-set-encryption <name> <encryption_key>, Sets up GPG encryption for future backups of the postgres service
+postgres:backup-schedule-cat <name> Show the backup schedule for the service
+postgres:backup-set-encryption <name> <encryption_key> Sets up GPG encryption for future backups of the postgres service
 postgres:backup-unschedule <name> Unschedules the backup of the postgres service
-postgres:backup-unset-encryption <name>, Removes backup encryption for future backups of the postgres service
+postgres:backup-unset-encryption <name> Removes backup encryption for future backups of the postgres service
 postgres:clone <name> <new-name>  Create container <new-name> then copy data from <name> into <new-name>
 postgres:connect <name>           Connect via psql to a postgres service
 postgres:create <name>            Create a postgres service with environment variables
@@ -233,6 +234,9 @@ dokku postgres:backup lolipop BUCKET_NAME
 # schedule a backup
 # CRON_SCHEDULE is a crontab expression, eg. "0 3 * * *" for each day at 3am
 dokku postgres:backup-schedule lolipop CRON_SCHEDULE BUCKET_NAME
+
+# cat the contents of the configured backup cronfile for the service
+dokku postgres:backup-schedule-cat lolipop
 
 # remove the scheduled backup from cron
 dokku postgres:backup-unschedule lolipop
