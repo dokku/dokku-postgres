@@ -7,7 +7,7 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 postgres-expose-cmd() {
   declare desc="expose a $PLUGIN_SERVICE service on custom port if provided (random port otherwise)"
   local cmd="$PLUGIN_COMMAND_PREFIX:expose" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1"
+  declare SERVICE="$1" PORTS="${@:2}"
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   verify_service_name "$SERVICE"

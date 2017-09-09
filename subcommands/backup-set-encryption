@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+postgres-backup-set-encryption-cmd() {
+  declare desc="sets encryption for all future backups of $PLUGIN_SERVICE service"
+  local cmd="$PLUGIN_COMMAND_PREFIX:backup-set-encryption" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  declare SERVICE="$1" ENCRYPTION_KEY="$2"
+
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  [[ -z "$ENCRYPTION_KEY" ]] && dokku_log_fail "Please specify a GPG encryption key"
+  verify_service_name "$SERVICE"
+  service_backup_set_encryption "$SERVICE" "$ENCRYPTION_KEY"
+}
+
+postgres-backup-set-encryption-cmd "$@"

@@ -4,14 +4,14 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
-postgres-logs-cmd() {
-  declare desc="print the most recent log(s) for this service"
-  local cmd="$PLUGIN_COMMAND_PREFIX:logs" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1" TAIL_FLAG="$2"
+postgres-backup-unset-encryption-cmd() {
+  declare desc="unsets encryption for future backups of the $PLUGIN_SERVICE service"
+  local cmd="$PLUGIN_COMMAND_PREFIX:backup-unset-encryption" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  declare SERVICE="$1"
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   verify_service_name "$SERVICE"
-  service_logs "$SERVICE" "$TAIL_FLAG"
+  service_backup_unset_encryption "$SERVICE"
 }
 
-postgres-logs-cmd "$@"
+postgres-backup-unset-encryption-cmd "$@"

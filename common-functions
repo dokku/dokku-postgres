@@ -105,17 +105,18 @@ service_alternative_alias() {
 
 service_backup() {
   declare desc="Creates a backup of a service to an existing s3 bucket"
-  declare SERVICE="$1" BUCKET_NAME="$2" S3_FLAG="$3"
+  declare SERVICE="$1" BUCKET_NAME="$2" USE_IAM_OPTIONAL_FLAG="$3"
   local BACKUP_CONFIG_ROOT="$PLUGIN_DATA_ROOT/$SERVICE/backup"
+  local BACKUP_ENCRYPTION_CONFIG_ROOT="$PLUGIN_DATA_ROOT/$SERVICE/backup-encryption"
   local AWS_ACCESS_KEY_ID_FILE="$BACKUP_CONFIG_ROOT/AWS_ACCESS_KEY_ID"
   local AWS_SECRET_ACCESS_KEY_FILE="$BACKUP_CONFIG_ROOT/AWS_SECRET_ACCESS_KEY"
   local BACKUP_PARAMETERS=""
 
-  if [[ -z "$S3_FLAG" ]]; then
+  if [[ -z "$USE_IAM_OPTIONAL_FLAG" ]]; then
     [[ ! -f "$AWS_ACCESS_KEY_ID_FILE" ]] && dokku_log_fail "Missing AWS_ACCESS_KEY_ID file"
     [[ ! -f "$AWS_SECRET_ACCESS_KEY_FILE" ]] && dokku_log_fail "Missing AWS_SECRET_ACCESS_KEY file"
     BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_ACCESS_KEY_ID=$(cat "$AWS_ACCESS_KEY_ID_FILE") -e AWS_SECRET_ACCESS_KEY=$(cat "$AWS_SECRET_ACCESS_KEY_FILE")"
-  elif [[ $S3_FLAG != "--use-iam" ]]; then
+  elif [[ $USE_IAM_OPTIONAL_FLAG != "--use-iam" ]]; then
     dokku_log_fail "Provide AWS credentials or use the --use-iam flag"
   fi
 
@@ -141,8 +142,12 @@ service_backup() {
     BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e ENDPOINT_URL=$(cat "$BACKUP_CONFIG_ROOT/ENDPOINT_URL")"
   fi
 
+  if [[ -f "$BACKUP_ENCRYPTION_CONFIG_ROOT/ENCRYPTION_KEY" ]]; then
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e ENCRYPTION_KEY=$(cat "$BACKUP_ENCRYPTION_CONFIG_ROOT/ENCRYPTION_KEY")"
+  fi
+
   # shellcheck disable=SC2086
-  docker run $BACKUP_PARAMETERS dokkupaas/s3backup:0.7.0
+  docker run $BACKUP_PARAMETERS dokkupaas/s3backup:0.8.0
 }
 
 service_backup_auth() {
@@ -196,6 +201,25 @@ service_backup_unschedule() {
   local CRON_FILE="/etc/cron.d/dokku-${PLUGIN_COMMAND_PREFIX}-${SERVICE}"
 
   sudo /bin/rm -f "$CRON_FILE"
+}
+
+service_backup_set_encryption() {
+  declare desc="Sets up backup encryption"
+  declare SERVICE="$1" ENCRYPTION_KEY="$2"
+  local SERVICE_ROOT="${PLUGIN_DATA_ROOT}/${SERVICE}"
+  local SERVICE_BACKUP_ENCRYPTION_ROOT="${SERVICE_ROOT}/backup-encryption/"
+
+  mkdir -p "$SERVICE_BACKUP_ENCRYPTION_ROOT"
+  echo "$ENCRYPTION_KEY" > "${SERVICE_BACKUP_ENCRYPTION_ROOT}/ENCRYPTION_KEY"
+}
+
+service_backup_unset_encryption() {
+  declare desc="Removes backup encryption"
+  declare SERVICE="$1"
+  local SERVICE_ROOT="${PLUGIN_DATA_ROOT}/${SERVICE}"
+  local SERVICE_BACKUP_ENCRYPTION_ROOT="${SERVICE_ROOT}/backup-encryption/"
+
+  rm -rf "$SERVICE_BACKUP_ENCRYPTION_ROOT"
 }
 
 service_enter() {
