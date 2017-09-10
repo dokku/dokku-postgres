@@ -112,11 +112,11 @@ service_backup() {
   local AWS_SECRET_ACCESS_KEY_FILE="$BACKUP_CONFIG_ROOT/AWS_SECRET_ACCESS_KEY"
   local BACKUP_PARAMETERS=""
 
-  if [[ -z "$USE_IAM_OPTIONAL_FLAG" ]]; then
+  if [[ "$USE_IAM_OPTIONAL_FLAG" != "--use-iam" ]] && [[ "$USE_IAM_OPTIONAL_FLAG" != "-u" ]]; then
     [[ ! -f "$AWS_ACCESS_KEY_ID_FILE" ]] && dokku_log_fail "Missing AWS_ACCESS_KEY_ID file"
     [[ ! -f "$AWS_SECRET_ACCESS_KEY_FILE" ]] && dokku_log_fail "Missing AWS_SECRET_ACCESS_KEY file"
     BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_ACCESS_KEY_ID=$(cat "$AWS_ACCESS_KEY_ID_FILE") -e AWS_SECRET_ACCESS_KEY=$(cat "$AWS_SECRET_ACCESS_KEY_FILE")"
-  elif [[ $USE_IAM_OPTIONAL_FLAG != "--use-iam" ]]; then
+  else
     dokku_log_fail "Provide AWS credentials or use the --use-iam flag"
   fi
 
