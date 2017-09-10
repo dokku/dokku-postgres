@@ -5,9 +5,9 @@ source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 postgres-destroy-cmd() {
-  declare desc="delete the $PLUGIN_SERVICE service, delete the data and stop its container if there are no links left"
+  declare desc="delete the $PLUGIN_SERVICE service/data/container if there are no links left"
   local cmd="$PLUGIN_COMMAND_PREFIX:destroy" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1" FORCE_DESTROY="$2"
+  declare SERVICE="$1" FORCE_FLAG="$2"
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   verify_service_name "$SERVICE"
@@ -16,7 +16,9 @@ postgres-destroy-cmd() {
 
   [[ -s "$LINKS_FILE" ]] && dokku_log_fail "Cannot delete linked service"
 
-  [[ "$FORCE_DESTROY" == "force" ]] && DOKKU_APPS_FORCE_DELETE=1
+  if [[ "$FORCE_FLAG" == "force" ]] || [[ "$FORCE_FLAG" == "-f" ]] || [[ "$FORCE_FLAG" == "--force" ]]; then
+    DOKKU_APPS_FORCE_DELETE=1
+  fi
   if [[ -z "$DOKKU_APPS_FORCE_DELETE" ]]; then
     dokku_log_warn "WARNING: Potentially Destructive Action"
     dokku_log_warn "This command will destroy $SERVICE $PLUGIN_SERVICE service."
