@@ -349,14 +349,14 @@ service_list() {
 
 service_logs() {
   declare desc="Displays logs for a service"
-  declare SERVICE="$1"
+  declare SERVICE="$1" TAIL_FLAG="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local ID=$(cat "$SERVICE_ROOT/ID")
+  local RE_INTEGER='^[0-9]+$'
 
-  if [[ $2 == "-t" ]]; then
+  DOKKU_LOGS_ARGS="--tail 100"
+  if [[ "$TAIL_FLAG" == "-t" ]] || [[ "$TAIL_FLAG" == "--tail" ]]; then
     DOKKU_LOGS_ARGS="--follow"
-  else
-    DOKKU_LOGS_ARGS="--tail 100"
   fi
 
   # shellcheck disable=SC2086
