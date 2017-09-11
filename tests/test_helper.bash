@@ -10,6 +10,7 @@ export PLUGIN_AVAILABLE_PATH="$PLUGIN_PATH"
 export PLUGIN_CORE_AVAILABLE_PATH="$PLUGIN_PATH"
 export POSTGRES_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fixtures"
 export PLUGIN_DATA_ROOT="$POSTGRES_ROOT"
+export PLUGIN_CONFIG_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 if [[ "$(uname)" == "Darwin" ]]; then
   export PLUGN_URL="https://github.com/dokku/plugn/releases/download/v0.3.0/plugn_0.3.0_darwin_x86_64.tgz"
 else
@@ -18,6 +19,9 @@ fi
 
 mkdir -p "$PLUGIN_DATA_ROOT"
 rm -rf "${PLUGIN_DATA_ROOT:?}"/*
+
+mkdir -p "$PLUGIN_CONFIG_ROOT"
+rm -rf "${PLUGIN_CONFIG_ROOT:?}"/*
 
 flunk() {
   { if [ "$#" -eq 0 ]; then cat -

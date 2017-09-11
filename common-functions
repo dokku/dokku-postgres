@@ -328,6 +328,7 @@ service_linked_apps() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local LINKS_FILE="$SERVICE_ROOT/LINKS"
 
+  touch "$LINKS_FILE"
   [[ -z $(< "$LINKS_FILE") ]] && echo '-' && return 0
 
   tr '\n' ' ' < "$LINKS_FILE"
