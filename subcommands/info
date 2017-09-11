@@ -4,7 +4,31 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
-postgres-info-cmd() {
+service-info-cmd() {
+  #E get connection information as follows:
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop
+  #E you can also retrieve a specific piece of service info via flags:
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --config-dir
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --data-dir
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --dsn
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --exposed-ports
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --id
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --internal-ip
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --links
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --service-root
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --status
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --version
+  #A service, service to run command against
+  #F --config-dir, show the service configuration directory
+  #F --data-dir, show the service data directory
+  #F --dsn, show the service DSN
+  #F --exposed-ports, show service exposed ports
+  #F --id, show the service container id
+  #F --internal-ip, show the service internal ip
+  #F --links, show the service app links
+  #F --service-root, show the service root directory
+  #F --status, show the service running status
+  #F --version, show the service image version
   declare desc="print the connection information"
   local cmd="$PLUGIN_COMMAND_PREFIX:info" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" INFO_FLAG="$2"
@@ -14,4 +38,4 @@ postgres-info-cmd() {
   service_info "$SERVICE" "$INFO_FLAG"
 }
 
-postgres-info-cmd "$@"
+service-info-cmd "$@"

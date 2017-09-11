@@ -4,7 +4,13 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
-postgres-backup-schedule-cmd() {
+service-backup-schedule-cmd() {
+  #E schedule a backup
+  #E > 'schedule' is a crontab expression, eg. "0 3 * * *" for each day at 3am
+  #E dokku $PLUGIN_COMMAND_PREFIX:backup-deauth lolipop "0 3 * * *" my-s3-bucket
+  #A service, service to run command against
+  #A schedule, a cron schedule to run backups on
+  #A bucket-name, name of the s3 bucket to upload backups to
   declare desc="schedules a backup of the $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-schedule" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" SCHEDULE="$2" BUCKET_NAME="$3"
@@ -16,4 +22,4 @@ postgres-backup-schedule-cmd() {
   service_backup_schedule "$SERVICE" "$SCHEDULE" "$BUCKET_NAME"
 }
 
-postgres-backup-schedule-cmd "$@"
+service-backup-schedule-cmd "$@"

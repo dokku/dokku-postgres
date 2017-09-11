@@ -4,7 +4,10 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
-postgres-backup-unset-encryption-cmd() {
+service-backup-unset-encryption-cmd() {
+  #E unset a GPG encryption key for backups
+  #E dokku $PLUGIN_COMMAND_PREFIX:backup-unset-encryption lolipop
+  #A service, service to run command against
   declare desc="unsets encryption for future backups of the $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-unset-encryption" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"
@@ -14,4 +17,4 @@ postgres-backup-unset-encryption-cmd() {
   service_backup_unset_encryption "$SERVICE"
 }
 
-postgres-backup-unset-encryption-cmd "$@"
+service-backup-unset-encryption-cmd "$@"

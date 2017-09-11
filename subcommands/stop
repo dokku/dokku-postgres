@@ -4,7 +4,10 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
-postgres-stop-cmd() {
+service-stop-cmd() {
+  #E stop the service and the running container
+  #E dokku $PLUGIN_COMMAND_PREFIX:stop lolipop
+  #A service, service to run command against
   declare desc="stop a running $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:stop" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"
@@ -14,4 +17,4 @@ postgres-stop-cmd() {
   service_stop "$SERVICE"
 }
 
-postgres-stop-cmd "$@"
+service-stop-cmd "$@"

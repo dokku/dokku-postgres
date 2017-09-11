@@ -4,7 +4,41 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
-postgres-link-cmd() {
+service-link-cmd() {
+  #E a $PLUGIN_COMMAND_PREFIX service can be linked to a container.
+  #E this will use native docker links via the docker-options plugin.
+  #E here we link it to our 'playground' app.
+  #E > NOTE: this will restart your app
+  #E dokku $PLUGIN_COMMAND_PREFIX:link lolipop playground
+  #E the following environment variables will be set automatically by docker
+  #E (not on the app itself, so they won’t be listed when calling dokku config):
+  #E
+  #E     DOKKU_${PLUGIN_DEFAULT_ALIAS}_LOLIPOP_NAME=/lolipop/DATABASE
+  #E     DOKKU_${PLUGIN_DEFAULT_ALIAS}_LOLIPOP_PORT=tcp://172.17.0.1:${PLUGIN_DATASTORE_PORTS[0]}
+  #E     DOKKU_${PLUGIN_DEFAULT_ALIAS}_LOLIPOP_PORT_${PLUGIN_DATASTORE_PORTS[0]}_TCP=tcp://172.17.0.1:${PLUGIN_DATASTORE_PORTS[0]}
+  #E     DOKKU_${PLUGIN_DEFAULT_ALIAS}_LOLIPOP_PORT_${PLUGIN_DATASTORE_PORTS[0]}_TCP_PROTO=tcp
+  #E     DOKKU_${PLUGIN_DEFAULT_ALIAS}_LOLIPOP_PORT_${PLUGIN_DATASTORE_PORTS[0]}_TCP_PORT=${PLUGIN_DATASTORE_PORTS[0]}
+  #E     DOKKU_${PLUGIN_DEFAULT_ALIAS}_LOLIPOP_PORT_${PLUGIN_DATASTORE_PORTS[0]}_TCP_ADDR=172.17.0.1
+  #E
+  #E the following will be set on the linked application by default:
+  #E
+  #E     ${PLUGIN_DEFAULT_ALIAS}_URL=${PLUGIN_SCHEME}://lolipop:SOME_PASSWORD@dokku-${PLUGIN_COMMAND_PREFIX}-lolipop:${PLUGIN_DATASTORE_PORTS[0]}/lolipop
+  #E
+  #E the host exposed here only works internally in docker containers.
+  #E if you want your container to be reachable from outside, you should
+  #E use the 'expose' subcommand. another service can be linked to your app:
+  #E dokku $PLUGIN_COMMAND_PREFIX:link other_service playground
+  #E it is possible to change the protocol for ${PLUGIN_DEFAULT_ALIAS}_URL by setting the
+  #E environment variable ${PLUGIN_DEFAULT_ALIAS}_DATABASE_SCHEME on the app. doing so will
+  #E after linking will cause the plugin to think the service is not
+  #E linked, and we advise you to unlink before proceeding.
+  #E dokku config:set playground ${PLUGIN_DEFAULT_ALIAS}_DATABASE_SCHEME=${PLUGIN_SCHEME}2
+  #E dokku $PLUGIN_COMMAND_PREFIX:link lolipop playground
+  #E this will cause ${PLUGIN_DEFAULT_ALIAS}_URL to be set as:
+  #E
+  #E     ${PLUGIN_SCHEME}2://lolipop:SOME_PASSWORD@dokku-${PLUGIN_COMMAND_PREFIX}-lolipop:${PLUGIN_DATASTORE_PORTS[0]}/lolipop
+  #A service, service to run command against
+  #A app, app to run command against
   declare desc="link the $PLUGIN_SERVICE service to the app"
   local cmd="$PLUGIN_COMMAND_PREFIX:link" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" APP="$2"
@@ -17,4 +51,4 @@ postgres-link-cmd() {
   service_link "$SERVICE" "$APP"
 }
 
-postgres-link-cmd "$@"
+service-link-cmd "$@"

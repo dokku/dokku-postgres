@@ -4,7 +4,11 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
-postgres-destroy-cmd() {
+service-destroy-cmd() {
+  #E destroy the service, it's data, and the running container
+  #E dokku $PLUGIN_COMMAND_PREFIX:destroy lolipop
+  #A service, service to run command against
+  #F -f|--force, force destroy without asking for confirmation
   declare desc="delete the $PLUGIN_SERVICE service/data/container if there are no links left"
   local cmd="$PLUGIN_COMMAND_PREFIX:destroy" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" FORCE_FLAG="$2"
@@ -52,4 +56,4 @@ postgres-destroy-cmd() {
   dokku_log_info2 "$PLUGIN_SERVICE container deleted: $SERVICE"
 }
 
-postgres-destroy-cmd "$@"
+service-destroy-cmd "$@"

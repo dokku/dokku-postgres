@@ -1,0 +1,307 @@
+#!/usr/bin/env bash
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+
+export SUBCOMMAND_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/subcommands"
+
+fn-help() {
+  declare CMD="$1"
+  local cmd EXIT_CODE
+
+  if [[ "$CMD" == "help" ]] || [[ "$CMD" == "$PLUGIN_COMMAND_PREFIX" ]] || [[ "$CMD" == "$PLUGIN_COMMAND_PREFIX:help" ]]; then
+    fn-help-all "$@"
+    exit 0
+  fi
+
+  pushd "$SUBCOMMAND_ROOT" > /dev/null 2>&1
+  for cmd in *; do
+    if [[ "$CMD" == "${PLUGIN_COMMAND_PREFIX}:$cmd" ]]; then
+      "$SUBCOMMAND_ROOT/$cmd" "$@"
+      EXIT_CODE="$?"
+      exit "$EXIT_CODE"
+    fi
+  done
+  popd > /dev/null 2>&1
+
+  exit "$DOKKU_NOT_IMPLEMENTED_EXIT"
+}
+
+fn-help-all() {
+  declare CMD="$1" SUBCOMMAND="$2"
+  local CMD_OUTPUT BLUE BOLD FULL_OUTPUT NORMAL 
+  FULL_OUTPUT=true
+
+  if [[ "$CMD" = "$PLUGIN_COMMAND_PREFIX:help" ]] ; then
+    BOLD="$(tput bold)"
+    NORMAL="\033[m"
+    BLUE="\033[0;34m"
+    CYAN="\033[1;36m"
+    if [[ -n "$SUBCOMMAND" ]] && [[ "$SUBCOMMAND" != "--all" ]]; then
+      fn-help-contents-subcommand "$SUBCOMMAND" "$FULL_OUTPUT"
+      return "$?"
+    fi
+
+    echo -e "${BOLD}usage${NORMAL}: dokku $PLUGIN_COMMAND_PREFIX[:COMMAND]"
+    echo ''
+    echo -e "${BOLD}List your $PLUGIN_COMMAND_PREFIX services.${NORMAL}"
+    echo ''
+    echo -e "${BLUE}Example:${NORMAL}"
+    echo ''
+    echo "    \$ dokku $PLUGIN_COMMAND_PREFIX:list"
+    echo ''
+    fn-help-list-example | column -c5 -t -s,
+    echo ''
+    echo -e "dokku ${BOLD}${PLUGIN_COMMAND_PREFIX}${NORMAL} commands: (get help with ${CYAN}dokku ${PLUGIN_COMMAND_PREFIX}:help SUBCOMMAND${NORMAL})"
+    echo ''
+    fn-help-contents | sort | column -c2 -t -s,
+    echo ''
+  elif [[ $(ps -o command= $PPID) == *"--all"* ]]; then
+    fn-help-contents
+  else
+    cat<<help_desc
+  $PLUGIN_COMMAND_PREFIX, Plugin for managing $PLUGIN_SERVICE services
+help_desc
+  fi
+
+  return 0
+}
+
+fn-help-contents() {
+  local TMPDIR
+
+  TMPDIR=$(mktemp -d)
+  trap 'rm -rf "$TMPDIR" > /dev/null' RETURN INT TERM EXIT
+  pushd "$SUBCOMMAND_ROOT" > /dev/null 2>&1
+  for cmd in *; do
+    fn-help-contents-subcommand "$cmd" || true
+  done
+}
+
+fn-help-contents-subcommand() {
+  declare SUBCOMMAND="$1" FULL_OUTPUT="$2"
+  local UNCLEAN_FILE="${TMPDIR}cmd-unclean" CLEAN_FILE="${TMPDIR}cmd-clean"
+  local BOLD CMD_OUTPUT CYAN EXAMPLE LIGHT_GRAY NORMAL
+
+  rm -rf "$UNCLEAN_FILE" "$CLEAN_FILE"
+  cat "$SUBCOMMAND_ROOT/$SUBCOMMAND" > "$UNCLEAN_FILE"
+
+  fn-help-subcommand-sanitize "$UNCLEAN_FILE" "$CLEAN_FILE"
+  if [[ "$(fn-help-is-subcommand-unimplemented "$CLEAN_FILE")" == true ]]; then
+    return 1
+  fi
+
+  args="$(fn-help-subcommand-args "$CLEAN_FILE" "$FULL_OUTPUT")"
+  cmd_line="$(echo -e "${SUBCOMMAND} ${args}" | sed -e 's/[[:space:]]*$//')"
+  desc="$(grep desc "$CLEAN_FILE" | head -1)"
+  eval "$desc"
+
+  BLUE="\033[0;34m"
+  BOLD="$(tput bold)"
+  CYAN="\033[1;36m"
+  NORMAL="\033[m"
+  LIGHT_GRAY="\033[2;37m"
+  LIGHT_RED="\033[1;31m"
+  CMD_OUTPUT="$(echo -e "    ${PLUGIN_COMMAND_PREFIX}:${cmd_line}, ${LIGHT_GRAY}${desc}${NORMAL}")"
+  if [[ "$FULL_OUTPUT" != "true" ]]; then
+    echo "$CMD_OUTPUT"
+    return 0
+  fi
+
+  echo -e "${BOLD}usage:${NORMAL} dokku ${PLUGIN_COMMAND_PREFIX}:${cmd_line}"
+  echo ''
+  echo -e "${BOLD}${desc}${NORMAL}"
+  echo ''
+
+  ARGS="$(fn-help-subcommand-list-args "$CLEAN_FILE")"
+  if [[ -n "$ARGS" ]]; then
+    echo -e "${CYAN}arguments:${NORMAL}"
+    echo ''
+    echo "$ARGS" | column -c2 -t -s,
+    echo ''
+  fi
+
+  FLAGS="$(fn-help-subcommand-list-flags "$CLEAN_FILE")"
+  if [[ -n "$FLAGS" ]]; then
+    echo -e "${BLUE}flags:${NORMAL}"
+    echo ''
+    echo "$FLAGS" | column -c2 -t -s,
+    echo ''
+  fi
+
+  EXAMPLE="$(fn-help-subcommand-example "$CLEAN_FILE")"
+  if [[ -n "$EXAMPLE" ]]; then
+    echo -e "${LIGHT_RED}examples:${NORMAL}"
+    echo ''
+    echo "$EXAMPLE"
+    echo ''
+  fi
+
+  return 0
+}
+
+fn-help-is-subcommand-unimplemented() {
+  declare FUNC_FILE="$1"
+  local UNIMPLEMENTED
+
+  UNIMPLEMENTED="$(grep "Not yet implemented" "$FUNC_FILE" | head -1 || true)"
+  if [[ -n "$UNIMPLEMENTED" ]]; then
+    echo true
+  else
+    echo false
+  fi
+}
+
+fn-help-list-example() {
+  # shellcheck disable=SC2034
+  declare desc="return $PLUGIN_COMMAND_PREFIX plugin help content"
+  cat<<help_list
+      NAME, VERSION, STATUS, EXPOSED PORTS, LINKS
+      service-name, $PLUGIN_COMMAND_PREFIX:$PLUGIN_IMAGE_VERSION, running, -, app-name
+help_list
+}
+
+fn-help-subcommand-args() {
+  declare FUNC_FILE="$1" FULL_OUTPUT="$2"
+  local argline arglist args argpos BLUE NORMAL
+
+  if [[ "$FULL_OUTPUT" == "true" ]]; then
+    BLUE="\033[0;34m"
+    NORMAL="\033[m"
+  fi
+  argline=$(grep declare "$FUNC_FILE" | grep -v "declare desc" | head -1 || true)
+  arglist=($(echo -e "${argline// /"\n"}" | awk -F= '/=/{print ""$1""}'))
+  args=""
+  argpos=0
+  for arg in "${arglist[@]}"; do
+    argpos=$((argpos + 1))
+    if [[ "$FULL_OUTPUT" != "true" ]] && [[ "$argpos" == 4 ]]; then
+      args+="..."
+      break
+    fi
+
+    if [[ "$arg" == *_FLAG ]]; then
+      arg="${arg/_FLAG/}"
+      if [[ $arg == "INFO" ]]; then
+        arg="SINGLE_INFO_FLAG..."
+        args+=" ${BLUE}[--${arg//_/-}]${NORMAL}"
+      else
+        args+=" ${BLUE}[-${arg:0:1}|--${arg//_/-}]${NORMAL}"
+      fi
+    elif [[ "$arg" == *_FLAGS_LIST ]]; then
+      arg=${arg%_*}
+      args+=" [--${arg//_/-}...]"
+    elif [[ "$arg" == *_LIST ]]; then
+      arg=${arg%_*}
+      args+=" <${arg//_/-}...>"
+    else
+      args+=" <${arg//_/-}>"
+    fi
+  done
+  args=$(echo "$args" | tr "\n" " ")
+  # shellcheck disable=SC2001
+  echo "${args,,}" | sed -e 's/^[[:space:]]*//'
+}
+
+fn-help-subcommand-example() {
+  declare FUNC_FILE="$1"
+  local EXAMPLE
+
+  EXAMPLE=$(grep "#E" "$FUNC_FILE" | cut -d' ' -f2- || true)
+  if [[ -z "$EXAMPLE" ]]; then
+    return 0
+  fi
+
+  BOLD="$(tput bold)"
+  LAST_LINE=""
+  LIGHT_GRAY="\033[2;37m"
+  OTHER_GRAY="\033[7;37m"
+  NEWLINE=""
+  NORMAL="\033[m"
+  _fn-help-apply-shell-expansion "$EXAMPLE" | while read -r line; do
+    line="$(echo "$line" | cut -c 4-)"
+    if [[ "$line" == export* ]] || [[ "$line" == dokku* ]]; then
+      [[ "$LAST_LINE" == "command" ]] && NEWLINE=""
+      [[ "$LAST_LINE" == "sentence" ]] && NEWLINE="\n"
+      echo -e "${NEWLINE}    ${LIGHT_GRAY}${line}${NORMAL}"
+      LAST_LINE="command"
+    else
+      [[ "$LAST_LINE" == "command" ]] && NEWLINE="\n"
+      [[ "$LAST_LINE" == "sentence" ]] && NEWLINE=""
+      [[ "$line" == \>* ]] && line="\n    ${BOLD}${line}${NORMAL}"
+      # shellcheck disable=SC2001
+      [[ "$line" == "    "* ]] && line="    ${OTHER_GRAY}$(echo "$line" | sed -e 's/^[[:space:]]*//')${NORMAL}"
+      echo -e "${NEWLINE}${line}"
+      LAST_LINE="sentence"
+      NEWLINE="\n"
+    fi
+  done
+}
+
+fn-help-subcommand-list-args() {
+  declare FUNC_FILE="$1"
+  local EXAMPLE LIGHT_GRAY NORMAL
+
+  FLAGS=$(grep "#A" "$FUNC_FILE" | cut -d'A' -f2- | sed -e 's/^[[:space:]]*//' || true)
+  if [[ -z "$FLAGS" ]]; then
+    return 0
+  fi
+
+  NORMAL="\033[m"
+  LIGHT_GRAY="\033[2;37m"
+
+  _fn-help-apply-shell-expansion "$FLAGS" | while read -r line; do 
+    echo -e "$(echo "$line" | cut -d',' -f1),${LIGHT_GRAY}$(echo "$line" | cut -d',' -f2-)${NORMAL}"
+  done
+}
+
+fn-help-subcommand-list-flags() {
+  declare FUNC_FILE="$1"
+  local EXAMPLE LIGHT_GRAY NORMAL
+
+  FLAGS=$(grep "#F" "$FUNC_FILE" | cut -d'F' -f2- | sed -e 's/^[[:space:]]*//' || true)
+  if [[ -z "$FLAGS" ]]; then
+    return 0
+  fi
+
+  NORMAL="\033[m"
+  LIGHT_GRAY="\033[2;37m"
+
+  _fn-help-apply-shell-expansion "$FLAGS" | while read -r line; do 
+    echo -e "$(echo "$line" | cut -d',' -f1),${LIGHT_GRAY}$(echo "$line" | cut -d',' -f2-)${NORMAL}"
+  done
+}
+
+fn-help-subcommand-sanitize() {
+  declare FUNC_FILE="$1" OUTGOING_FUNC_FILE="$2"
+  local FUNCTION_FOUND=false
+  local IFS OIFS
+
+  touch "$OUTGOING_FUNC_FILE"
+
+  OIFS="$IFS"
+  IFS=,
+  while read -r p; do
+    IFS="$OIFS"
+    if [[ "$p" == *"-cmd \"\$@\""* ]] || [[ "$p" == "" ]]; then
+      continue
+    fi
+
+    if [[ "$FUNCTION_FOUND" == true ]]; then
+      echo "$p" >> "$OUTGOING_FUNC_FILE"
+      continue
+    fi
+
+    if [[ "$p" == *"()"* ]]; then
+      FUNCTION_FOUND=true
+      echo "$p" >> "$OUTGOING_FUNC_FILE"
+      continue
+    fi
+  done < "$FUNC_FILE"
+}
+
+_fn-help-apply-shell-expansion() {
+  declare desc="Expand environment variables for a shell command"
+  declare data="$1"
+  declare delimiter="__apply_shell_expansion_delimiter__"
+  declare command="cat <<$delimiter"$'\n'"$data"$'\n'"$delimiter"
+  eval "$command"
+}

@@ -4,13 +4,20 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
-postgres-enter-cmd() {
+service-enter-cmd() {
+  #E a bash prompt can be opened against a running service.
+  #E filesystem changes will not be saved to disk.
+  #E dokku $PLUGIN_COMMAND_PREFIX:enter lolipop
+  #E you may also run a command directly against the service.
+  #E filesystem changes will not be saved to disk.
+  #E dokku $PLUGIN_COMMAND_PREFIX:enter lolipop touch /tmp/test
+  #A service, service to run command against
   declare desc="enter or run a command in a running $PLUGIN_SERVICE service container"
   local cmd="$PLUGIN_COMMAND_PREFIX:enter" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1" && shift 1
+  declare SERVICE="$1"
 
   dokku_log_info1_quiet "Filesystem changes may not persist after container restarts"
-  service_enter "$SERVICE" "$@"
+  service_enter "$SERVICE" "${@:2}"
 }
 
-postgres-enter-cmd "$@"
+service-enter-cmd "$@"

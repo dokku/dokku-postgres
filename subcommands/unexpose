@@ -4,7 +4,10 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
-postgres-unexpose-cmd() {
+service-unexpose-cmd() {
+  #E unexpose the service, removing access to it from the public interface (0.0.0.0)
+  #E dokku $PLUGIN_COMMAND_PREFIX:unexpose lolipop
+  #A service, service to run command against
   declare desc="unexpose a previously exposed $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:unexpose" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"
@@ -14,4 +17,4 @@ postgres-unexpose-cmd() {
   service_port_unexpose "$SERVICE"
 }
 
-postgres-unexpose-cmd "$@"
+service-unexpose-cmd "$@"

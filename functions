@@ -2,12 +2,24 @@
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common-functions"
+source "$PLUGIN_BASE_PATH/common/functions"
 source "$PLUGIN_AVAILABLE_PATH/config/functions"
 if [[ -f "$PLUGIN_AVAILABLE_PATH/docker-options/functions" ]]; then
   source "$PLUGIN_AVAILABLE_PATH/docker-options/functions"
 fi
 
 # non-generic functions
+
+service_connect() {
+  local SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
+  local DATABASE_NAME="$(get_database_name "$SERVICE")"
+  local SERVICE_TTY_OPTS
+  has_tty && SERVICE_TTY_OPTS="-t"
+
+  docker exec -i $SERVICE_TTY_OPTS "$SERVICE_NAME" psql -h localhost -U postgres "$DATABASE_NAME"
+}
 
 service_create() {
   local SERVICE="$1"
