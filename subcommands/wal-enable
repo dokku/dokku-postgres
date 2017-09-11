@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+postgres-wal-enable-cmd() {
+  [[ -z $2 ]] && dokku_log_fail "Please specify a name for the service"
+  verify_service_name "$2"
+
+  local SERVICE="$2"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local SERVICE_NAME=$(get_service_name "$SERVICE")
+  local PASSWORD=$(cat "$SERVICE_ROOT/PASSWORD")
+  local ENABLE_SCRIPT_PATH="$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/scripts/enable_wal.sh"
+  local DOCKER_RUN_ARGS=(run --rm -i -v "$SERVICE_ROOT/backups:/var/lib/postgresql/backups" -v "$SERVICE_ROOT/data:/var/lib/postgresql/data" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION")
+  local FORCE="$3"
+
+  if [[ -e "$SERVICE_ROOT/backups/base" ]]; then
+    # If backup directory already exists
+
+    # Check config file to see if WAL is already enabled
+    if docker "${DOCKER_RUN_ARGS[@]}" cat /var/lib/postgresql/data/postgresql.conf | grep 'archive_mode.*on' > /dev/null; then
+      dokku_log_fail "WAL seems to have already been enabled"
+    fi
+
+    # If WAL is current disabled, start over only if we're given -f
+    if [[ $FORCE == "-f" ]]; then
+      dokku_log_verbose_quiet "Removing previous backup files"
+      docker ${DOCKER_RUN_ARGS[@]} find /var/lib/postgresql/backups -mindepth 1 -delete
+    else
+      dokku_log_fail "$SERVICE_ROOT/backups/base already exists. Use -f to remove it and start over. "
+    fi
+  else
+    # Create the backup directory and attach it to the container
+    dokku_log_verbose_quiet "Recreating container to attach directory for backups"
+
+    service_stop "$SERVICE"
+    sleep 1
+
+    dokku_log_verbose_quiet "Removing container"
+    docker rm -v "$SERVICE_NAME" > /dev/null
+
+    service_create_container "$SERVICE"
+  fi
+
+  # Writing config files to enable WAL
+  dokku_log_verbose_quiet "Writing postgresql.conf and pg_hba.conf"
+  docker "${DOCKER_RUN_ARGS[@]}" bash -s < $ENABLE_SCRIPT_PATH
+
+  service_stop "$SERVICE"
+  service_start "$SERVICE"
+
+  sleep 1
+
+  # Initial backup
+  dokku_log_verbose_quiet "Creating base backup"
+
+  docker exec "$SERVICE_NAME" chown -R postgres:root /var/lib/postgresql/backups
+  docker exec -u postgres "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_basebackup -h localhost -U postgres -D /var/lib/postgresql/backups/base -Ft -z -P
+
+  dokku_log_verbose_quiet "WAL incremental backup enabled"
+  dokku_log_verbose_quiet "The base backup and the WAL segments are archived in $SERVICE_ROOT/backups"
+}
+
+postgres-wal-enable-cmd "$@"
