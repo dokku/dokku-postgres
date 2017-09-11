@@ -4,7 +4,10 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
-postgres-backup-unschedule-cmd() {
+service-backup-unschedule-cmd() {
+  #E remove the scheduled backup from cron
+  #E dokku $PLUGIN_COMMAND_PREFIX:backup-unschedule lolipop
+  #A service, service to run command against
   declare desc="unschedules the backup of the $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-unschedule" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"
@@ -14,4 +17,4 @@ postgres-backup-unschedule-cmd() {
   service_backup_unschedule "$SERVICE"
 }
 
-postgres-backup-unschedule-cmd "$@"
+service-backup-unschedule-cmd "$@"

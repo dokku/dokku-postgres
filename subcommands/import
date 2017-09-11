@@ -4,7 +4,10 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
-postgres-import-cmd() {
+service-import-cmd() {
+  #E import a datastore dump
+  #E dokku $PLUGIN_COMMAND_PREFIX:import lolipop < database.dump
+  #A service, service to run command against
   declare desc="import a dump into the $PLUGIN_SERVICE service database"
   local cmd="$PLUGIN_COMMAND_PREFIX:import" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"
@@ -14,4 +17,4 @@ postgres-import-cmd() {
   service_import "$SERVICE"
 }
 
-postgres-import-cmd "$@"
+service-import-cmd "$@"

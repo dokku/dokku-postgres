@@ -4,7 +4,12 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
-postgres-unlink-cmd() {
+service-unlink-cmd() {
+  #E you can unlink a $PLUGIN_COMMAND_PREFIX service
+  #E > NOTE: this will restart your app and unset related environment variables
+  #E dokku $PLUGIN_COMMAND_PREFIX:unlink lolipop playground
+  #A service, service to run command against
+  #A app, app to run command against
   declare desc="unlink the $PLUGIN_SERVICE service from the app"
   local cmd="$PLUGIN_COMMAND_PREFIX:unlink" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" APP="$2"
@@ -12,9 +17,9 @@ postgres-unlink-cmd() {
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   [[ -z "$APP" ]] && dokku_log_fail "Please specify an app to run the command on"
-  verify_app_name "$APP"
   verify_service_name "$SERVICE"
+  verify_app_name "$APP"
   service_unlink "$SERVICE" "$APP"
 }
 
-postgres-unlink-cmd "$@"
+service-unlink-cmd "$@"
