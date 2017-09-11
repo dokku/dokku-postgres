@@ -16,8 +16,11 @@ plugin-install() {
   pull-docker-image "dokkupaas/s3backup:0.8.0"
   pull-docker-image "busybox:latest"
 
-  mkdir -p "$PLUGIN_DATA_ROOT" || echo "Failed to create $PLUGIN_SERVICE directory"
+  mkdir -p "$PLUGIN_DATA_ROOT" || echo "Failed to create $PLUGIN_SERVICE data directory"
   chown dokku:dokku "$PLUGIN_DATA_ROOT"
+
+  mkdir -p "$PLUGIN_CONFIG_ROOT" || echo "Failed to create $PLUGIN_SERVICE config directory"
+  chown dokku:dokku "$PLUGIN_CONFIG_ROOT"
 
   rm -f "/etc/sudoers.d/dokku-${PLUGIN_COMMAND_PREFIX}*"
   _SUDOERS_FILE="/etc/sudoers.d/dokku-${PLUGIN_COMMAND_PREFIX}"

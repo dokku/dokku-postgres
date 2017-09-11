@@ -88,6 +88,8 @@ fn-help-contents-subcommand() {
   fi
 
   args="$(fn-help-subcommand-args "$CLEAN_FILE" "$FULL_OUTPUT")"
+  SUBCOMMAND=":$SUBCOMMAND"
+  [[ "$SUBCOMMAND" == ":default" ]] && SUBCOMMAND=""
   cmd_line="$(echo -e "${SUBCOMMAND} ${args}" | sed -e 's/[[:space:]]*$//')"
   desc="$(grep desc "$CLEAN_FILE" | head -1)"
   eval "$desc"
@@ -98,13 +100,13 @@ fn-help-contents-subcommand() {
   NORMAL="\033[m"
   LIGHT_GRAY="\033[2;37m"
   LIGHT_RED="\033[1;31m"
-  CMD_OUTPUT="$(echo -e "    ${PLUGIN_COMMAND_PREFIX}:${cmd_line}, ${LIGHT_GRAY}${desc}${NORMAL}")"
+  CMD_OUTPUT="$(echo -e "    ${PLUGIN_COMMAND_PREFIX}${cmd_line}, ${LIGHT_GRAY}${desc}${NORMAL}")"
   if [[ "$FULL_OUTPUT" != "true" ]]; then
     echo "$CMD_OUTPUT"
     return 0
   fi
 
-  echo -e "${BOLD}usage:${NORMAL} dokku ${PLUGIN_COMMAND_PREFIX}:${cmd_line}"
+  echo -e "${BOLD}usage:${NORMAL} dokku ${PLUGIN_COMMAND_PREFIX}${cmd_line}"
   echo ''
   echo -e "${BOLD}${desc}${NORMAL}"
   echo ''

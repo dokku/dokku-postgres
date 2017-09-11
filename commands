@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 [[ " help $PLUGIN_COMMAND_PREFIX:help " == *" $1 "* ]] || [[ "$1" == "$PLUGIN_COMMAND_PREFIX:"* ]] || exit "$DOKKU_NOT_IMPLEMENTED_EXIT"
+source "$PLUGIN_BASE_PATH/common/functions"
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/help-functions"
 
+if [[ ! -d $PLUGIN_CONFIG_ROOT ]]; then
+  dokku_log_fail "$PLUGIN_SERVICE: Please run: sudo dokku plugin:install"
+fi
+
 if [[ ! -d $PLUGIN_DATA_ROOT ]]; then
-  source "$PLUGIN_BASE_PATH/common/functions"
   dokku_log_fail "$PLUGIN_SERVICE: Please run: sudo dokku plugin:install"
 fi
 
