@@ -58,7 +58,7 @@ fn-help-all() {
     fn-help-contents
   else
     cat<<help_desc
-  $PLUGIN_COMMAND_PREFIX, Plugin for managing $PLUGIN_SERVICE services
+    $PLUGIN_COMMAND_PREFIX, Plugin for managing $PLUGIN_SERVICE services
 help_desc
   fi
 
@@ -66,10 +66,6 @@ help_desc
 }
 
 fn-help-contents() {
-  local TMPDIR
-
-  TMPDIR=$(mktemp -d)
-  trap 'rm -rf "$TMPDIR" > /dev/null' RETURN INT TERM EXIT
   pushd "$SUBCOMMAND_ROOT" > /dev/null 2>&1
   for cmd in *; do
     fn-help-contents-subcommand "$cmd" || true
@@ -78,8 +74,10 @@ fn-help-contents() {
 
 fn-help-contents-subcommand() {
   declare SUBCOMMAND="$1" FULL_OUTPUT="$2"
+  local TMPDIR=$(mktemp -d)
   local UNCLEAN_FILE="${TMPDIR}cmd-unclean" CLEAN_FILE="${TMPDIR}cmd-clean"
   local BOLD CMD_OUTPUT CYAN EXAMPLE LIGHT_GRAY NORMAL
+  trap 'rm -rf "$TMPDIR" > /dev/null' RETURN INT TERM EXIT
 
   rm -rf "$UNCLEAN_FILE" "$CLEAN_FILE"
   cat "$SUBCOMMAND_ROOT/$SUBCOMMAND" > "$UNCLEAN_FILE"
