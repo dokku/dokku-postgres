@@ -575,7 +575,6 @@ service_unlink() {
   local SERVICE_ALIAS=$(service_alias "$SERVICE")
   local LINK=($(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1)) || true
 
-  [[ -z ${LINK[*]} ]] && dokku_log_fail "Not linked to app $APP"
   remove_from_links_file "$SERVICE" "$APP"
 
   if declare -f -F add_passed_docker_option > /dev/null; then
@@ -585,6 +584,8 @@ service_unlink() {
   else
     dokku docker-options:remove "$APP" build,deploy,run "--link $SERVICE_NAME:$SERVICE_ALIAS"
   fi
+
+  [[ -z ${LINK[*]} ]] && dokku_log_fail "Not linked to app $APP"
   config_unset "$APP" "${LINK[*]}"
 }
 
