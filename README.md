@@ -64,6 +64,10 @@ dokku postgres:create lolipop
 export POSTGRES_CUSTOM_ENV="USER=alpha;HOST=beta"
 dokku postgres:create lolipop
 
+# you can disable ssl if your db is accessible only internally
+export DISABLE_SSL=1
+dokku postgres:create lolipop
+
 # get connection information as follows
 dokku postgres:info lolipop
 

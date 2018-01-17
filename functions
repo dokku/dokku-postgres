@@ -70,9 +70,14 @@ service_create_container() {
   DATABASE_NAME="$(get_database_name "$SERVICE")"
   docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2> /dev/null || echo 'Already exists'
 
-  dokku_log_verbose_quiet "Securing connection to database"
-  service_stop "$SERVICE" > /dev/null
-  docker run --rm -i -v "$SERVICE_ROOT/data:/var/lib/postgresql/data" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" bash -s < "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/enable_ssl.sh" &> /dev/null
+
+  service_stop "$SERVICE" > /dev/null;
+  if [ -z "$DISABLE_SSL" ]; then
+    dokku_log_verbose_quiet "Securing connection to database";
+    docker run --rm -i -v "$SERVICE_ROOT/data:/var/lib/postgresql/data" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" bash -s < "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/enable_ssl.sh" &> /dev/null;
+  else
+    dokku_log_verbose_quiet "Not securing connection to database";
+  fi
 
   PREVIOUS_ID=$(docker ps -f status=exited | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
   docker start "$PREVIOUS_ID" > /dev/null
