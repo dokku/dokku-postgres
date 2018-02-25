@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_AVAILABLE_PATH/config/functions"
 
 docker_ports_options() {
   declare desc="Exports a list of exposed ports"
@@ -286,6 +287,20 @@ service_info() {
     done
     [[ "$match" == "true" ]] || dokku_log_fail "Invalid flag passed, valid flags:${valid_flags}"
   fi
+}
+
+service_is_linked() {
+  declare desc="Links a service to an application"
+  declare SERVICE="$1" APP="$2"
+  update_plugin_scheme_for_app "$APP"
+  local SERVICE_URL=$(service_url "$SERVICE")
+  local EXISTING_CONFIG=$(config_all "$APP")
+  local LINK=$(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1) || true
+  if [[ -z $LINK ]]; then
+    dokku_log_warn "Service $SERVICE is not linked to $APP"
+    exit 1
+  fi
+  dokku_log_info1 "Service $SERVICE is linked to $APP"
 }
 
 service_link() {

@@ -2,10 +2,9 @@ sudo: required
 dist: trusty
 language: bash
 env:
-  - DOKKU_VERSION=master
-  - DOKKU_VERSION=v0.7.0
-  - DOKKU_VERSION=v0.6.0
-  - DOKKU_VERSION=v0.5.0
-  - DOKKU_VERSION=v0.4.0
-before_install: make setup
+  - DOKKU_VERSION=master DOKKU_SYSTEM_GROUP=travis DOKKU_SYSTEM_USER=travis
+  - DOKKU_VERSION=v0.7.0 DOKKU_SYSTEM_GROUP=travis DOKKU_SYSTEM_USER=travis
+  - DOKKU_VERSION=v0.6.0 DOKKU_SYSTEM_GROUP=travis DOKKU_SYSTEM_USER=travis
+  - DOKKU_VERSION=v0.5.0 DOKKU_SYSTEM_GROUP=travis DOKKU_SYSTEM_USER=travis
+  - DOKKU_VERSION=v0.4.0 DOKKU_SYSTEM_GROUP=travis DOKKU_SYSTEM_USER=travis
 script: make test

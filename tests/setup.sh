@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/test_helper.bash"
 
 BIN_STUBS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/bin"
@@ -10,6 +11,11 @@ fi
 cd $DOKKU_ROOT
 echo "Dokku version $DOKKU_VERSION"
 git checkout $DOKKU_VERSION > /dev/null
+if grep go-build Makefile > /dev/null; then
+  mv "$BIN_STUBS/docker" "$BIN_STUBS/docker-stub"
+  make go-build
+  mv "$BIN_STUBS/docker-stub" "$BIN_STUBS/docker"
+fi
 cd -
 
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"

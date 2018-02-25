@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+service-linked-cmd() {
+  #E here we check if the lolipop $PLUGIN_COMMAND_PREFIX service is linked to the 'playground' app.
+  #E dokku $PLUGIN_COMMAND_PREFIX:linked lolipop playground
+  #A service, service to run command against
+  #A app, app to run command against
+  declare desc="check if the $PLUGIN_SERVICE service is linked to an app"
+  local cmd="$PLUGIN_COMMAND_PREFIX:linked" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  declare SERVICE="$1" APP="$2"
+  APP=${APP:="$DOKKU_APP_NAME"}
+
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  [[ -z "$APP" ]] && dokku_log_fail "Please specify an app to run the command on"
+  verify_app_name "$APP"
+  verify_service_name "$SERVICE"
+  service_is_linked "$SERVICE" "$APP"
+}
+
+service-linked-cmd "$@"
