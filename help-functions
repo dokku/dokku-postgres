@@ -7,7 +7,7 @@ fn-help() {
   declare CMD="$1"
   local cmd EXIT_CODE
 
-  if [[ "$CMD" == "help" ]] || [[ "$CMD" == "$PLUGIN_COMMAND_PREFIX" ]] || [[ "$CMD" == "$PLUGIN_COMMAND_PREFIX:help" ]]; then
+  if [[ "$CMD" == "help" ]] || [[ "$CMD" == "$PLUGIN_COMMAND_PREFIX:help" ]] || [[ "$CMD" == "$PLUGIN_COMMAND_PREFIX" ]] || [[ "$CMD" == "$PLUGIN_COMMAND_PREFIX:default" ]]; then
     fn-help-all "$@"
     exit 0
   fi
@@ -30,7 +30,7 @@ fn-help-all() {
   local CMD_OUTPUT BLUE BOLD FULL_OUTPUT NORMAL 
   FULL_OUTPUT=true
 
-  if [[ "$CMD" = "$PLUGIN_COMMAND_PREFIX:help" ]] ; then
+  if [[ "$CMD" = "$PLUGIN_COMMAND_PREFIX:help" ]] || [[ "$CMD" == "$PLUGIN_COMMAND_PREFIX" ]] || [[ "$CMD" == "$PLUGIN_COMMAND_PREFIX:default" ]] ; then
     BOLD="$(tput bold)"
     NORMAL="\033[m"
     BLUE="\033[0;34m"
