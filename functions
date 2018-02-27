@@ -53,7 +53,7 @@ service_create() {
   service_create_container "$SERVICE"
 }
 
-database_create() {
+service_create_database() {
   local SERVICE="$1"
   local NAME="$2"
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"

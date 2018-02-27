@@ -9,7 +9,7 @@ service-create-database-cmd() {
   local cmd="$PLUGIN_COMMAND_PREFIX:create-database" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" NAME="$2"
 
-  database_create "$SERVICE" "$NAME"
+  service_create_database "$SERVICE" "$NAME"
 }
 
 service-create-database-cmd "$@"

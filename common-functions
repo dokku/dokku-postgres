@@ -689,6 +689,7 @@ check_auth_migration() {
     mkdir -p "$AUTH_DIR"
     chmod 750 "$AUTH_DIR"
     mv "$SERVICE_ROOT/PASSWORD" "$AUTH_DIR/postgres"
+    mkdir -p "$SERVICE_ROOT/databases/"
     touch "$SERVICE_ROOT/databases/$SERVICE"
   fi
 }
