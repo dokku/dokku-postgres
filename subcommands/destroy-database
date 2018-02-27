@@ -4,7 +4,7 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
-postgres-destroy-database-cmd() {
+service-destroy-database-cmd() {
   declare desc="delete a $PLUGIN_SERVICE database from the specified service"
   local cmd="$PLUGIN_COMMAND_PREFIX:destroy-database" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" DATABASE="$2"
@@ -26,4 +26,4 @@ postgres-destroy-database-cmd() {
   fi
 }
 
-postgres-destroy-database-cmd "$@"
+service-destroy-database-cmd "$@"

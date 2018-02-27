@@ -4,7 +4,7 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
-postgres-create-database-cmd() {
+service-create-database-cmd() {
   declare desc="create a $PLUGIN_SERVICE database"
   local cmd="$PLUGIN_COMMAND_PREFIX:create-database" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" NAME="$2"
@@ -12,4 +12,4 @@ postgres-create-database-cmd() {
   database_create "$SERVICE" "$NAME"
 }
 
-postgres-create-database-cmd "$@"
+service-create-database-cmd "$@"
