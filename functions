@@ -59,6 +59,7 @@ service_create_database() {
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   [[ -z "$NAME" ]] && dokku_log_fail "Please specify a name for the database"
 
+  verify_service_name "$SERVICE"
   check_auth_migration "$SERVICE"
 
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
