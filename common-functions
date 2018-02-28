@@ -642,6 +642,60 @@ service_version() {
   docker inspect -f '{{.Config.Image}}' "$SERVICE_NAME"
 }
 
+
+service_create_database() {
+  local SERVICE="$1"
+  local DATABASE="$2"
+  local USER="$2"
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  [[ -z "$DATABASE" ]] && dokku_log_fail "Please specify a name for the database"
+
+  verify_service_name "$SERVICE"
+  check_auth_migration "$SERVICE"
+
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
+
+  dokku_log_verbose_quiet "Creating user"
+  password=$(openssl rand -hex 16)
+  if docker exec "$SERVICE_NAME" su - postgres -c "psql -c \"CREATE USER \\\"$USER\\\" WITH PASSWORD '$password';\"" > /dev/null 2>&1; then
+    echo "$password" > "$SERVICE_ROOT/auth/$USER"
+    chmod 640 "$SERVICE_ROOT/auth/$USER"
+  else
+    dokku_log_verbose_quiet "Already exists"
+  fi
+
+  dokku_log_verbose_quiet "Creating database"
+  if docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE" 2> /dev/null; then
+    touch "$SERVICE_ROOT/databases/$DATABASE"
+  else
+    dokku_log_verbose_quiet "Already exists"
+  fi
+  docker exec "$SERVICE_NAME" su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE \\\"$DATABASE\\\" TO \\\"$USER\\\";\"" > /dev/null
+
+  dokku_log_info2 "$PLUGIN_SERVICE database created: $DATABASE"
+}
+
+service_destroy_database() {
+  local SERVICE="$1"
+  local DATABASE="$2"
+
+  verify_service_name "$SERVICE"
+  verify_database_name "$SERVICE" "$DATABASE"
+  SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  SERVICE_NAME="$(get_service_name "$SERVICE")"
+
+  dokku_log_info1 "Deleting $DATABASE from $SERVICE"
+  if docker exec "$SERVICE_NAME" su - postgres -c "psql -c \"DROP DATABASE $DATABASE;\"" 2> /dev/null && docker exec "$SERVICE_NAME" su - postgres -c "psql -c \"DROP USER $DATABASE;\"" 2> /dev/null; then
+    rm -f "$SERVICE_ROOT/databases/$DATABASE"
+    rm -f "$SERVICE_ROOT/auth/$DATABASE"
+    dokku_log_info2 "$PLUGIN_SERVICE $SERVICE database deleted: $DATABASE"
+  else
+    dokku_log_fail "Could not delete the database"
+  fi  
+}
+
+
 update_plugin_scheme_for_app() {
   declare desc="Retrieves the updated plugin scheme"
   declare APP="$1"

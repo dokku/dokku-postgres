@@ -11,19 +11,8 @@ service-destroy-database-cmd() {
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   [[ -z "$DATABASE" ]] && dokku_log_fail "Please specify a name for the database"
-  verify_service_name "$SERVICE"
-  verify_database_name "$SERVICE" "$DATABASE"
-  SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  SERVICE_NAME="$(get_service_name "$SERVICE")"
 
-  dokku_log_info1 "Deleting $DATABASE from $SERVICE"
-  if docker exec "$SERVICE_NAME" su - postgres -c "psql -c \"DROP DATABASE $DATABASE;\"" 2> /dev/null && docker exec "$SERVICE_NAME" su - postgres -c "psql -c \"DROP USER $DATABASE;\"" 2> /dev/null; then
-    rm -f "$SERVICE_ROOT/databases/$DATABASE"
-    rm -f "$SERVICE_ROOT/auth/$DATABASE"
-    dokku_log_info2 "$PLUGIN_SERVICE $SERVICE database deleted: $DATABASE"
-  else
-    dokku_log_fail "Could not delete the database"
-  fi
+  service_destroy_database "$SERVICE" "$DATABASE"
 }
 
 service-destroy-database-cmd "$@"
