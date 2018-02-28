@@ -12,10 +12,7 @@ service-unlink-cmd() {
   #A app, app to run command against
   declare desc="unlink the $PLUGIN_SERVICE service from the app"
   local cmd="$PLUGIN_COMMAND_PREFIX:unlink" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1" APP="$2"
-  APP=${APP:="$DOKKU_APP_NAME"}
-
-  local USER=''
+  declare SERVICE="$1" APP="$2" DATABASE_FLAG=""
 
   local next_index=1; local skip=false; local args=("$@"); local positional=()
   for arg in "$@"; do
@@ -30,15 +27,14 @@ service-unlink-cmd() {
     local next_index=$(( next_index + 1 ))
   done
 
-  declare SERVICE="${positional[0]}" APP="${positional[1]}"
+  APP=${APP:="$DOKKU_APP_NAME"}
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
-  [[ -z "$APP" ]] && dokku_log_fail "Please specify an app to run the command on"
   verify_service_name "$SERVICE"
+  [[ -z "$APP" ]] && dokku_log_fail "Please specify an app to run the command on"
   verify_app_name "$APP"
-  [[ -z "$DATABASE" ]] || verify_database_name "$SERVICE" "$DATABASE"
+  [[ -z "$DATABASE_FLAG" ]] || verify_database_name "$SERVICE" "$DATABASE_FLAG"
   service_unlink "$SERVICE" "$APP" "$DATABASE"
-
 }
 
 service-unlink-cmd "$@"

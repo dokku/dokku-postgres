@@ -41,15 +41,14 @@ service-link-cmd() {
   #A app, app to run command against
   declare desc="link the $PLUGIN_SERVICE service to the app"
   local cmd="$PLUGIN_COMMAND_PREFIX:link" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
-
-  local USER=''
+  declare SERVICE="$1" APP="$2" DATABASE_FLAG=""
 
   local next_index=1; local skip=false; local args=("$@"); local positional=()
   for arg in "$@"; do
     $skip && skip=false && local next_index=$(( next_index + 1 )) && continue
     case "$arg" in
-      --user)
-        USER=${args[$next_index]}; skip=true
+      --database)
+        DATABASE=${args[$next_index]}; skip=true
         ;;
       *)
         positional+=("$arg")
@@ -57,13 +56,11 @@ service-link-cmd() {
     local next_index=$(( next_index + 1 ))
   done
 
-  declare SERVICE="${positional[0]}" APP="${positional[1]}"
   APP=${APP:="$DOKKU_APP_NAME"}
-
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  verify_service_name "$SERVICE"
   [[ -z "$APP" ]] && dokku_log_fail "Please specify an app to run the command on"
   verify_app_name "$APP"
-  verify_service_name "$SERVICE"
   [[ -z "$DATABASE" ]] || verify_database_name "$SERVICE" "$DATABASE"
   service_link "$SERVICE" "$APP" "$DATABASE"
 }

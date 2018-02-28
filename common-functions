@@ -24,6 +24,17 @@ get_database_name() {
   echo "$DATABASE" | tr .- _
 }
 
+get_database_user_name() {
+  declare SERVICE="$1"
+  declare DATABASE="$2"
+
+  if [ "$DATABASE" = "$SERVICE" ]; then
+    echo "postgres"
+  else
+    echo "$DATABASE"
+  fi
+}
+
 get_random_ports() {
   declare desc="Retrieves N random ports"
   declare iterations="${1:-1}"
@@ -332,7 +343,7 @@ service_link() {
   update_plugin_scheme_for_app "$APP"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local DATABASE=${3:-$(get_database_name "$SERVICE")}
-  local USER="$DATABASE"
+  local USER=$(get_database_user_name "$SERVICE" "$DATABASE")
   local PASSWORD=$(cat "$SERVICE_ROOT/auth/$USER")
   local SERVICE_URL=$(service_url "$SERVICE" "$USER" "$PASSWORD" "$DATABASE")
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
@@ -611,7 +622,7 @@ service_unlink() {
   declare SERVICE="$1" APP="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local DATABASE=${3:-$(get_database_name "$SERVICE")}
-  local USER="$DATABASE"
+  local USER=$(get_database_user_name "$SERVICE" "$DATABASE")
   local PASSWORD=$(cat "$SERVICE_ROOT/auth/$USER")
   update_plugin_scheme_for_app "$APP"
   local SERVICE_URL=$(service_url "$SERVICE" "$USER" "$PASSWORD" "$DATABASE")
@@ -739,7 +750,6 @@ check_auth_migration() {
     dokku_log_verbose_quiet "Migrating root user to multi-user format for $SERVICE"
     local AUTH_DIR="$SERVICE_ROOT/auth"
     mkdir -p "$AUTH_DIR"
-    chmod 750 "$AUTH_DIR"
     mv "$SERVICE_ROOT/PASSWORD" "$AUTH_DIR/postgres"
     mkdir -p "$SERVICE_ROOT/databases/"
     touch "$SERVICE_ROOT/databases/postgres"

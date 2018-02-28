@@ -36,7 +36,6 @@ service_create() {
   mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
   mkdir -p "$SERVICE_ROOT/data" || dokku_log_fail "Unable to create service data directory"
   mkdir -p "$AUTH_DIR" || dokku_log_fail "Unable to create service auth directory"
-  chmod 750 "$AUTH_DIR"
   mkdir -p "$DB_DIR" || dokku_log_fail "Unable to create service databases directory" 
   touch "$LINKS_FILE"
   PASSWORD=$(openssl rand -hex 16)
