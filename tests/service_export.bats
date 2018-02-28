@@ -25,7 +25,7 @@ teardown() {
   export ECHO_DOCKER_COMMAND="true"
   export SSH_TTY=`tty`
   run dokku "$PLUGIN_COMMAND_PREFIX:export" l
-  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  password="$(cat "$PLUGIN_DATA_ROOT/l/auth/postgres")"
   assert_exit_status 0
   assert_output "docker exec dokku.postgres.l env PGPASSWORD=$password pg_dump -Fc --no-acl --no-owner -h localhost -U postgres -w l"
 }
@@ -34,7 +34,7 @@ teardown() {
   export ECHO_DOCKER_COMMAND="true"
   unset SSH_TTY
   run dokku "$PLUGIN_COMMAND_PREFIX:export" l
-  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  password="$(cat "$PLUGIN_DATA_ROOT/l/auth/postgres")"
   assert_exit_status 0
   assert_output "docker exec dokku.postgres.l env PGPASSWORD=$password pg_dump -Fc --no-acl --no-owner -h localhost -U postgres -w l"
 }

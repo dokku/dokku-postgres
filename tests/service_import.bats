@@ -31,7 +31,7 @@ teardown() {
 @test "($PLUGIN_COMMAND_PREFIX:import) success" {
   export ECHO_DOCKER_COMMAND="true"
   run dokku "$PLUGIN_COMMAND_PREFIX:import" l < "$PLUGIN_DATA_ROOT/fake.dump"
-  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  password="$(cat "$PLUGIN_DATA_ROOT/l/auth/postgres")"
   assert_output "docker exec -i dokku.postgres.l env PGPASSWORD=$password pg_restore -h localhost -cO -d l -U postgres -w"
 }
 
