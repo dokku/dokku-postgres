@@ -21,9 +21,6 @@ service-unlink-cmd() {
   for arg in "$@"; do
     $skip && skip=false && local next_index=$(( next_index + 1 )) && continue
     case "$arg" in
-      --user)
-        USER=${args[$next_index]}; skip=true
-        ;;
       --database)
         DATABASE=${args[$next_index]}; skip=true
         ;;
@@ -40,8 +37,7 @@ service-unlink-cmd() {
   verify_service_name "$SERVICE"
   verify_app_name "$APP"
   [[ -z "$DATABASE" ]] || verify_database_name "$SERVICE" "$DATABASE"
-  [[ -z "$USER" ]] || verify_user_name "$SERVICE" "$USER"
-  service_unlink "$SERVICE" "$APP" "$USER" "$DATABASE"
+  service_unlink "$SERVICE" "$APP" "$DATABASE"
 
 }
 

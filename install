@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common-functions"
 
 plugin-install() {
   pull-docker-image() {
@@ -36,6 +37,10 @@ plugin-install() {
 EOL
 
   chmod 0440 "$_SUDOERS_FILE"
+
+  for d in "$PLUGIN_DATA_ROOT"/* ; do
+    check_auth_migration "$d"
+  done
 }
 
 plugin-install "$@"

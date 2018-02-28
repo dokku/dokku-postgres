@@ -331,9 +331,8 @@ service_link() {
   declare SERVICE="$1" APP="$2"
   update_plugin_scheme_for_app "$APP"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  check_auth_migration "$SERVICE"
-  local USER=${3:-postgres}
-  local DATABASE=${4:-$(get_database_name "$SERVICE")}
+  local DATABASE=${3:-$(get_database_name "$SERVICE")}
+  local USER="$DATABASE"
   local PASSWORD=$(cat "$SERVICE_ROOT/auth/$USER")
   local SERVICE_URL=$(service_url "$SERVICE" "$USER" "$PASSWORD" "$DATABASE")
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
@@ -611,9 +610,9 @@ service_unlink() {
   declare desc="Unlinks an application from a service"
   declare SERVICE="$1" APP="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local USER=${3:-postgres}
+  local DATABASE=${3:-$(get_database_name "$SERVICE")}
+  local USER="$DATABASE"
   local PASSWORD=$(cat "$SERVICE_ROOT/auth/$USER")
-  local DATABASE=${4:-$(get_database_name "$SERVICE")}
   update_plugin_scheme_for_app "$APP"
   local SERVICE_URL=$(service_url "$SERVICE" "$USER" "$PASSWORD" "$DATABASE")
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
@@ -651,7 +650,6 @@ service_create_database() {
   [[ -z "$DATABASE" ]] && dokku_log_fail "Please specify a name for the database"
 
   verify_service_name "$SERVICE"
-  check_auth_migration "$SERVICE"
 
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
@@ -738,12 +736,12 @@ check_auth_migration() {
   [[ ! -n "$SERVICE" ]] && dokku_log_fail "(verify_service_name) SERVICE must not be null"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   if [ -f "$SERVICE_ROOT/PASSWORD" ]; then
-    dokku_log_verbose_quiet "Migrating root user to multi-user format"
+    dokku_log_verbose_quiet "Migrating root user to multi-user format for $SERVICE"
     local AUTH_DIR="$SERVICE_ROOT/auth"
     mkdir -p "$AUTH_DIR"
     chmod 750 "$AUTH_DIR"
     mv "$SERVICE_ROOT/PASSWORD" "$AUTH_DIR/postgres"
     mkdir -p "$SERVICE_ROOT/databases/"
-    touch "$SERVICE_ROOT/databases/$SERVICE"
+    touch "$SERVICE_ROOT/databases/postgres"
   fi
 }

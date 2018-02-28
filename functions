@@ -25,7 +25,7 @@ service_create() {
   local SERVICE="$1"
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   [[ ! -d "$PLUGIN_DATA_ROOT/$SERVICE" ]] || dokku_log_fail "$PLUGIN_SERVICE service $SERVICE already exists"
-  SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"; LINKS_FILE="$SERVICE_ROOT/LINKS"
+  SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"; LINKS_FILE="$SERVICE_ROOT/LINKS"; AUTH_DIR="$SERVICE_ROOT/auth"; DB_DIR="$SERVICE_ROOT/databases"
 
   service_parse_args "${@:2}"
 
@@ -35,14 +35,17 @@ service_create() {
 
   mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
   mkdir -p "$SERVICE_ROOT/data" || dokku_log_fail "Unable to create service data directory"
+  mkdir -p "$AUTH_DIR" || dokku_log_fail "Unable to create service auth directory"
+  chmod 750 "$AUTH_DIR"
+  mkdir -p "$DB_DIR" || dokku_log_fail "Unable to create service databases directory" 
   touch "$LINKS_FILE"
   PASSWORD=$(openssl rand -hex 16)
   if [[ -n "$SERVICE_PASSWORD" ]]; then
     PASSWORD="$SERVICE_PASSWORD"
     dokku_log_warn "Specified password may not be as secure as the auto-generated password"
   fi
-  echo "$PASSWORD" > "$SERVICE_ROOT/PASSWORD"
-  chmod 640 "$SERVICE_ROOT/PASSWORD"
+  echo "$PASSWORD" > "$AUTH_DIR/postgres"
+  chmod 640 "$AUTH_DIR/postgres"
 
   [[ -n "$SERVICE_CUSTOM_ENV" ]] && POSTGRES_CUSTOM_ENV="$SERVICE_CUSTOM_ENV"
   if [[ -n $POSTGRES_CUSTOM_ENV ]]; then
@@ -59,6 +62,7 @@ service_create_container() {
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local PASSWORD="$(cat "$SERVICE_ROOT/auth/postgres")"
   local PREVIOUS_ID
+  local DB_DIR="$SERVICE_ROOT/databases"
 
   ID=$(docker run --name "$SERVICE_NAME" -v "$SERVICE_ROOT/data:/var/lib/postgresql/data" -e "POSTGRES_PASSWORD=$PASSWORD" --env-file="$SERVICE_ROOT/ENV" -d --restart always --label dokku=service --label dokku.service=postgres "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION")
   echo "$ID" > "$SERVICE_ROOT/ID"
@@ -68,6 +72,7 @@ service_create_container() {
 
   dokku_log_verbose_quiet "Creating container database"
   DATABASE_NAME="$(get_database_name "$SERVICE")"
+  touch "$DB_DIR/$DATABASE_NAME"
   docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2> /dev/null || echo 'Already exists'
 
   dokku_log_verbose_quiet "Securing connection to database"

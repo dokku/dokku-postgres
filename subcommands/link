@@ -51,9 +51,6 @@ service-link-cmd() {
       --user)
         USER=${args[$next_index]}; skip=true
         ;;
-      --database)
-        DATABASE=${args[$next_index]}; skip=true
-        ;;
       *)
         positional+=("$arg")
     esac
@@ -67,9 +64,8 @@ service-link-cmd() {
   [[ -z "$APP" ]] && dokku_log_fail "Please specify an app to run the command on"
   verify_app_name "$APP"
   verify_service_name "$SERVICE"
-  [[ -z "$USER" ]] || verify_user_name "$SERVICE" "$USER"
   [[ -z "$DATABASE" ]] || verify_database_name "$SERVICE" "$DATABASE"
-  service_link "$SERVICE" "$APP" "$USER" "$DATABASE"
+  service_link "$SERVICE" "$APP" "$DATABASE"
 }
 
 service-link-cmd "$@"

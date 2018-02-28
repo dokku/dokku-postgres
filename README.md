@@ -36,7 +36,7 @@ postgres:export <name> > <file>   Export a dump of the postgres service database
 postgres:expose <name> [port]     Expose a postgres service on custom port if provided (random port otherwise)
 postgres:import <name> < <file>   Import a dump into the postgres service database
 postgres:info <name>              Print the connection information
-postgres:link <name> <app> [--user user] [--database database] Link the postgres service to the app
+postgres:link <name> <app> [--database database] Link the postgres service to the app
 postgres:linked <name> <app>      Check if the postgres service is linked to an app
 postgres:list                     List all postgres services
 postgres:logs <name> [-t]         Print the most recent log(s) for this service
@@ -45,7 +45,7 @@ postgres:restart <name>           Graceful shutdown and restart of the postgres 
 postgres:start <name>             Start a previously stopped postgres service
 postgres:stop <name>              Stop a running postgres service
 postgres:unexpose <name>          Unexpose a previously exposed postgres service
-postgres:unlink <name> <app> [--user user] [--database database] Unlink the postgres service from the app
+postgres:unlink <name> <app> [--database database] Unlink the postgres service from the app
 ```
 
 ## usage
