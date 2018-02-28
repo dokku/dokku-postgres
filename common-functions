@@ -552,26 +552,19 @@ service_promote() {
   local PLUGIN_DEFAULT_CONFIG_VAR="${PLUGIN_DEFAULT_ALIAS}_URL"
   local EXISTING_CONFIG=$(config_all "$APP")
   update_plugin_scheme_for_app "$APP"
-  local SERVICE_URL=$(service_url "$SERVICE")
-  local CONFIG_VARS=($(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1)) || true
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local PREVIOUS_DEFAULT_URL=$(get_url_from_config "$EXISTING_CONFIG" "$PLUGIN_DEFAULT_CONFIG_VAR")
+  local USER="postgres"
+  local DATABASE="$SERVICE"
+  local PASSWORD=$(cat "$SERVICE_ROOT/auth/$USER")
+  local SERVICE_URL=$(service_url "$SERVICE" "$USER" "$PASSWORD" "$DATABASE")
+  local CONFIG_VAR=$(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1) || true
 
-  [[ -z ${CONFIG_VARS[*]} ]] && dokku_log_fail "Not linked to app $APP"
-  [[ ${CONFIG_VARS[*]} =~ $PLUGIN_DEFAULT_CONFIG_VAR ]] && dokku_log_fail "Service $1 already promoted as $PLUGIN_DEFAULT_CONFIG_VAR"
+  [[ -z $CONFIG_VAR ]] && dokku_log_fail "Not linked to app $APP"
+  [[ $CONFIG_VAR =~ $PLUGIN_DEFAULT_CONFIG_VAR ]] && dokku_log_fail "Service $1 already promoted as $PLUGIN_DEFAULT_CONFIG_VAR"
 
-  local NEW_CONFIG_VARS=""
-  if [[ -n $PREVIOUS_DEFAULT_URL ]]; then
-    local PREVIOUS_ALIAS=$(echo "$EXISTING_CONFIG" | grep "$PREVIOUS_DEFAULT_URL" | grep -v "$PLUGIN_DEFAULT_CONFIG_VAR") || true
-    if [[ -z $PREVIOUS_ALIAS ]]; then
-      local ALIAS=$(service_alternative_alias "$EXISTING_CONFIG")
-      NEW_CONFIG_VARS+="${ALIAS}_URL=$PREVIOUS_DEFAULT_URL "
-    fi
-  fi
-  local PROMOTE_URL=$(get_url_from_config "$EXISTING_CONFIG" "${CONFIG_VARS[0]}")
-  NEW_CONFIG_VARS+="$PLUGIN_DEFAULT_CONFIG_VAR=$PROMOTE_URL"
-
-  # shellcheck disable=SC2086
-  config_set "$APP" $NEW_CONFIG_VARS
+  config_set --no-restart "$APP" "${PLUGIN_DEFAULT_CONFIG_VAR}=$SERVICE_URL"
+  config_set "$APP" "${CONFIG_VAR}=$PREVIOUS_DEFAULT_URL"
 }
 
 service_set_alias() {
