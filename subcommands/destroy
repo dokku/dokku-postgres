@@ -16,6 +16,7 @@ service-destroy-cmd() {
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   verify_service_name "$SERVICE"
   SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"; LINKS_FILE="$SERVICE_ROOT/LINKS"
+  SERVICE_HOST_ROOT="$PLUGIN_DATA_HOST_ROOT/$SERVICE"
   SERVICE_NAME="$(get_service_name "$SERVICE")"
 
   [[ -s "$LINKS_FILE" ]] && dokku_log_fail "Cannot delete linked service"
@@ -50,7 +51,7 @@ service-destroy-cmd() {
   fi
 
   dokku_log_verbose_quiet "Removing data"
-  docker run --rm -v "$SERVICE_ROOT/data:/data" -v "$SERVICE_ROOT/config:/config" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" chmod 777 -R /config /data
+  docker run --rm -v "$SERVICE_HOST_ROOT/data:/data" -v "$SERVICE_HOST_ROOT/config:/config" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" chmod 777 -R /config /data
   rm -rf "$SERVICE_ROOT"
 
   dokku_log_info2 "$PLUGIN_SERVICE container deleted: $SERVICE"
