@@ -267,3 +267,9 @@ custom certificate by overwriting the `server.crt` and `server.key` files in
 `/var/lib/dokku/services/postgres/<DB_NAME>/data`.
 The `server.key` must be chmoded to 600 and must be owned by the postgres user
 or root.
+
+## Disabling `docker pull` calls
+
+If you wish to disable the `docker pull` calls that the plugin triggers, you may set the `POSTGRES_DISABLE_PULL` environment variable to `true`. Once disabled, you will need to pull the service image you wish to deploy as shown in the `stderr` output.
+
+Please ensure the proper images are in place when `docker pull` is disabled.

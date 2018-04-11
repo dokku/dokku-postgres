@@ -5,6 +5,11 @@ set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 plugin-install() {
   pull-docker-image() {
     declare IMAGE="$1"
+    if [[ "$POSTGRES_DISABLE_PULL" == "true" ]]; then
+      echo " !     POSTGRES_DISABLE_PULL environment variable detected. Not running pull command." 1>&2
+      echo " !        docker pull ${IMAGE}" 1>&2
+      return
+    fi
     if [[ "$(docker images -q "${IMAGE}" 2> /dev/null)" == "" ]]; then
       docker pull "${IMAGE}"
     fi
