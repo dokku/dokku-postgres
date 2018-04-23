@@ -24,11 +24,11 @@ teardown() {
 @test "($PLUGIN_COMMAND_PREFIX:logs) success when not tailing" {
   export ECHO_DOCKER_COMMAND="true"
   run dokku "$PLUGIN_COMMAND_PREFIX:logs" l
-  assert_output "docker logs --tail 100 testid"
+  assert_contains "docker logs --tail 100 testid"
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:logs) success when tailing" {
   export ECHO_DOCKER_COMMAND="true"
   run dokku "$PLUGIN_COMMAND_PREFIX:logs" l -t
-  assert_output "docker logs --follow testid"
+  assert_contains "docker logs --follow testid"
 }
