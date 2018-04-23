@@ -30,8 +30,8 @@ service_create() {
   service_parse_args "${@:2}"
 
   if ! docker images | grep -e "^$PLUGIN_IMAGE " | grep -q " $PLUGIN_IMAGE_VERSION " ; then
-    if [[ "$POSTGRES_DISABLE_PULL" == "true" ]]; then
-      dokku_log_warn "POSTGRES_DISABLE_PULL environment variable detected. Not running pull command." 1>&2
+    if [[ "$PLUGIN_DISABLE_PULL" == "true" ]]; then
+      dokku_log_warn "${PLUGIN_DISABLE_PULL_VARIABLE} environment variable detected. Not running pull command." 1>&2
       dokku_log_warn "   docker pull ${IMAGE}" 1>&2
       dokku_log_warn "$PLUGIN_SERVICE service creation failed"
       exit 1
