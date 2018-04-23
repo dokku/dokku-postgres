@@ -59,7 +59,7 @@ is_container_status() {
   declare desc="Returns 0 or 1 depending upon whether a given container has a certain status"
   declare CID="$1" STATUS="$2"
   local TEMPLATE="{{.State.$STATUS}}"
-  local CONTAINER_STATUS=$(docker inspect -f "$TEMPLATE" "$CID" || true)
+  local CONTAINER_STATUS=$(docker inspect -f "$TEMPLATE" "$CID" 2> /dev/null || true)
 
   if [[ "$CONTAINER_STATUS" == "true" ]]; then
     return 0
@@ -387,8 +387,10 @@ service_logs() {
     DOKKU_LOGS_ARGS="--follow"
   fi
 
+  is_container_status "$ID" "Running" || dokku_log_warn "Service logs may not be output as service is not running"
+
   # shellcheck disable=SC2086
-  docker logs $DOKKU_LOGS_ARGS "$ID"
+  docker logs $DOKKU_LOGS_ARGS "$ID" 2> /dev/null
 }
 
 service_parse_args() {
@@ -565,13 +567,17 @@ service_status() {
   declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local ID="$(cat "$SERVICE_ROOT/ID")"
+  local CONTAINER_STATUS
 
   is_container_status "$ID" "Dead" && echo "dead" && return 0
   is_container_status "$ID" "OOMKilled" && echo "oomkilled" && return 0
   is_container_status "$ID" "Paused" && echo "paused" && return 0
   is_container_status "$ID" "Restarting" && echo "restarting" && return 0
   is_container_status "$ID" "Running" && echo "running" && return 0
-  echo "stopped" && return 0
+
+  CONTAINER_STATUS=$(docker inspect -f "{{.State.Status}}" "$CID" 2> /dev/null || true)
+  [[ -n "$CONTAINER_STATUS" ]] && echo "$CONTAINER_STATUS" && return 0
+  echo "missing" && return 0
 }
 
 service_stop() {
@@ -620,7 +626,7 @@ service_version() {
   declare desc="Displays the running version for an image"
   declare SERVICE="$1"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
-  docker inspect -f '{{.Config.Image}}' "$SERVICE_NAME"
+  docker inspect -f '{{.Config.Image}}' "$SERVICE_NAME" 2> /dev/null || true
 }
 
 update_plugin_scheme_for_app() {

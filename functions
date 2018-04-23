@@ -75,7 +75,7 @@ service_create_container() {
 
   dokku_log_verbose_quiet "Creating container database"
   DATABASE_NAME="$(get_database_name "$SERVICE")"
-  docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2> /dev/null || echo 'Already exists'
+  docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2> /dev/null || dokku_log_verbose_quiet 'Already exists'
 
   dokku_log_verbose_quiet "Securing connection to database"
   service_stop "$SERVICE" > /dev/null
