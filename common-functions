@@ -113,16 +113,19 @@ service_backup() {
   local AWS_SECRET_ACCESS_KEY_FILE="$BACKUP_CONFIG_ROOT/AWS_SECRET_ACCESS_KEY"
   local BACKUP_PARAMETERS=""
 
-  if [[ "$USE_IAM_OPTIONAL_FLAG" != "--use-iam" ]] && [[ "$USE_IAM_OPTIONAL_FLAG" != "-u" ]]; then
+  if [[ -z "$USE_IAM_OPTIONAL_FLAG" ]]; then
     [[ ! -f "$AWS_ACCESS_KEY_ID_FILE" ]] && dokku_log_fail "Missing AWS_ACCESS_KEY_ID file"
     [[ ! -f "$AWS_SECRET_ACCESS_KEY_FILE" ]] && dokku_log_fail "Missing AWS_SECRET_ACCESS_KEY file"
     BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_ACCESS_KEY_ID=$(cat "$AWS_ACCESS_KEY_ID_FILE") -e AWS_SECRET_ACCESS_KEY=$(cat "$AWS_SECRET_ACCESS_KEY_FILE")"
-  else
+  elif [[ "$USE_IAM_OPTIONAL_FLAG" != "--use-iam" ]] && [[ "$USE_IAM_OPTIONAL_FLAG" != "-u" ]]; then
     dokku_log_fail "Provide AWS credentials or use the --use-iam flag"
   fi
 
   TMPDIR=$(mktemp -d)
   trap 'rm -rf "$TMPDIR" > /dev/null' RETURN INT TERM EXIT
+
+  docker inspect "$ID" &> /dev/null || dokku_log_fail "Service container does not exist"
+  is_container_status "$ID" "Running" || dokku_log_fail "Service container is not running"
 
   (service_export "$SERVICE" > "${TMPDIR}/export")
 
@@ -185,12 +188,16 @@ service_backup_deauth() {
 
 service_backup_schedule() {
   declare desc="schedules a backup of the service"
-  declare SERVICE="$1" SCHEDULE="$2" BUCKET_NAME="$3"
+  declare SERVICE="$1" SCHEDULE="$2" BUCKET_NAME="$3" USE_IAM_OPTIONAL_FLAG="$4"
   local DOKKU_BIN="$(which dokku)"
   local CRON_FILE="/etc/cron.d/dokku-${PLUGIN_COMMAND_PREFIX}-${SERVICE}"
   local TMP_CRON_FILE="${PLUGIN_DATA_ROOT}/.TMP_CRON_FILE"
 
-  echo "${SCHEDULE} dokku ${DOKKU_BIN} ${PLUGIN_COMMAND_PREFIX}:backup ${SERVICE} ${BUCKET_NAME}" > "$TMP_CRON_FILE"
+  if [[ -n "$USE_IAM_OPTIONAL_FLAG" ]] && [[ "$USE_IAM_OPTIONAL_FLAG" != "--use-iam" ]] && [[ "$USE_IAM_OPTIONAL_FLAG" != "-u" ]]; then
+    dokku_log_fail "Invalid flag provided, only '--use-iam' allowed"
+  fi
+
+  echo "${SCHEDULE} dokku ${DOKKU_BIN} ${PLUGIN_COMMAND_PREFIX}:backup ${SERVICE} ${BUCKET_NAME} ${USE_IAM_OPTIONAL_FLAG}" > "$TMP_CRON_FILE"
   sudo /bin/mv "$TMP_CRON_FILE" "$CRON_FILE"
   sudo /bin/chown root:root "$CRON_FILE"
   sudo /bin/chmod 644 "$CRON_FILE"
@@ -241,8 +248,8 @@ service_enter() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local ID="$(cat "$SERVICE_ROOT/ID")"
 
-  docker inspect "$ID" &> /dev/null || dokku_log_fail "Container does not exist"
-  is_container_status "$ID" "Running" || dokku_log_fail "Container is not running"
+  docker inspect "$ID" &> /dev/null || dokku_log_fail "Service container does not exist"
+  is_container_status "$ID" "Running" || dokku_log_fail "Service container is not running"
 
   local EXEC_CMD=""
   has_tty && local DOKKU_RUN_OPTS+=" -i -t"
@@ -387,6 +394,7 @@ service_logs() {
     DOKKU_LOGS_ARGS="--follow"
   fi
 
+  docker inspect "$ID" &> /dev/null || dokku_log_fail "Service container does not exist"
   is_container_status "$ID" "Running" || dokku_log_warn "Service logs may not be output as service is not running"
 
   # shellcheck disable=SC2086

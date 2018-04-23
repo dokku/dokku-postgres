@@ -7,19 +7,22 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 service-backup-schedule-cmd() {
   #E schedule a backup
   #E > 'schedule' is a crontab expression, eg. "0 3 * * *" for each day at 3am
-  #E dokku $PLUGIN_COMMAND_PREFIX:backup-deauth lolipop "0 3 * * *" my-s3-bucket
+  #E dokku $PLUGIN_COMMAND_PREFIX:backup-schedule lolipop "0 3 * * *" my-s3-bucket
+  #E schedule a backup and authenticate via iam
+  #E dokku $PLUGIN_COMMAND_PREFIX:backup-schedule lolipop "0 3 * * *" my-s3-bucket --use-iam
+  #F -u|--use-iam, use the IAM profile associated with the current server
   #A service, service to run command against
   #A schedule, a cron schedule to run backups on
   #A bucket-name, name of the s3 bucket to upload backups to
   declare desc="schedules a backup of the $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-schedule" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1" SCHEDULE="$2" BUCKET_NAME="$3"
+  declare SERVICE="$1" SCHEDULE="$2" BUCKET_NAME="$3" USE_IAM_OPTIONAL_FLAG="$4"
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   [[ -z "$SCHEDULE" ]] && dokku_log_fail "Please specify a schedule for the backup"
   [[ -z "$BUCKET_NAME" ]] && dokku_log_fail "Please specify an aws bucket for the backup"
   verify_service_name "$SERVICE"
-  service_backup_schedule "$SERVICE" "$SCHEDULE" "$BUCKET_NAME"
+  service_backup_schedule "$SERVICE" "$SCHEDULE" "$BUCKET_NAME" "$USE_IAM_OPTIONAL_FLAG"
 }
 
 service-backup-schedule-cmd "$@"
