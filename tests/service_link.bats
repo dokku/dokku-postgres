@@ -75,3 +75,11 @@ teardown() {
   assert_contains "$url" "?pool=5"
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
 }
+
+@test "($PLUGIN_COMMAND_PREFIX:link) uses a specified config url when alias is specified" {
+  dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app --alias "ALIAS"
+  url=$(dokku config:get my_app ALIAS_URL)
+  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  assert_contains "$url" "postgres://postgres:$password@dokku-postgres-l:5432/l"
+  dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
+}
