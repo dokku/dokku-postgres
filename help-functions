@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
-
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common-functions"
 export SUBCOMMAND_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/subcommands"
 
 fn-help() {
@@ -83,7 +84,7 @@ fn-help-contents-subcommand() {
   cat "$SUBCOMMAND_ROOT/$SUBCOMMAND" > "$UNCLEAN_FILE"
 
   fn-help-subcommand-sanitize "$UNCLEAN_FILE" "$CLEAN_FILE"
-  if [[ "$(fn-help-is-subcommand-unimplemented "$CLEAN_FILE")" == true ]]; then
+  if ! is_implemented_command "$SUBCOMMAND"; then
     return 1
   fi
 
@@ -136,18 +137,6 @@ fn-help-contents-subcommand() {
   fi
 
   return 0
-}
-
-fn-help-is-subcommand-unimplemented() {
-  declare FUNC_FILE="$1"
-  local UNIMPLEMENTED
-
-  UNIMPLEMENTED="$(grep "Not yet implemented" "$FUNC_FILE" | head -1 || true)"
-  if [[ -n "$UNIMPLEMENTED" ]]; then
-    echo true
-  else
-    echo false
-  fi
 }
 
 fn-help-list-example() {

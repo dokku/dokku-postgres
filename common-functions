@@ -67,6 +67,22 @@ is_container_status() {
   return 1
 }
 
+is_implemented_command() {
+  declare desc="return true if value ($1) is in list (all other arguments)"
+  declare CMD="$1"
+  CMD="$(echo "$CMD" | cut -d ':' -f2)"
+
+  if [[ ${#PLUGIN_UNIMPLEMENTED_SUBCOMMANDS[@]} -eq 0 ]]; then
+    return 0
+  fi
+
+  local e
+  for e in "${PLUGIN_UNIMPLEMENTED_SUBCOMMANDS[@]}"; do
+    [[ "$e" == "$CMD" ]] && return 1
+  done
+  return 0
+}
+
 remove_from_links_file() {
   declare desc="Removes an app from the service link file"
   declare SERVICE="$1" APP="$2"
@@ -598,10 +614,10 @@ service_stop() {
   [[ -z $ID ]] && dokku_log_warn "Service is already stopped" && return 0
 
   if [[ -n $ID ]]; then
-    dokku_log_info1_quiet "Stopping container"
+    dokku_log_info2_quiet "Stopping container"
     docker stop "$SERVICE_NAME" > /dev/null
     service_port_pause "$SERVICE"
-    dokku_log_info2 "Container stopped"
+    dokku_log_verbose_quiet "Container stopped"
   else
     dokku_log_verbose_quiet "No container exists for $SERVICE"
   fi

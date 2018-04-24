@@ -12,18 +12,24 @@ service-clone-cmd() {
   declare desc="create container <new-name> then copy data from <name> into <new-name>"
   local cmd="$PLUGIN_COMMAND_PREFIX:clone" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" NEW_SERVICE="$2" CLONE_FLAGS_LIST="${@:3}"
+  is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   [[ -z "$NEW_SERVICE" ]] && dokku_log_fail "Please specify a name for the new service"
   verify_service_name "$SERVICE"
 
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local ID="$(cat "$SERVICE_ROOT/ID")"
+  is_container_status "$ID" "Running" || dokku_log_fail "Service ${SERVICE} container is not running"
+
   PLUGIN_IMAGE=$(service_version "$SERVICE" |  grep -o "^.*:" | sed -r "s/://g")
   PLUGIN_IMAGE_VERSION=$(service_version "$SERVICE" |  grep -o ":.*$" | sed -r "s/://g")
 
+  dokku_log_info2 "Cloning $SERVICE to $NEW_SERVICE"
   service_create "$NEW_SERVICE" "${@:3}"
   dokku_log_info1 "Copying data from $SERVICE to $NEW_SERVICE"
   service_export "$SERVICE" | service_import "$NEW_SERVICE" > /dev/null 2>&1 || true
-  dokku_log_info1 "Done"
+  dokku_log_info2 "Done"
 }
 
 service-clone-cmd "$@"

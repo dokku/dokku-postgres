@@ -37,7 +37,7 @@ service-destroy-cmd() {
     fi
   fi
 
-  dokku_log_info1 "Deleting $SERVICE"
+  dokku_log_info2_quiet "Deleting $SERVICE"
   if [[ -n $(docker ps -aq -f name="$SERVICE_NAME") ]]; then
     dokku_log_verbose_quiet "Deleting container data"
     service_stop "$SERVICE"
@@ -51,7 +51,7 @@ service-destroy-cmd() {
   fi
 
   dokku_log_verbose_quiet "Removing data"
-  docker run --rm -v "$SERVICE_HOST_ROOT/data:/data" -v "$SERVICE_HOST_ROOT/config:/config" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" chmod 777 -R /config /data
+  docker run --rm -v "$SERVICE_HOST_ROOT/data:/data" -v "$SERVICE_HOST_ROOT/config:/config" busybox chmod 777 -R /config /data
   rm -rf "$SERVICE_ROOT"
 
   dokku_log_info2 "$PLUGIN_SERVICE container deleted: $SERVICE"

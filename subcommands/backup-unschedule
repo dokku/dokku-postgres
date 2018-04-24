@@ -11,6 +11,7 @@ service-backup-unschedule-cmd() {
   declare desc="unschedules the backup of the $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-unschedule" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"
+  is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   verify_service_name "$SERVICE"

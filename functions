@@ -128,7 +128,7 @@ service_start() {
     return 0
   fi
 
-  dokku_log_info1_quiet "Starting container"
+  dokku_log_info2_quiet "Starting container"
   local PREVIOUS_ID=$(docker ps -f status=exited | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
   local IMAGE_EXISTS=$(docker images | grep -e "^$PLUGIN_IMAGE " | grep -q " $PLUGIN_IMAGE_VERSION " && true)
   local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"

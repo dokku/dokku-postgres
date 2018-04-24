@@ -8,9 +8,10 @@ service-connect-cmd() {
   #E connect to the service via the $PLUGIN_COMMAND_PREFIX connection tool
   #E dokku $PLUGIN_COMMAND_PREFIX:connect lolipop
   #A service, service to run command against
-  declare desc="connect via psql to a $PLUGIN_SERVICE service"
+  declare desc="connect to the service via the $PLUGIN_COMMAND_PREFIX connection tool"
   local cmd="$PLUGIN_COMMAND_PREFIX:connect" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"
+  is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   verify_service_name "$SERVICE"

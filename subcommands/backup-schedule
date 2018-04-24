@@ -17,6 +17,7 @@ service-backup-schedule-cmd() {
   declare desc="schedules a backup of the $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-schedule" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" SCHEDULE="$2" BUCKET_NAME="$3" USE_IAM_OPTIONAL_FLAG="$4"
+  is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   [[ -z "$SCHEDULE" ]] && dokku_log_fail "Please specify a schedule for the backup"
