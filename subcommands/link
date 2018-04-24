@@ -41,13 +41,15 @@ service-link-cmd() {
   #A app, app to run command against
   declare desc="link the $PLUGIN_SERVICE service to the app"
   local cmd="$PLUGIN_COMMAND_PREFIX:link" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1" APP="$2"
+  declare SERVICE="$1" APP="$2" LINK_FLAGS_LIST="${@:3}"
   APP=${APP:="$DOKKU_APP_NAME"}
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   [[ -z "$APP" ]] && dokku_log_fail "Please specify an app to run the command on"
   verify_app_name "$APP"
   verify_service_name "$SERVICE"
+
+  service_parse_args "${@:3}"
   service_link "$SERVICE" "$APP"
 }
 

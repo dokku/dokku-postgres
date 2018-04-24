@@ -370,6 +370,7 @@ service_link() {
   else
     dokku docker-options:add "$APP" build,deploy,run "--link $SERVICE_NAME:$SERVICE_ALIAS"
   fi
+  [[ -n "$SERVICE_QUERYSTRING" ]] && SERVICE_URL="${SERVICE_URL}?${SERVICE_QUERYSTRING}"
   config_set "$APP" "${ALIAS}_URL=$SERVICE_URL"
 }
 
@@ -460,7 +461,7 @@ service_parse_args() {
          ;;
       p) export SERVICE_PASSWORD=$OPTARG
          ;;
-      q) export SERVICE_QUERYSTRING=$OPTARG
+      q) export SERVICE_QUERYSTRING=${OPTARG#"?"}
          ;;
       r) export SERVICE_ROOT_PASSWORD=$OPTARG
          ;;
