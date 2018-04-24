@@ -72,6 +72,6 @@ teardown() {
 @test "($PLUGIN_COMMAND_PREFIX:link) adds a querystring" {
   dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app --querystring "pool=5"
   url=$(dokku config:get my_app DATABASE_URL)
-  assert_contains "$url" "?pool=4"
+  assert_contains "$url" "?pool=5"
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
 }
