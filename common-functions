@@ -346,20 +346,28 @@ service_link() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local EXISTING_CONFIG=$(config_all "$APP")
   local LINK=$(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1) || true
-  local DEFAULT_ALIAS=$(echo "$EXISTING_CONFIG" | grep "${PLUGIN_DEFAULT_ALIAS}_URL") || true
   local SERVICE_DNS_HOSTNAME=$(service_dns_hostname "$SERVICE")
   local LINKS_FILE="$SERVICE_ROOT/LINKS"
+  local ALIAS="$PLUGIN_DEFAULT_ALIAS"
+  local DEFAULT_ALIAS
+
+  if [[ -n "$SERVICE_ALIAS" ]]; then
+    ALIAS="$SERVICE_ALIAS"
+    ALIAS_IN_USE=$(echo "$EXISTING_CONFIG" | grep "${ALIAS}_URL") || true
+    [[ -n "$ALIAS_IN_USE" ]] && dokku_log_fail "Specified alias $ALIAS already in use"
+  else
+    DEFAULT_ALIAS=$(echo "$EXISTING_CONFIG" | grep "${PLUGIN_DEFAULT_ALIAS}_URL") || true
+    if [[ -n "$DEFAULT_ALIAS" ]]; then
+      ALIAS=$(service_alternative_alias "$EXISTING_CONFIG")
+    fi
+    [[ -z "$ALIAS" ]] && dokku_log_fail "Unable to use default or generated URL alias"
+  fi
 
   [[ -n $LINK ]] && dokku_log_fail "Already linked as $LINK"
   mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
   touch "$LINKS_FILE"
   echo "$APP" >> "$LINKS_FILE"
   sort "$LINKS_FILE" -u -o "$LINKS_FILE"
-
-  local ALIAS="$PLUGIN_DEFAULT_ALIAS"
-  if [[ -n $DEFAULT_ALIAS ]]; then
-    ALIAS=$(service_alternative_alias "$EXISTING_CONFIG")
-  fi
 
   if declare -f -F add_passed_docker_option > /dev/null; then
     # shellcheck disable=SC2034
@@ -443,7 +451,8 @@ service_parse_args() {
   OPTIND=1
   while getopts "a:c:C:d:i:I:m:p:q:r:u:" opt; do
     case "$opt" in
-      a) export SERVICE_ALIAS=$OPTARG
+      a)
+         SERVICE_ALIAS="${SERVICE_ALIAS^^}"; export SERVICE_ALIAS="${SERVICE_ALIAS%_URL}"
          ;;
       c) export PLUGIN_CONFIG_OPTIONS=$OPTARG
          ;;

@@ -39,6 +39,8 @@ service-link-cmd() {
   #E     ${PLUGIN_SCHEME}2://lolipop:SOME_PASSWORD@dokku-${PLUGIN_COMMAND_PREFIX}-lolipop:${PLUGIN_DATASTORE_PORTS[0]}/lolipop
   #A service, service to run command against
   #A app, app to run command against
+  #F -a|--alias "BLUE_DATABASE", an alternative alias to use for linking to an app via environment variable
+  #F -q|--querystring "pool=5", ampersand delimited querystring arguments to append to the service link
   declare desc="link the $PLUGIN_SERVICE service to the app"
   local cmd="$PLUGIN_COMMAND_PREFIX:link" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" APP="$2" LINK_FLAGS_LIST="${@:3}"

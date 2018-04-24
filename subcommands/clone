@@ -32,7 +32,7 @@ service-clone-cmd() {
 
   service_parse_args "${@:3}"
 
-  dokku_log_info2 "Cloning $SERVICE to $NEW_SERVICE"
+  dokku_log_info2 "Cloning $SERVICE to $NEW_SERVICE @ $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
   service_create "$NEW_SERVICE" "${@:3}"
   dokku_log_info1 "Copying data from $SERVICE to $NEW_SERVICE"
   service_export "$SERVICE" | service_import "$NEW_SERVICE" > /dev/null 2>&1 || true
