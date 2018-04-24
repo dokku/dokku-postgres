@@ -108,9 +108,7 @@ service_alternative_alias() {
   local COLORS=(AQUA BLACK BLUE FUCHSIA GRAY GREEN LIME MAROON NAVY OLIVE PURPLE RED SILVER TEAL WHITE YELLOW)
   local ALIAS;
 
-  while [[ -z $ALIAS ]]; do
-    local IDX=$((RANDOM % ${#COLORS[*]}))
-    local COLOR=${COLORS[IDX]}
+  for COLOR in "${COLORS[@]}"; do
     ALIAS="${PLUGIN_ALT_ALIAS}_${COLOR}"
     local IN_USE=$(echo "$EXISTING_CONFIG" | grep "${ALIAS}_URL")
     if [[ -n $IN_USE ]]; then
