@@ -95,7 +95,7 @@ remove_from_links_file() {
   sort "$LINKS_FILE" -u -o "$LINKS_FILE"
 }
 
-service_alias() {
+service_dns_hostname() {
   declare desc="Retrieves the alias of a service"
   declare SERVICE="$1"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
@@ -347,7 +347,7 @@ service_link() {
   local EXISTING_CONFIG=$(config_all "$APP")
   local LINK=$(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1) || true
   local DEFAULT_ALIAS=$(echo "$EXISTING_CONFIG" | grep "${PLUGIN_DEFAULT_ALIAS}_URL") || true
-  local SERVICE_ALIAS=$(service_alias "$SERVICE")
+  local SERVICE_DNS_HOSTNAME=$(service_dns_hostname "$SERVICE")
   local LINKS_FILE="$SERVICE_ROOT/LINKS"
 
   [[ -n $LINK ]] && dokku_log_fail "Already linked as $LINK"
@@ -364,9 +364,9 @@ service_link() {
   if declare -f -F add_passed_docker_option > /dev/null; then
     # shellcheck disable=SC2034
     local passed_phases=(build deploy run)
-    add_passed_docker_option passed_phases[@] "--link $SERVICE_NAME:$SERVICE_ALIAS"
+    add_passed_docker_option passed_phases[@] "--link $SERVICE_NAME:$SERVICE_DNS_HOSTNAME"
   else
-    dokku docker-options:add "$APP" build,deploy,run "--link $SERVICE_NAME:$SERVICE_ALIAS"
+    dokku docker-options:add "$APP" build,deploy,run "--link $SERVICE_NAME:$SERVICE_DNS_HOSTNAME"
   fi
   [[ -n "$SERVICE_QUERYSTRING" ]] && SERVICE_URL="${SERVICE_URL}?${SERVICE_QUERYSTRING}"
   config_set "$APP" "${ALIAS}_URL=$SERVICE_URL"
@@ -629,7 +629,7 @@ service_unlink() {
   local SERVICE_URL=$(service_url "$SERVICE")
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local EXISTING_CONFIG=$(config_all "$APP")
-  local SERVICE_ALIAS=$(service_alias "$SERVICE")
+  local SERVICE_DNS_HOSTNAME=$(service_dns_hostname "$SERVICE")
   local LINK=($(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1)) || true
 
   remove_from_links_file "$SERVICE" "$APP"
@@ -637,9 +637,9 @@ service_unlink() {
   if declare -f -F add_passed_docker_option > /dev/null; then
     # shellcheck disable=SC2034
     local passed_phases=(build deploy run)
-    remove_passed_docker_option passed_phases[@] "--link $SERVICE_NAME:$SERVICE_ALIAS"
+    remove_passed_docker_option passed_phases[@] "--link $SERVICE_NAME:$SERVICE_DNS_HOSTNAME"
   else
-    dokku docker-options:remove "$APP" build,deploy,run "--link $SERVICE_NAME:$SERVICE_ALIAS"
+    dokku docker-options:remove "$APP" build,deploy,run "--link $SERVICE_NAME:$SERVICE_DNS_HOSTNAME"
   fi
 
   [[ -z ${LINK[*]} ]] && dokku_log_fail "Not linked to app $APP"
