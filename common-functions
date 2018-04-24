@@ -452,7 +452,7 @@ service_parse_args() {
   while getopts "a:c:C:d:i:I:m:p:q:r:u:" opt; do
     case "$opt" in
       a)
-         SERVICE_ALIAS="${SERVICE_ALIAS^^}"; export SERVICE_ALIAS="${SERVICE_ALIAS%_URL}"
+         SERVICE_ALIAS="${OPTARG^^}"; export SERVICE_ALIAS="${SERVICE_ALIAS%_URL}"
          ;;
       c) export PLUGIN_CONFIG_OPTIONS=$OPTARG
          ;;
