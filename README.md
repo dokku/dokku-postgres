@@ -4,8 +4,8 @@ Official postgres plugin for dokku. Currently defaults to installing [postgres 1
 
 ## requirements
 
-* dokku 0.4.x+
-* docker 1.8.x
+- dokku 0.4.x+
+- docker 1.8.x
 
 ## installation
 
@@ -172,14 +172,14 @@ believe the postgres is not linked when attempting to use `dokku postgres:unlink
 or `dokku postgres:promote`.
 You should be able to fix this by
 
-* Changing DATABASE_URL manually to the new value.
+- Changing DATABASE_URL manually to the new value.
 
 OR
 
-* Set POSTGRES_DATABASE_SCHEME back to its original setting
-* Unlink the service
-* Change POSTGRES_DATABASE_SCHEME to the desired setting
-* Relink the service
+- Set POSTGRES_DATABASE_SCHEME back to its original setting
+- Unlink the service
+- Change POSTGRES_DATABASE_SCHEME to the desired setting
+- Relink the service
 
 ## upgrade/downgrade
 
