@@ -118,6 +118,22 @@ service_alternative_alias() {
   echo "$ALIAS"
 }
 
+service_app_links() {
+  declare desc="Outputs all service links for a given app"
+  declare APP="$1"
+  local SERVICE LINKED_APP
+
+  pushd "$PLUGIN_DATA_ROOT" > /dev/null
+  for SERVICE in *; do
+    [[ -f "$SERVICE/LINKS" ]] || continue
+    for LINKED_APP in $(<"$SERVICE/LINKS"); do
+      if [[ "$LINKED_APP" == "$APP" ]] ; then
+        echo "$SERVICE"
+      fi
+    done
+  done
+}
+
 service_backup() {
   declare desc="Creates a backup of a service to an existing s3 bucket"
   declare SERVICE="$1" BUCKET_NAME="$2" USE_IAM_OPTIONAL_FLAG="$3"
