@@ -1,6 +1,6 @@
 # dokku postgres [![Build Status](https://img.shields.io/travis/dokku/dokku-postgres.svg?branch=master "Build Status")](https://travis-ci.org/dokku/dokku-postgres) [![IRC Network](https://img.shields.io/badge/irc-freenode-blue.svg "IRC Freenode")](https://webchat.freenode.net/?channels=dokku)
 
-Official postgres plugin for dokku. Currently defaults to installing [postgres 10.2](https://hub.docker.com/_/postgres/).
+Official postgres plugin for dokku. Currently defaults to installing [postgres 10.4](https://hub.docker.com/_/postgres/).
 
 ## requirements
 
@@ -59,7 +59,7 @@ dokku postgres:create lolipop
 # it *must* be compatible with the
 # official postgres image
 export POSTGRES_IMAGE="postgres"
-export POSTGRES_IMAGE_VERSION="10.2"
+export POSTGRES_IMAGE_VERSION="10.4"
 dokku postgres:create lolipop
 
 # you can also specify custom environment
@@ -184,7 +184,7 @@ OR
 
 ## upgrade/downgrade
 
-At the moment a database can’t be upgraded  (or downgraded) inplace. Instead a clone has to be made, like this:
+At the moment a database can’t be upgraded (or downgraded) inplace. Instead a clone has to be made, like this:
 
 ```shell
 # Our original DB using PG 9.5
@@ -207,7 +207,7 @@ $ dokku postgres:destroy db9.5
 If you wish to tune the postgres instances various .conf files, you can find them by using the postgres:info command.
 
 ```shell
-dokku postgres:info lolipop 
+dokku postgres:info lolipop
 # or
 dokku postgres:info lolipop --data-dir
 ```
@@ -244,14 +244,14 @@ dokku postgres:backup-unschedule lolipop
 ```
 
 Backup auth can also be set up for different regions, signature versions and endpoints (e.g. for minio):
- 
+
 ```
 # setup s3 backup authentication with different region
 dokku postgres:backup-auth lolipop AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION
- 
+
 # setup s3 backup authentication with different signature version and endpoint
 dokku postgres:backup-auth lolipop AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION AWS_SIGNATURE_VERSION ENDPOINT_URL
- 
+
 # more specific example for minio auth
 dokku postgres:backup-auth lolipop MINIO_ACCESS_KEY_ID MINIO_SECRET_ACCESS_KEY us-east-1 s3v4 https://YOURMINIOSERVICE
 ```
@@ -267,7 +267,7 @@ dokku postgres:connect db < ./dump.sql
 ## Security
 
 The connection to the database is done over SSL. A self-signed certificate is
-automatically generated when creating the service.  It can be replaced by a
+automatically generated when creating the service. It can be replaced by a
 custom certificate by overwriting the `server.crt` and `server.key` files in
 `/var/lib/dokku/services/postgres/<DB_NAME>/data`.
 The `server.key` must be chmoded to 600 and must be owned by the postgres user
