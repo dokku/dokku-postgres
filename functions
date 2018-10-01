@@ -12,7 +12,7 @@ fi
 
 service_connect() {
   local SERVICE="$1"
-  local EXTRA_OPTS="${@:2}"
+  local EXTRA_OPTS="${*:2}"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local DATABASE_NAME="$(get_database_name "$SERVICE")"
