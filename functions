@@ -12,14 +12,14 @@ fi
 
 service_connect() {
   local SERVICE="$1"
-  local EXTRA_OPTS=${*:2}
+  local EXTRA_CMD=${*:2}
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local DATABASE_NAME="$(get_database_name "$SERVICE")"
   local SERVICE_TTY_OPTS
   has_tty && SERVICE_TTY_OPTS="-t"
 
-  docker exec -i $SERVICE_TTY_OPTS "$SERVICE_NAME" psql -h localhost -U postgres "$DATABASE_NAME" "$EXTRA_OPTS"
+  docker exec -i $SERVICE_TTY_OPTS "$SERVICE_NAME" psql -h localhost -U postgres "$DATABASE_NAME" -c '"$EXTRA_CMD"'
 }
 
 service_create() {
