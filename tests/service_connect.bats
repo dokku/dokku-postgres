@@ -23,7 +23,14 @@ teardown() {
 
 @test "($PLUGIN_COMMAND_PREFIX:connect) success" {
   export ECHO_DOCKER_COMMAND="true"
-  run dokku "$PLUGIN_COMMAND_PREFIX:connect" l -c "select * form some_table"
-  assert_output 'docker exec -i -t dokku.postgres.l psql -h localhost -U postgres l -c "select * form some_table"'
+  run dokku "$PLUGIN_COMMAND_PREFIX:connect" l"
+  assert_output 'docker exec -i -t dokku.postgres.l psql -h localhost -U postgres l'
 }
+
+@test "($PLUGIN_COMMAND_PREFIX:connect) success with command" {
+  export ECHO_DOCKER_COMMAND="true"
+  run dokku "$PLUGIN_COMMAND_PREFIX:connect" l "select * form some_table"
+  assert_output 'docker exec -i -t dokku.postgres.l psql -h localhost -U postgres l -c \'select * form some_table\''
+}
+
 
