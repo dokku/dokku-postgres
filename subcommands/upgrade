@@ -8,9 +8,9 @@ service-upgrade-cmd() {
   #E you can upgrade an existing service to a new image or image-version
   #E dokku $PLUGIN_COMMAND_PREFIX:upgrade lolipop
   #A service, service to run command against
-  #F -c|--custom-env "USER=alpha;HOST=beta", semi-colon delimited environment variables to start the service with
+  #F -C|--custom-env "USER=alpha;HOST=beta", semi-colon delimited environment variables to start the service with
   #F -i|--image IMAGE, the image name to start the service with
-  #F -i|--image-version IMAGE_VERSION, the image version to start the service with
+  #F -I|--image-version IMAGE_VERSION, the image version to start the service with
   declare desc="upgrade service <service> to the specified versions"
   local cmd="$PLUGIN_COMMAND_PREFIX:upgrade" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" UPGRADE_FLAG_LIST="${@:2}"
