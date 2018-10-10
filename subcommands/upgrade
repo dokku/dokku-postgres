@@ -28,9 +28,9 @@ service-upgrade-cmd() {
     dokku_log_fail "Unable to proceed with upgrade, image ${PLUGIN_IMAGE}:${PLUGIN_IMAGE_VERSION} does not exist"
   fi
 
+  dokku_log_info2 "Upgrading $SERVICE to $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
   dokku_log_info2 "Stopping $SERVICE"
   service_container_rm "$SERVICE"
-  dokku_log_info2 "Upgrading $SERVICE @ $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
   service_start "$SERVICE" "${@:2}"
   dokku_log_info2 "Done"
 }

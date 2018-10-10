@@ -279,9 +279,9 @@ service_container_rm() {
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
 
   service_stop "$SERVICE"
-  dokku_log_info2_quiet "Removing container"
+  dokku_log_verbose_quiet "Removing container"
   if ! docker rm "$SERVICE_NAME" > /dev/null 2>&1; then
-    dokku_log_fail "Unable to stop container for service $SERVICE" 
+    dokku_log_fail "Unable to remove container for service $SERVICE" 
   fi
 }
 
