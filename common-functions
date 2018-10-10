@@ -317,10 +317,10 @@ service_image_exists() {
   local IMAGE="$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
 
   if [[ "$(docker images -q "$IMAGE" 2> /dev/null)" == "" ]]; then
-    return 0
+    return 1
   fi
 
-  return 1
+  return 0
 }
 
 service_info() {
