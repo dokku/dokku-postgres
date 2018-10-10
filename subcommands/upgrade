@@ -22,9 +22,6 @@ service-upgrade-cmd() {
   local ID="$(cat "$SERVICE_ROOT/ID")"
   is_container_status "$ID" "Running" || dokku_log_fail "Service ${SERVICE} container is not running"
 
-  PLUGIN_IMAGE=$(service_version "$SERVICE" |  grep -o "^.*:" | sed -r "s/://g")
-  PLUGIN_IMAGE_VERSION=$(service_version "$SERVICE" |  grep -o ":.*$" | sed -r "s/://g")
-
   service_parse_args "${@:2}"
 
   if ! service_image_exists "$SERVICE"; then
