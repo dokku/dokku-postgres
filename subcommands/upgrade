@@ -29,9 +29,9 @@ service-upgrade-cmd() {
   fi
 
   dokku_log_info2 "Stopping $SERVICE"
-  service_container_rm "$NEW_SERVICE"
+  service_container_rm "$SERVICE"
   dokku_log_info2 "Upgrading $SERVICE @ $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
-  service_start "$NEW_SERVICE" "${@:2}"
+  service_start "$SERVICE" "${@:2}"
   dokku_log_info2 "Done"
 }
 
