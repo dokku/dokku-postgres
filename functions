@@ -29,7 +29,7 @@ service_create() {
 
   service_parse_args "${@:2}"
 
-  if ! docker images | grep -e "^$PLUGIN_IMAGE " | grep -q " $PLUGIN_IMAGE_VERSION " ; then
+  if ! service_image_exists "$SERVICE"; then
     if [[ "$PLUGIN_DISABLE_PULL" == "true" ]]; then
       dokku_log_warn "${PLUGIN_DISABLE_PULL_VARIABLE} environment variable detected. Not running pull command." 1>&2
       dokku_log_warn "   docker pull ${IMAGE}" 1>&2
@@ -130,14 +130,13 @@ service_start() {
 
   dokku_log_info2_quiet "Starting container"
   local PREVIOUS_ID=$(docker ps -f status=exited | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
-  local IMAGE_EXISTS=$(docker images | grep -e "^$PLUGIN_IMAGE " | grep -q " $PLUGIN_IMAGE_VERSION " && true)
   local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
 
   if [[ -n $PREVIOUS_ID ]]; then
     docker start "$PREVIOUS_ID" > /dev/null
     service_port_unpause "$SERVICE"
     dokku_log_info2 "Container started"
-  elif $IMAGE_EXISTS && [[ -n "$PASSWORD" ]]; then
+  elif service_image_exists "$SERVICE" && [[ -n "$PASSWORD" ]]; then
     service_create_container "$SERVICE"
   else
     dokku_log_verbose_quiet "Neither container nor valid configuration exists for $SERVICE"
