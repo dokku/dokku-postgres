@@ -13,7 +13,7 @@ service-upgrade-cmd() {
   #F -i|--image-version IMAGE_VERSION, the image version to start the service with
   declare desc="upgrade service <service> to the specified versions"
   local cmd="$PLUGIN_COMMAND_PREFIX:upgrade" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1" CLONE_FLAGS_LIST="${@:2}"
+  declare SERVICE="$1" UPGRADE_FLAG_LIST="${@:2}"
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   verify_service_name "$SERVICE"
