@@ -273,6 +273,18 @@ service_backup_unset_encryption() {
   rm -rf "$SERVICE_BACKUP_ENCRYPTION_ROOT"
 }
 
+service_container_rm() {
+  declare desc="Stops a service and removes the running container"
+  declare SERVICE="$1"
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
+
+  service_stop "$SERVICE"
+  dokku_log_info2_quiet "Removing container"
+  if ! docker rm "$SERVICE_NAME" > /dev/null 2>&1; then
+    dokku_log_fail "Unable to stop container for service $SERVICE" 
+  fi
+}
+
 service_enter() {
   declare desc="enters running app container of specified proc type"
   declare SERVICE="$1" && shift 1
@@ -298,6 +310,17 @@ service_exposed_ports() {
   for (( i=0; i < ${#PLUGIN_DATASTORE_PORTS[@]}; i++ )); do
     echo -n "${PLUGIN_DATASTORE_PORTS[i]}->${PORTS[i]} "
   done
+}
+
+service_image_exists() {
+  declare desc="Checks if the current image exists"
+  local IMAGE="$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
+
+  if [[ "$(docker images -q "$IMAGE" 2> /dev/null)" == "" ]]; then
+    return 0
+  fi
+
+  return 1
 }
 
 service_info() {
