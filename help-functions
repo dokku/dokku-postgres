@@ -28,14 +28,14 @@ fn-help() {
 
 fn-help-all() {
   declare CMD="$1" SUBCOMMAND="$2"
-  local CMD_OUTPUT BLUE BOLD FULL_OUTPUT NORMAL 
+  local CMD_OUTPUT BLUE BOLD FULL_OUTPUT NORMAL
   FULL_OUTPUT=true
 
   if [[ "$CMD" = "$PLUGIN_COMMAND_PREFIX:help" ]] || [[ "$CMD" == "$PLUGIN_COMMAND_PREFIX" ]] || [[ "$CMD" == "$PLUGIN_COMMAND_PREFIX:default" ]] ; then
-    BOLD="$(tput bold)"
-    NORMAL="\033[m"
-    BLUE="\033[0;34m"
-    CYAN="\033[1;36m"
+    BOLD="$(fn-help-fancy-tput bold)"
+    NORMAL="$(fn-help-fancy-color "\033[m")"
+    BLUE="$(fn-help-fancy-color "\033[0;34m")"
+    CYAN="$(fn-help-fancy-color "\033[1;36m")"
     if [[ -n "$SUBCOMMAND" ]] && [[ "$SUBCOMMAND" != "--all" ]]; then
       fn-help-contents-subcommand "$SUBCOMMAND" "$FULL_OUTPUT"
       return "$?"
@@ -95,12 +95,12 @@ fn-help-contents-subcommand() {
   desc="$(grep desc "$CLEAN_FILE" | head -1)"
   eval "$desc"
 
-  BLUE="\033[0;34m"
-  BOLD="$(tput bold)"
-  CYAN="\033[1;36m"
-  NORMAL="\033[m"
-  LIGHT_GRAY="\033[2;37m"
-  LIGHT_RED="\033[1;31m"
+  BLUE="$(fn-help-fancy-color "\033[0;34m")"
+  BOLD="$(fn-help-fancy-tput bold)"
+  CYAN="$(fn-help-fancy-color "\033[1;36m")"
+  NORMAL="$(fn-help-fancy-color "\033[m")"
+  LIGHT_GRAY="$(fn-help-fancy-color "\033[2;37m")"
+  LIGHT_RED="$(fn-help-fancy-color "\033[1;31m")"
   CMD_OUTPUT="$(echo -e "    ${PLUGIN_COMMAND_PREFIX}${cmd_line}, ${LIGHT_GRAY}${desc}${NORMAL}")"
   if [[ "$FULL_OUTPUT" != "true" ]]; then
     echo "$CMD_OUTPUT"
@@ -139,6 +139,26 @@ fn-help-contents-subcommand() {
   return 0
 }
 
+fn-help-fancy-tput() {
+  declare desc="A wrapper around tput"
+
+  if [[ -z "$DOKKU_NO_COLOR" ]] || [[ "$TERM" = "unknown" ]] || [[ "$TERM" == "dumb" ]]; then
+    return
+  fi
+
+  tput "$@"
+}
+
+fn-help-fancy-color() {
+  declare desc="A wrapper around colors"
+
+  if [[ -z "$DOKKU_NO_COLOR" ]] || [[ "$TERM" = "unknown" ]] || [[ "$TERM" == "dumb" ]]; then
+    return
+  fi
+
+  echo "$@"
+}
+
 fn-help-list-example() {
   # shellcheck disable=SC2034
   declare desc="return $PLUGIN_COMMAND_PREFIX plugin help content"
@@ -153,8 +173,8 @@ fn-help-subcommand-args() {
   local argline arglist args argpos BLUE NORMAL
 
   if [[ "$FULL_OUTPUT" == "true" ]]; then
-    BLUE="\033[0;34m"
-    NORMAL="\033[m"
+    BLUE="$(fn-help-fancy-color "\033[0;34m")"
+    NORMAL="$(fn-help-fancy-color "\033[m")"
   fi
   argline=$(grep declare "$FUNC_FILE" | grep -v "declare desc" | head -1 || true)
   arglist=($(echo -e "${argline// /"\n"}" | awk -F= '/=/{print ""$1""}'))
@@ -199,12 +219,12 @@ fn-help-subcommand-example() {
     return 0
   fi
 
-  BOLD="$(tput bold)"
+  BOLD="$(fn-help-fancy-tput bold)"
   LAST_LINE=""
-  LIGHT_GRAY="\033[2;37m"
-  OTHER_GRAY="\033[7;37m"
+  LIGHT_GRAY="$(fn-help-fancy-color "\033[2;37m")"
+  OTHER_GRAY="$(fn-help-fancy-color "\033[7;37m")"
   NEWLINE=""
-  NORMAL="\033[m"
+  NORMAL="$(fn-help-fancy-color "\033[m")"
   _fn-help-apply-shell-expansion "$EXAMPLE" | while read -r line; do
     line="$(echo "$line" | cut -c 4-)"
     if [[ "$line" == export* ]] || [[ "$line" == dokku* ]]; then
@@ -234,10 +254,10 @@ fn-help-subcommand-list-args() {
     return 0
   fi
 
-  NORMAL="\033[m"
-  LIGHT_GRAY="\033[2;37m"
+  NORMAL="$(fn-help-fancy-color "\033[m")"
+  LIGHT_GRAY="$(fn-help-fancy-color "\033[2;37m")"
 
-  _fn-help-apply-shell-expansion "$FLAGS" | while read -r line; do 
+  _fn-help-apply-shell-expansion "$FLAGS" | while read -r line; do
     echo -e "$(echo "$line" | cut -d',' -f1),${LIGHT_GRAY}$(echo "$line" | cut -d',' -f2-)${NORMAL}"
   done
 }
@@ -251,10 +271,10 @@ fn-help-subcommand-list-flags() {
     return 0
   fi
 
-  NORMAL="\033[m"
-  LIGHT_GRAY="\033[2;37m"
+  NORMAL="$(fn-help-fancy-color "\033[m")"
+  LIGHT_GRAY="$(fn-help-fancy-color "\033[2;37m")"
 
-  _fn-help-apply-shell-expansion "$FLAGS" | while read -r line; do 
+  _fn-help-apply-shell-expansion "$FLAGS" | while read -r line; do
     echo -e "$(echo "$line" | cut -d',' -f1),${LIGHT_GRAY}$(echo "$line" | cut -d',' -f2-)${NORMAL}"
   done
 }
