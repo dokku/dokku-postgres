@@ -21,8 +21,6 @@ service-upgrade-cmd() {
   verify_service_name "$SERVICE"
 
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local ID="$(cat "$SERVICE_ROOT/ID")"
-  is_container_status "$ID" "Running" || dokku_log_fail "Service ${SERVICE} container is not running"
 
   service_parse_args "${@:2}"
 
@@ -40,6 +38,7 @@ service-upgrade-cmd() {
   if [[ "$SERVICE_RESTART_APPS" == "true" ]]; then
     dokku_log_info2 "Stopping all linked services"
     for app in $(service_linked_apps "$SERVICE"); do
+      [[ "$app" == "-" ]] && continue
       ps_stop "$app"
     done
   fi
@@ -51,6 +50,7 @@ service-upgrade-cmd() {
   if [[ "$SERVICE_RESTART_APPS" == "true" ]]; then
     dokku_log_info2 "Starting all linked services"
     for app in $(service_linked_apps "$SERVICE"); do
+      [[ "$app" == "-" ]] && continue
       ps_start "$app"
     done
   fi
