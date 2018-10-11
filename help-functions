@@ -142,7 +142,7 @@ fn-help-contents-subcommand() {
 fn-help-fancy-tput() {
   declare desc="A wrapper around tput"
 
-  if [[ -z "$DOKKU_NO_COLOR" ]] || [[ "$TERM" = "unknown" ]] || [[ "$TERM" == "dumb" ]]; then
+  if [[ -n "$DOKKU_NO_COLOR" ]] || [[ "$TERM" = "unknown" ]] || [[ "$TERM" == "dumb" ]]; then
     return
   fi
 
@@ -152,7 +152,7 @@ fn-help-fancy-tput() {
 fn-help-fancy-color() {
   declare desc="A wrapper around colors"
 
-  if [[ -z "$DOKKU_NO_COLOR" ]] || [[ "$TERM" = "unknown" ]] || [[ "$TERM" == "dumb" ]]; then
+  if [[ -n "$DOKKU_NO_COLOR" ]] || [[ "$TERM" = "unknown" ]] || [[ "$TERM" == "dumb" ]]; then
     return
   fi
 
