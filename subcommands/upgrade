@@ -30,7 +30,13 @@ service-upgrade-cmd() {
     dokku_log_fail "Unable to proceed with upgrade, image ${PLUGIN_IMAGE}:${PLUGIN_IMAGE_VERSION} does not exist"
   fi
 
-  dokku_log_info2 "Upgrading $SERVICE to $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
+  local NEW_PLUGIN_IMAGE_TAG="$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
+  if [[ "$(service_version "$SERVICE")" == "$NEW_PLUGIN_IMAGE_TAG" ]]; then
+    dokku_log_info1 "Service $SERVICE already running $NEW_PLUGIN_IMAGE_TAG"
+    return
+  fi
+
+  dokku_log_info2 "Upgrading $SERVICE to $NEW_PLUGIN_IMAGE_TAG"
   if [[ "$SERVICE_RESTART_APPS" == "true" ]]; then
     dokku_log_info2 "Stopping all linked services"
     for app in $(service_linked_apps "$SERVICE"); do
