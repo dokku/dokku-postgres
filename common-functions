@@ -474,24 +474,24 @@ service_parse_args() {
   for arg in "$@"; do
     shift
     case "$arg" in
-      "--config-options") set -- "$@" "-c" ;;
-      "--custom-env")     set -- "$@" "-C" ;;
-      "--image")          set -- "$@" "-i" ;;
-      "--image-version")  set -- "$@" "-I" ;;
-      "--password")       set -- "$@" "-p" ;;
-      "--root-password")  set -- "$@" "-r" ;;
-
-      "--alias")          set -- "$@" "-a" ;;
-      "--database")       set -- "$@" "-d" ;;
-      "--memory")         set -- "$@" "-m" ;;
-      "--querystring")    set -- "$@" "-q" ;;
-      "--user")           set -- "$@" "-u" ;;
-      *)                  set -- "$@" "$arg"
+      "--alias")                 set -- "$@" "-a" ;;
+      "--config-options")        set -- "$@" "-c" ;;
+      "--custom-env")            set -- "$@" "-C" ;;
+      "--database")              set -- "$@" "-d" ;;
+      "--image-version")         set -- "$@" "-I" ;;
+      "--image")                 set -- "$@" "-i" ;;
+      "--memory")                set -- "$@" "-m" ;;
+      "--password")              set -- "$@" "-p" ;;
+      "--querystring")           set -- "$@" "-q" ;;
+      "--restart-apps")          set -- "$@" "-R" ;;
+      "--root-password")         set -- "$@" "-r" ;;
+      "--user")                  set -- "$@" "-u" ;;
+      *)                         set -- "$@" "$arg"
     esac
   done
 
   OPTIND=1
-  while getopts "a:c:C:d:i:I:m:p:q:r:u:" opt; do
+  while getopts "a:c:C:d:i:I:m:p:q:R:r:u:" opt; do
     case "$opt" in
       a)
          SERVICE_ALIAS="${OPTARG^^}"; export SERVICE_ALIAS="${SERVICE_ALIAS%_URL}"
@@ -511,6 +511,8 @@ service_parse_args() {
       p) export SERVICE_PASSWORD=$OPTARG
          ;;
       q) export SERVICE_QUERYSTRING=${OPTARG#"?"}
+         ;;
+      R) export SERVICE_RESTART_APPS=$OPTARG
          ;;
       r) export SERVICE_ROOT_PASSWORD=$OPTARG
          ;;
