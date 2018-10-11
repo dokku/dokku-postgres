@@ -440,7 +440,11 @@ service_list() {
   if [[ -z $SERVICES ]]; then
     dokku_log_warn "There are no $PLUGIN_SERVICE services"
   else
-    LIST="NAME,VERSION,STATUS,EXPOSED PORTS,LINKS\n"
+    LIST=""
+    if [[ -z "$DOKKU_QUIET_OUTPUT" ]]; then
+      LIST="NAME,VERSION,STATUS,EXPOSED PORTS,LINKS\n"
+    fi
+
     for SERVICE in $SERVICES; do
       LIST+="$SERVICE,$(service_version "$SERVICE"),$(service_status "$SERVICE"),$(service_exposed_ports "$SERVICE"),$(service_linked_apps "$SERVICE")\n"
     done
