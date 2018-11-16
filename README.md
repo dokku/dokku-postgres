@@ -23,7 +23,7 @@ postgres:backup-auth <name> <aws_access_key_id> <aws_secret_access_key> (<aws_de
 postgres:backup-deauth <name>     Removes backup authentication for the postgres service
 postgres:backup-schedule <name> <schedule> <bucket> Schedules a backup of the postgres service
 postgres:backup-schedule-cat <name> Show the backup schedule for the service
-postgres:backup-set-encryption <name> <encryption_key> Sets up GPG encryption for future backups of the postgres service
+postgres:backup-set-encryption <name> <encryption_password> Sets up passphrase-based encryption for future backups
 postgres:backup-unschedule <name> Unschedules the backup of the postgres service
 postgres:backup-unset-encryption <name> Removes backup encryption for future backups of the postgres service
 postgres:clone <name> <new-name>  Create container <new-name> then copy data from <name> into <new-name>
@@ -229,6 +229,11 @@ dokku postgres:backup-auth lolipop AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
 
 # remove s3 authentication
 dokku postgres:backup-deauth lolipop
+
+# ensure all future backups are encrypted
+# keep your password in a safe place - if you lose it, your backups become worthless
+dokku postgres:backup-set-encryption lolipop "my-v3ry-5ecur3-p455word"
+# You need GPG installed to decrypt a downloaded backup: gpg -o my_backup.tgz -d lolipop-timestamp.tgz.gpg
 
 # backup the `lolipop` service to the `BUCKET_NAME` bucket on AWS
 dokku postgres:backup lolipop BUCKET_NAME
