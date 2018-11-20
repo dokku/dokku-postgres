@@ -158,3 +158,18 @@ service_url() {
   local PASSWORD="$(service_password "$SERVICE")"
   echo "$PLUGIN_SCHEME://postgres:$PASSWORD@$SERVICE_DNS_HOSTNAME:${PLUGIN_DATASTORE_PORTS[0]}/$DATABASE_NAME"
 }
+
+service_exposed_url() {
+  local SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local PORT_FILE="$SERVICE_ROOT/PORT"
+  [[ ! -f $PORT_FILE ]] && echo '-' && return 0
+  local GLOBAL_VHOST_FILE="$DOKKU_ROOT/VHOST"
+  [[ ! -f $GLOBAL_VHOST_FILE ]] && echo '-' && return 0
+
+  local PORTS=($(cat "$PORT_FILE"))
+  local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
+  local DATABASE_NAME="$(get_database_name "$SERVICE")"
+  local GLOBAL_VHOSTS=($(cat "$GLOBAL_VHOST_FILE"))
+  echo "$PLUGIN_SCHEME://postgres:$PASSWORD@${GLOBAL_VHOSTS[0]}:${PORTS[0]}/$DATABASE_NAME"
+}

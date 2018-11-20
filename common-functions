@@ -385,6 +385,7 @@ service_info() {
     "--config-dir: ${SERVICE_ROOT}/config"
     "--data-dir: ${SERVICE_ROOT}/data"
     "--dsn: ${SERVICE_URL}"
+    "--exposed-dsn: $(service_exposed_url "$SERVICE")"
     "--exposed-ports: $(service_exposed_ports "$SERVICE")"
     "--id: ${SERVICE_CONTAINER_ID}"
     "--internal-ip: $(get_container_ip "${SERVICE_CONTAINER_ID}")"

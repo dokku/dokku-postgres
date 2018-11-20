@@ -47,6 +47,9 @@ teardown() {
   run dokku "$PLUGIN_COMMAND_PREFIX:info" l --dsn
   assert_success
 
+  run dokku "$PLUGIN_COMMAND_PREFIX:info" l --exposed-dsn
+  assert_success
+
   run dokku "$PLUGIN_COMMAND_PREFIX:info" l --exposed-ports
   assert_success
 
