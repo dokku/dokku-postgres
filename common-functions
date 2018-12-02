@@ -667,7 +667,7 @@ service_stop() {
   declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE";
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
-  local ID=$(docker ps -f status=running | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
+  local ID=$(docker ps -f status=running --no-trunc | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
   [[ -z $ID ]] && dokku_log_warn "Service is already stopped" && return 0
 
   if [[ -n $ID ]]; then
