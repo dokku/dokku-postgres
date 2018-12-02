@@ -5,19 +5,19 @@ source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-backup-set-encryption-cmd() {
-  #E set a GPG encryption key for backups
+  #E set a GPG passphrase for backups
   #E dokku $PLUGIN_COMMAND_PREFIX:backup-set-encryption lolipop
   #A service, service to run command against
-  #A encryption-key, a GPG encryption key
+  #A passphrase, a GPG-compatible passphrase
   declare desc="sets encryption for all future backups of $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-set-encryption" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1" ENCRYPTION_KEY="$2"
+  declare SERVICE="$1" PASSPHRASE="$2"
   is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
-  [[ -z "$ENCRYPTION_KEY" ]] && dokku_log_fail "Please specify a GPG encryption key"
+  [[ -z "$PASSPHRASE" ]] && dokku_log_fail "Please specify a GPG backup passphrase"
   verify_service_name "$SERVICE"
-  service_backup_set_encryption "$SERVICE" "$ENCRYPTION_KEY"
+  service_backup_set_encryption "$SERVICE" "$PASSPHRASE"
 }
 
 service-backup-set-encryption-cmd "$@"
