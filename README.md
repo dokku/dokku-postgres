@@ -23,7 +23,7 @@ postgres:backup-auth <name> <aws_access_key_id> <aws_secret_access_key> (<aws_de
 postgres:backup-deauth <name>     Removes backup authentication for the postgres service
 postgres:backup-schedule <name> <schedule> <bucket> Schedules a backup of the postgres service
 postgres:backup-schedule-cat <name> Show the backup schedule for the service
-postgres:backup-set-encryption <name> <encryption_key> Sets up GPG encryption for future backups of the postgres service
+postgres:backup-set-encryption <name> <passphrase> Set a GPG passphrase for backups
 postgres:backup-unschedule <name> Unschedules the backup of the postgres service
 postgres:backup-unset-encryption <name> Removes backup encryption for future backups of the postgres service
 postgres:clone <name> <new-name>  Create container <new-name> then copy data from <name> into <new-name>
@@ -46,6 +46,7 @@ postgres:start <name>             Start a previously stopped postgres service
 postgres:stop <name>              Stop a running postgres service
 postgres:unexpose <name>          Unexpose a previously exposed postgres service
 postgres:unlink <name> <app>      Unlink the postgres service from the app
+postgres:upgrade <name>           Upgrade service <service> to the specified version
 ```
 
 ## usage

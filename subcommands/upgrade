@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+source "$PLUGIN_AVAILABLE_PATH/ps/functions"
+
+service-upgrade-cmd() {
+  #E you can upgrade an existing service to a new image or image-version
+  #E dokku $PLUGIN_COMMAND_PREFIX:upgrade lolipop
+  #A service, service to run command against
+  #F -C|--custom-env "USER=alpha;HOST=beta", semi-colon delimited environment variables to start the service with
+  #F -i|--image IMAGE, the image name to start the service with
+  #F -I|--image-version IMAGE_VERSION, the image version to start the service with
+  #F -R|--restart-apps "true", whether to force an app restart
+  declare desc="upgrade service <service> to the specified versions"
+  local cmd="$PLUGIN_COMMAND_PREFIX:upgrade" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  declare SERVICE="$1" UPGRADE_FLAGS_LIST="${@:2}"
+
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  verify_service_name "$SERVICE"
+
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+
+  service_parse_args "${@:2}"
+
+  if ! service_image_exists "$SERVICE"; then
+    dokku_log_fail "Unable to proceed with upgrade, image ${PLUGIN_IMAGE}:${PLUGIN_IMAGE_VERSION} does not exist"
+  fi
+
+  local NEW_PLUGIN_IMAGE_TAG="$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
+  if [[ "$(service_version "$SERVICE")" == "$NEW_PLUGIN_IMAGE_TAG" ]]; then
+    dokku_log_info1 "Service $SERVICE already running $NEW_PLUGIN_IMAGE_TAG"
+    return
+  fi
+
+  dokku_log_info2 "Upgrading $SERVICE to $NEW_PLUGIN_IMAGE_TAG"
+  if [[ "$SERVICE_RESTART_APPS" == "true" ]]; then
+    dokku_log_info2 "Stopping all linked services"
+    for app in $(service_linked_apps "$SERVICE"); do
+      [[ "$app" == "-" ]] && continue
+      ps_stop "$app"
+    done
+  fi
+
+  dokku_log_info2 "Stopping $SERVICE"
+  service_container_rm "$SERVICE"
+  service_start "$SERVICE" "${@:2}"
+
+  if [[ "$SERVICE_RESTART_APPS" == "true" ]]; then
+    dokku_log_info2 "Starting all linked services"
+    for app in $(service_linked_apps "$SERVICE"); do
+      [[ "$app" == "-" ]] && continue
+      ps_start "$app"
+    done
+  fi
+
+  dokku_log_info2 "Done"
+}
+
+service-upgrade-cmd "$@"

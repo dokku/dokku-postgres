@@ -29,7 +29,7 @@ service_create() {
 
   service_parse_args "${@:2}"
 
-  if ! docker images | grep -e "^$PLUGIN_IMAGE " | grep -q " $PLUGIN_IMAGE_VERSION " ; then
+  if ! service_image_exists "$SERVICE"; then
     if [[ "$PLUGIN_DISABLE_PULL" == "true" ]]; then
       dokku_log_warn "${PLUGIN_DISABLE_PULL_VARIABLE} environment variable detected. Not running pull command." 1>&2
       dokku_log_warn "   docker pull ${IMAGE}" 1>&2
@@ -114,7 +114,7 @@ service_import() {
   if [[ -t 0 ]]; then
     dokku_log_fail "No data provided on stdin."
   fi
-  docker exec -i "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_restore -h localhost -cO -d "$DATABASE_NAME" -U postgres -w
+  docker exec -i "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_restore -h localhost -cO --if-exists -d "$DATABASE_NAME" -U postgres -w
 }
 
 service_start() {
@@ -137,7 +137,7 @@ service_start() {
     docker start "$PREVIOUS_ID" > /dev/null
     service_port_unpause "$SERVICE"
     dokku_log_info2 "Container started"
-  elif $IMAGE_EXISTS && [[ -n "$PASSWORD" ]]; then
+  elif service_image_exists "$SERVICE" && [[ -n "$PASSWORD" ]]; then
     service_create_container "$SERVICE"
   else
     dokku_log_verbose_quiet "Neither container nor valid configuration exists for $SERVICE"
