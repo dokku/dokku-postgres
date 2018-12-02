@@ -38,6 +38,7 @@ service-destroy-cmd() {
   fi
 
   dokku_log_info2_quiet "Deleting $SERVICE"
+  service_backup_unschedule "$SERVICE"
   if [[ -n $(docker ps -aq -f name="$SERVICE_NAME") ]]; then
     dokku_log_verbose_quiet "Deleting container data"
     service_stop "$SERVICE"
