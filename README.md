@@ -192,7 +192,7 @@ At the moment a database can’t be upgraded (or downgraded) inplace. Instead a 
 $ dokku postgres:create db9.5
 
 # Migrate it like this for example
-$ POSTGRES_IMAGE_VERSION=9.6 dokku postgres:clone db9.5 db9.6
+$ dokku postgres:clone db9.5 db9.6 -I 9.6
 
 # If it was linked to an application, first link the new DB
 $ dokku postgres:link db9.6 my_app
