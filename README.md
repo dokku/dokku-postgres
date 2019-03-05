@@ -279,3 +279,22 @@ or root.
 If you wish to disable the `docker pull` calls that the plugin triggers, you may set the `POSTGRES_DISABLE_PULL` environment variable to `true`. Once disabled, you will need to pull the service image you wish to deploy as shown in the `stderr` output.
 
 Please ensure the proper images are in place when `docker pull` is disabled.
+
+## Postgis
+
+Official Postgres docker images doesn't include postgis extension. To be able to use postgis, you will need postgres+postgis docker container compatible with official ones. 
+
+You can use for example `mdillon/postgis` container:
+
+```
+export POSTGRES_IMAGE="mdillon/postgis" 
+export POSTGRES_IMAGE_VERSION="latest"
+
+dokku postgres:create postgis-database
+
+dokku postgres:connect postgis-database
+
+CREATE EXTENSION postgis;
+```
+
+Reference issue: https://github.com/dokku/dokku-postgres/issues/52
