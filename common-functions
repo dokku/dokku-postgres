@@ -277,9 +277,12 @@ service_container_rm() {
   declare desc="Stops a service and removes the running container"
   declare SERVICE="$1"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
+  local ID
 
   service_stop "$SERVICE"
-  if ! docker inspect "$SERVICE_NAME" -f '{{ .ID }}' > /dev/null 2>&1; then
+  ID=$(docker inspect "$SERVICE_NAME" -f '{{ .ID }}' > /dev/null 2>&1 || true)
+  # this may be 'true' in tests...
+  if [[ -z "$ID" ]] || [[ "$ID" == "true" ]]; then
     return 0
   fi
 
