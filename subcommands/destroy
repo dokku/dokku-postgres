@@ -39,17 +39,7 @@ service-destroy-cmd() {
 
   dokku_log_info2_quiet "Deleting $SERVICE"
   service_backup_unschedule "$SERVICE"
-  if [[ -n $(docker ps -aq -f name="$SERVICE_NAME") ]]; then
-    dokku_log_verbose_quiet "Deleting container data"
-    service_stop "$SERVICE"
-    sleep 1
-
-    dokku_log_verbose_quiet "Removing container"
-    docker rm -v "$SERVICE_NAME" > /dev/null
-    sleep 1
-  else
-    dokku_log_verbose_quiet "No container exists for $SERVICE"
-  fi
+  service_container_rm "$SERVICE"
 
   dokku_log_verbose_quiet "Removing data"
   docker run --rm -v "$SERVICE_HOST_ROOT/data:/data" -v "$SERVICE_HOST_ROOT/config:/config" busybox chmod 777 -R /config /data
