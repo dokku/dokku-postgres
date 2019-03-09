@@ -21,6 +21,7 @@ service_connect() {
 
 service_create() {
   local SERVICE="$1"
+  is_valid_service_name "$SERVICE" || dokku_log_fail "Please specify a valid name for the service. Valid characters are: [A-Za-z0-9_]+"
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
   [[ ! -d "$PLUGIN_DATA_ROOT/$SERVICE" ]] || dokku_log_fail "$PLUGIN_SERVICE service $SERVICE already exists"
   SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"; LINKS_FILE="$SERVICE_ROOT/LINKS"
@@ -39,7 +40,6 @@ service_create() {
 
   mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
   mkdir -p "$SERVICE_ROOT/data" || dokku_log_fail "Unable to create service data directory"
-  mkdir -p "$SERVICE_ROOT/config" || dokku_log_fail "Unable to create service config directory"
   touch "$LINKS_FILE"
 
   PASSWORD=$(openssl rand -hex 16)

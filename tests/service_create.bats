@@ -10,3 +10,11 @@ load test_helper
   run dokku "$PLUGIN_COMMAND_PREFIX:create"
   assert_contains "${lines[*]}" "Please specify a name for the service"
 }
+
+@test "($PLUGIN_COMMAND_PREFIX:create) error when there is an invalid name specified" {
+  run dokku "$PLUGIN_COMMAND_PREFIX:create" d.erp
+  assert_failure
+
+  run dokku "$PLUGIN_COMMAND_PREFIX:create" d-erp
+  assert_failure
+}

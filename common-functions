@@ -731,3 +731,15 @@ verify_service_name() {
   [[ ! -d "$PLUGIN_DATA_ROOT/$SERVICE" ]] && dokku_log_fail "$PLUGIN_SERVICE service $SERVICE does not exist"
   return 0
 }
+
+is_valid_service_name() {
+  declare desc="Validates a service name"
+  declare SERVICE="$1"
+  [[ -z "$SERVICE" ]] && dokku_log_fail "SERVICE must not be null"
+
+  if [[ "$SERVICE" =~ ^[A-Za-z0-9_]+$ ]]; then
+    return 0
+  fi
+
+  return 1
+}
