@@ -15,7 +15,7 @@ service-backup-cmd() {
   declare SERVICE="$1" BUCKET_NAME="$2" USE_IAM_OPTIONAL_FLAG="$3"
   is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 
-  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
   [[ -z "$BUCKET_NAME" ]] && dokku_log_fail "Please specify an aws bucket for the backup"
   verify_service_name "$SERVICE"
   service_backup "$SERVICE" "$BUCKET_NAME" "$USE_IAM_OPTIONAL_FLAG"

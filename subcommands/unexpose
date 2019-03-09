@@ -12,7 +12,7 @@ service-unexpose-cmd() {
   local cmd="$PLUGIN_COMMAND_PREFIX:unexpose" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"
 
-  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
   verify_service_name "$SERVICE"
   service_port_unexpose "$SERVICE"
 }

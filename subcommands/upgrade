@@ -17,7 +17,7 @@ service-upgrade-cmd() {
   local cmd="$PLUGIN_COMMAND_PREFIX:upgrade" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" UPGRADE_FLAGS_LIST="${@:2}"
 
-  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
   verify_service_name "$SERVICE"
 
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"

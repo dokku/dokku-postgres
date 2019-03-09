@@ -19,7 +19,7 @@ service-clone-cmd() {
   declare SERVICE="$1" NEW_SERVICE="$2" CLONE_FLAGS_LIST="${@:3}"
   is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 
-  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
   [[ -z "$NEW_SERVICE" ]] && dokku_log_fail "Please specify a name for the new service"
   verify_service_name "$SERVICE"
 
