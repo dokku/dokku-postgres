@@ -15,7 +15,7 @@ teardown() {
 
 @test "($PLUGIN_COMMAND_PREFIX:promote) error when there are no arguments" {
   run dokku "$PLUGIN_COMMAND_PREFIX:promote"
-  assert_contains "${lines[*]}" "Please specify a name for the service"
+  assert_contains "${lines[*]}" "Please specify a valid name for the service"
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:promote) error when the app argument is missing" {

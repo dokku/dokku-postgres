@@ -14,7 +14,7 @@ service-backup-set-encryption-cmd() {
   declare SERVICE="$1" PASSPHRASE="$2"
   is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 
-  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
   [[ -z "$PASSPHRASE" ]] && dokku_log_fail "Please specify a GPG backup passphrase"
   verify_service_name "$SERVICE"
   service_backup_set_encryption "$SERVICE" "$PASSPHRASE"
