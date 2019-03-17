@@ -39,10 +39,9 @@ teardown() {
 @test "($PLUGIN_COMMAND_PREFIX:unlink) removes link from docker-options" {
   dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app >&2
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
-  options=$(dokku docker-options my_app | xargs)
-  check_value=""
-  [[ "$(dokku version)" == "master" ]] && check_value="Deploy options: --restart=on-failure:10"
-  [[ "$(at-least-version 0.7.0 "$(dokku version)")" == "true" ]] && check_value="Deploy options: --restart=on-failure:10"
+
+  check_value="Docker options build: Docker options deploy: --restart=on-failure:10 Docker options run:"
+  options=$(dokku --quiet docker-options:report my_app | xargs)
   assert_equal "$options" "$check_value"
 }
 

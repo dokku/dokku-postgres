@@ -4,7 +4,7 @@ Official postgres plugin for dokku. Currently defaults to installing [postgres 1
 
 ## requirements
 
-- dokku 0.4.x+
+- dokku 0.12.x+
 - docker 1.8.x
 
 ## installation
