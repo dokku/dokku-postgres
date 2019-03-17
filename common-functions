@@ -280,7 +280,7 @@ service_container_rm() {
   local ID
 
   service_stop "$SERVICE"
-  ID=$(docker inspect "$SERVICE_NAME" -f '{{ .ID }}' > /dev/null 2>&1 || true)
+  ID=$(docker ps -a --no-trunc | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
   # this may be 'true' in tests...
   if [[ -z "$ID" ]] || [[ "$ID" == "true" ]]; then
     return 0
