@@ -46,4 +46,4 @@ setup:
 	bash tests/setup.sh
 	$(MAKE) ci-dependencies
 
-test: setup lint unit-tests
+test: lint unit-tests
