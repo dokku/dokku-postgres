@@ -2,13 +2,11 @@
 load test_helper
 
 setup() {
-  export ECHO_DOCKER_COMMAND="false"
-  dokku "$PLUGIN_COMMAND_PREFIX:create" l >&2
+  dokku "$PLUGIN_COMMAND_PREFIX:create" l
 }
 
 teardown() {
-  export ECHO_DOCKER_COMMAND="false"
-  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l >&2
+  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:logs) error when there are no arguments" {
@@ -22,13 +20,11 @@ teardown() {
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:logs) success when not tailing" {
-  export ECHO_DOCKER_COMMAND="true"
   run dokku "$PLUGIN_COMMAND_PREFIX:logs" l
-  assert_contains "docker logs --tail 100 testid"
+  assert_success
 }
 
-@test "($PLUGIN_COMMAND_PREFIX:logs) success when tailing" {
-  export ECHO_DOCKER_COMMAND="true"
-  run dokku "$PLUGIN_COMMAND_PREFIX:logs" l -t
-  assert_contains "docker logs --follow testid"
-}
+# @test "($PLUGIN_COMMAND_PREFIX:logs) success when tailing" {
+#   run dokku "$PLUGIN_COMMAND_PREFIX:logs" l -t
+#   assert_contains "docker logs --follow testid"
+# }

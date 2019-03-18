@@ -89,8 +89,10 @@ remove_from_links_file() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local LINKS_FILE="$SERVICE_ROOT/LINKS"
 
-  mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
-  touch "$LINKS_FILE"
+  if [[ ! -f "$LINKS_FILE" ]]; then
+    return
+  fi
+
   sed -i.bak "/^$APP\$/d" "$LINKS_FILE" && rm "$LINKS_FILE.bak"
   sort "$LINKS_FILE" -u -o "$LINKS_FILE"
 }
@@ -191,7 +193,7 @@ service_backup_auth() {
   declare SERVICE="$1" AWS_ACCESS_KEY_ID="$2" AWS_SECRET_ACCESS_KEY="$3" AWS_DEFAULT_REGION="$4" AWS_SIGNATURE_VERSION="$5" ENDPOINT_URL="$6"
   local SERVICE_BACKUP_ROOT="$PLUGIN_DATA_ROOT/$SERVICE/backup"
 
-  mkdir -p "$SERVICE_BACKUP_ROOT"
+  mkdir "$SERVICE_BACKUP_ROOT"
   echo "$AWS_ACCESS_KEY_ID" > "$SERVICE_BACKUP_ROOT/AWS_ACCESS_KEY_ID"
   echo "$AWS_SECRET_ACCESS_KEY" > "$SERVICE_BACKUP_ROOT/AWS_SECRET_ACCESS_KEY"
 
@@ -260,7 +262,7 @@ service_backup_set_encryption() {
   local SERVICE_ROOT="${PLUGIN_DATA_ROOT}/${SERVICE}"
   local SERVICE_BACKUP_ENCRYPTION_ROOT="${SERVICE_ROOT}/backup-encryption/"
 
-  mkdir -p "$SERVICE_BACKUP_ENCRYPTION_ROOT"
+  mkdir "$SERVICE_BACKUP_ENCRYPTION_ROOT"
   echo "$ENCRYPTION_KEY" > "${SERVICE_BACKUP_ENCRYPTION_ROOT}/ENCRYPTION_KEY"
 }
 
@@ -280,7 +282,7 @@ service_container_rm() {
   local ID
 
   service_stop "$SERVICE"
-  ID=$(docker ps -a --no-trunc | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
+  ID=$(docker ps -aq --no-trunc --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
   # this may be 'true' in tests...
   if [[ -z "$ID" ]] || [[ "$ID" == "true" ]]; then
     return 0
@@ -411,7 +413,6 @@ service_link() {
   fi
 
   [[ -n $LINK ]] && dokku_log_fail "Already linked as $LINK"
-  mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
   touch "$LINKS_FILE"
   echo "$APP" >> "$LINKS_FILE"
   sort "$LINKS_FILE" -u -o "$LINKS_FILE"
@@ -643,7 +644,6 @@ service_set_alias() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local ALIAS_FILE="$SERVICE_ROOT/ALIAS"
 
-  mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
   touch "$ALIAS_FILE"
   echo "$ALIAS" > "$ALIAS_FILE"
 }
@@ -671,7 +671,7 @@ service_stop() {
   declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE";
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
-  local ID=$(docker ps -f status=running --no-trunc | grep -e "$SERVICE_NAME$" | awk '{print $1}') || true
+  local ID=$(docker ps -aq --no-trunc --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
   [[ -z $ID ]] && dokku_log_warn "Service is already stopped" && return 0
 
   if [[ -n $ID ]]; then
@@ -727,7 +727,7 @@ update_plugin_scheme_for_app() {
 verify_service_name() {
   declare desc="Verifies that a service exists"
   declare SERVICE="$1"
-  [[ ! -n "$SERVICE" ]] && dokku_log_fail "(verify_service_name) SERVICE must not be null"
+  [[ -z "$SERVICE" ]] && dokku_log_fail "(verify_service_name) SERVICE must not be null"
   [[ ! -d "$PLUGIN_DATA_ROOT/$SERVICE" ]] && dokku_log_fail "$PLUGIN_SERVICE service $SERVICE does not exist"
   return 0
 }

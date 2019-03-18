@@ -2,46 +2,66 @@
 load test_helper
 
 setup() {
-  dokku "$PLUGIN_COMMAND_PREFIX:create" l >&2
-  dokku apps:create my_app >&2
+  dokku "$PLUGIN_COMMAND_PREFIX:create" l
+  dokku apps:create my_app
 }
 
 teardown() {
-  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l >&2
-  rm -rf "$DOKKU_ROOT/my_app"
+  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l
+  dokku --force apps:destroy my_app
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:link) error when there are no arguments" {
   run dokku "$PLUGIN_COMMAND_PREFIX:link"
+  echo "output: $output"
+  echo "status: $status"
   assert_contains "${lines[*]}" "Please specify a valid name for the service"
+  assert_failure
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:link) error when the app argument is missing" {
   run dokku "$PLUGIN_COMMAND_PREFIX:link" l
+  echo "output: $output"
+  echo "status: $status"
   assert_contains "${lines[*]}" "Please specify an app to run the command on"
+  assert_failure
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:link) error when the app does not exist" {
   run dokku "$PLUGIN_COMMAND_PREFIX:link" l not_existing_app
+  echo "output: $output"
+  echo "status: $status"
   assert_contains "${lines[*]}" "App not_existing_app does not exist"
+  assert_failure
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:link) error when the service does not exist" {
   run dokku "$PLUGIN_COMMAND_PREFIX:link" not_existing_service my_app
+  echo "output: $output"
+  echo "status: $status"
   assert_contains "${lines[*]}" "service not_existing_service does not exist"
+  assert_failure
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:link) error when the service is already linked to app" {
   dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app
   run dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app
+  echo "output: $output"
+  echo "status: $status"
   assert_contains "${lines[*]}" "Already linked as DATABASE_URL"
+  assert_failure
+
+  dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:link) exports DATABASE_URL to app" {
-  dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app
+  run dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app
+  echo "output: $output"
+  echo "status: $status"
   url=$(dokku config:get my_app DATABASE_URL)
-  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  password="$(sudo cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
   assert_contains "$url" "postgres://postgres:$password@dokku-postgres-l:5432/l"
+  assert_success
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
 }
 
@@ -50,6 +70,7 @@ teardown() {
   dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app
   run dokku config my_app
   assert_contains "${lines[*]}" "DOKKU_POSTGRES_"
+  assert_success
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
 }
 
@@ -57,6 +78,7 @@ teardown() {
   dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app
   run dokku docker-options my_app
   assert_contains "${lines[*]}" "--link dokku.postgres.l:dokku-postgres-l"
+  assert_success
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
 }
 
@@ -64,8 +86,9 @@ teardown() {
   dokku config:set my_app POSTGRES_DATABASE_SCHEME=postgres2
   dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app
   url=$(dokku config:get my_app DATABASE_URL)
-  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  password="$(sudo cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
   assert_contains "$url" "postgres2://postgres:$password@dokku-postgres-l:5432/l"
+  assert_success
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
 }
 
@@ -73,13 +96,15 @@ teardown() {
   dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app --querystring "pool=5"
   url=$(dokku config:get my_app DATABASE_URL)
   assert_contains "$url" "?pool=5"
+  assert_success
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:link) uses a specified config url when alias is specified" {
   dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app --alias "ALIAS"
   url=$(dokku config:get my_app ALIAS_URL)
-  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  password="$(sudo cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
   assert_contains "$url" "postgres://postgres:$password@dokku-postgres-l:5432/l"
+  assert_success
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
 }

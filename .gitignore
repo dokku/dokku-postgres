@@ -1,5 +1,3 @@
-tests/dokku
-tests/fixtures
-tests/bin/plugn
-tests/bin/readlink
+/tmp
+/test-results
 .vagrant

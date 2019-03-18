@@ -2,11 +2,11 @@
 load test_helper
 
 setup() {
-  dokku "$PLUGIN_COMMAND_PREFIX:create" l >&2
+  dokku "$PLUGIN_COMMAND_PREFIX:create" l
 }
 
 teardown() {
-  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l >&2
+  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:unexpose) error when there are no arguments" {
