@@ -2,13 +2,13 @@
 load test_helper
 
 setup() {
-  dokku apps:create my_app >&2
-  dokku "$PLUGIN_COMMAND_PREFIX:create" l >&2
+  dokku apps:create my_app
+  dokku "$PLUGIN_COMMAND_PREFIX:create" l
 }
 
 teardown() {
-  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l >&2
-  rm -rf "$DOKKU_ROOT/my_app"
+  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l
+  dokku --force apps:destroy my_app
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:unlink) error when there are no arguments" {

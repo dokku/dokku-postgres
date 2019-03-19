@@ -24,7 +24,7 @@ service-create-cmd() {
   #F -r|--root-password PASSWORD, override the root-level service password
   declare desc="create a $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:create" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1" CREATE_FLAGS_LIST="${@:2}"
+  declare SERVICE="$1" CREATE_FLAGS_LIST=("${@:2}")
 
   service_create "$SERVICE" "${@:2}"
 }

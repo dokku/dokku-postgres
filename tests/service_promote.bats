@@ -2,15 +2,15 @@
 load test_helper
 
 setup() {
-  dokku "$PLUGIN_COMMAND_PREFIX:create" l >&2
-  dokku apps:create my_app >&2
+  dokku "$PLUGIN_COMMAND_PREFIX:create" l
+  dokku apps:create my_app
   dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app
 }
 
 teardown() {
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
-  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l >&2
-  rm -rf "$DOKKU_ROOT/my_app"
+  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l
+  dokku --force apps:destroy my_app
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:promote) error when there are no arguments" {
@@ -39,7 +39,7 @@ teardown() {
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:promote) changes DATABASE_URL" {
-  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  password="$(sudo cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
   dokku config:set my_app "DATABASE_URL=postgres://u:p@host:5432/db" "DOKKU_POSTGRES_BLUE_URL=postgres://postgres:$password@dokku-postgres-l:5432/l"
   dokku "$PLUGIN_COMMAND_PREFIX:promote" l my_app
   url=$(dokku config:get my_app DATABASE_URL)
@@ -47,14 +47,14 @@ teardown() {
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:promote) creates new config url when needed" {
-  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  password="$(sudo cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
   dokku config:set my_app "DATABASE_URL=postgres://u:p@host:5432/db" "DOKKU_POSTGRES_BLUE_URL=postgres://postgres:$password@dokku-postgres-l:5432/l"
   dokku "$PLUGIN_COMMAND_PREFIX:promote" l my_app
   run dokku config my_app
   assert_contains "${lines[*]}" "DOKKU_POSTGRES_"
 }
 @test "($PLUGIN_COMMAND_PREFIX:promote) uses POSTGRES_DATABASE_SCHEME variable" {
-  password="$(cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  password="$(sudo cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
   dokku config:set my_app "POSTGRES_DATABASE_SCHEME=postgres2" "DATABASE_URL=postgres://u:p@host:5432/db" "DOKKU_POSTGRES_BLUE_URL=postgres2://postgres:$password@dokku-postgres-l:5432/l"
   dokku "$PLUGIN_COMMAND_PREFIX:promote" l my_app
   url=$(dokku config:get my_app DATABASE_URL)

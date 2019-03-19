@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 export POSTGRES_IMAGE=${POSTGRES_IMAGE:="postgres"}
 export POSTGRES_IMAGE_VERSION=${POSTGRES_IMAGE_VERSION:="10.4"}
-export POSTGRES_ROOT=${POSTGRES_ROOT:="/var/lib/dokku/services/postgres"}
+export POSTGRES_ROOT=${POSTGRES_ROOT:="$DOKKU_LIB_ROOT/services/postgres"}
 export POSTGRES_HOST_ROOT=${POSTGRES_HOST_ROOT:=$POSTGRES_ROOT}
 
 export PLUGIN_UNIMPLEMENTED_SUBCOMMANDS=()

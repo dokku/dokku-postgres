@@ -41,7 +41,7 @@ fn-help-all() {
       return "$?"
     fi
 
-    echo -e "${BOLD}usage${NORMAL}: dokku $PLUGIN_COMMAND_PREFIX[:COMMAND]"
+    echo -e "${BOLD}usage${NORMAL}: dokku ${PLUGIN_COMMAND_PREFIX}[:COMMAND]"
     echo ''
     echo -e "${BOLD}List your $PLUGIN_COMMAND_PREFIX services.${NORMAL}"
     echo ''
