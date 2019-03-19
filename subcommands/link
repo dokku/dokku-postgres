@@ -43,7 +43,7 @@ service-link-cmd() {
   #F -q|--querystring "pool=5", ampersand delimited querystring arguments to append to the service link
   declare desc="link the $PLUGIN_SERVICE service to the app"
   local cmd="$PLUGIN_COMMAND_PREFIX:link" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1" APP="$2" LINK_FLAGS_LIST="${@:3}"
+  declare SERVICE="$1" APP="$2" LINK_FLAGS_LIST=("${@:3}")
   APP=${APP:="$DOKKU_APP_NAME"}
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"

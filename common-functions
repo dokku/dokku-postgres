@@ -474,7 +474,7 @@ service_logs() {
   is_container_status "$ID" "Running" || dokku_log_warn "Service logs may not be output as service is not running"
 
   # shellcheck disable=SC2086
-  docker logs $DOKKU_LOGS_ARGS "$ID" 2> /dev/null
+  docker logs $DOKKU_LOGS_ARGS "$ID" 2>&1
 }
 
 service_parse_args() {

@@ -11,7 +11,7 @@ service-expose-cmd() {
   #A ports, a list of ports to run against
   declare desc="expose a $PLUGIN_SERVICE service on custom port if provided (random port otherwise)"
   local cmd="$PLUGIN_COMMAND_PREFIX:expose" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1" PORTS_LIST="${@:2}"
+  declare SERVICE="$1" PORTS_LIST=("${@:2}")
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
   verify_service_name "$SERVICE"
