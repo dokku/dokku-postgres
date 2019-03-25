@@ -16,7 +16,7 @@ plugin-install() {
   }
 
   pull-docker-image "${PLUGIN_IMAGE}:${PLUGIN_IMAGE_VERSION}"
-  pull-docker-image "svendowideit/ambassador:latest"
+  pull-docker-image "dokku/ambassador:0.2.0"
   pull-docker-image "dokkupaas/wait:0.2"
   pull-docker-image "dokkupaas/s3backup:0.8.0"
   pull-docker-image "busybox:latest"
