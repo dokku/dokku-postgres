@@ -113,9 +113,10 @@ service_alternative_alias() {
   for COLOR in "${COLORS[@]}"; do
     ALIAS="${PLUGIN_ALT_ALIAS}_${COLOR}"
     local IN_USE=$(echo "$EXISTING_CONFIG" | grep "${ALIAS}_URL")
-    if [[ -n $IN_USE ]]; then
-      unset ALIAS
+    if [[ -z "$IN_USE" ]]; then
+      break
     fi
+    unset ALIAS
   done
   echo "$ALIAS"
 }
