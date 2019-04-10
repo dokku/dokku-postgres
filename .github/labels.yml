@@ -1,0 +1,57 @@
+labels:
+- name: bc-break
+  color: eb6420
+- name: blocks release
+  color: "000000"
+- name: 'difficulty: easy'
+  color: c5def5
+- name: 'difficulty: hard'
+  color: e99695
+- name: 'difficulty: medium'
+  color: fef2c0
+- name: hacktoberfest
+  color: b0581d
+- name: 'needs: documentation'
+  color: c2e0c6
+- name: 'needs: more info'
+  color: c2e0c6
+- name: 'needs: rebase'
+  color: c2e0c6
+- name: 'needs: tests'
+  color: c2e0c6
+- name: 'status: duplicate'
+  color: cccccc
+- name: 'status: fix-provided'
+  color: c5def5
+- name: 'status: future'
+  color: c5def5
+- name: 'status: has plan'
+  color: c5def5
+- name: 'status: invalid'
+  color: cccccc
+- name: 'status: merge for next minor'
+  color: c5def5
+- name: 'status: merge for next patch'
+  color: c5def5
+- name: 'status: wontfix'
+  color: cccccc
+- name: 'type: bug'
+  color: e01b1b
+- name: 'type: documentation'
+  color: 0052cc
+- name: 'type: enhancement'
+  color: 09ab3c
+- name: 'type: question'
+  color: cc317c
+- name: 'type: refactor'
+  color: 0052cc
+- name: 'type: rfc'
+  color: 0052cc
+- name: 'type: roadmap'
+  color: 0052cc
+- name: 'type: service'
+  color: "5319e7"
+- name: 'type: support'
+  color: cc317c
+- name: 'type: tests'
+  color: 0052cc
