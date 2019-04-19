@@ -1,6 +1,6 @@
 # dokku postgres [![Build Status](https://img.shields.io/travis/dokku/dokku-postgres.svg?branch=master "Build Status")](https://travis-ci.org/dokku/dokku-postgres) [![IRC Network](https://img.shields.io/badge/irc-freenode-blue.svg "IRC Freenode")](https://webchat.freenode.net/?channels=dokku)
 
-Official postgres plugin for dokku. Currently defaults to installing [postgres 10.4](https://hub.docker.com/_/postgres/).
+Official postgres plugin for dokku. Currently defaults to installing [postgres 11.2](https://hub.docker.com/_/postgres/).
 
 ## requirements
 
@@ -60,7 +60,7 @@ dokku postgres:create lolipop
 # it *must* be compatible with the
 # official postgres image
 export POSTGRES_IMAGE="postgres"
-export POSTGRES_IMAGE_VERSION="10.4"
+export POSTGRES_IMAGE_VERSION="11.2"
 dokku postgres:create lolipop
 
 # you can also specify custom environment
