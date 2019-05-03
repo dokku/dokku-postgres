@@ -21,6 +21,12 @@ get_simple_version() {
 
 }
 
+docker_image_exists() {
+  local image=$1
+  local tag=$2
+  curl --silent -f -lLS "https://hub.docker.com/v2/repositories/$image/tags/$tag" &>/dev/null
+}
+
 
 service-upgrade-cmd() {
   #E you can upgrade an existing service to a new image or image-version
@@ -76,17 +82,20 @@ service-upgrade-cmd() {
   old_version=$(get_simple_version "$OLD_IMAGE_VERSION")
   new_version=$(get_simple_version "$PLUGIN_IMAGE_VERSION")
 
-  dokku_log_info2 "Migrating $SERVICE from $old_version to $new_version"
+  if docker_image_exists tianon/postgres-upgrade "$old_version-to-$new_version"; then
 
-  mv "$data_dir" "$data_old"
+    dokku_log_info2 "Migrating $SERVICE from $old_version to $new_version"
 
-  docker run --rm \
-    -v "$data_old:/var/lib/postgresql/${old_version}/data" \
-    -v "$data_dir:/var/lib/postgresql/${new_version}/data" \
-    tianon/postgres-upgrade:"${old_version}-to-${new_version}"
+    mv "$data_dir" "$data_old"
 
-  docker run --rm -v "$data_old:/data" busybox:1.30.1-uclibc chmod 777 -R /data
-  rm -rf "$data_old"
+    docker run --rm \
+      -v "$data_old:/var/lib/postgresql/${old_version}/data" \
+      -v "$data_dir:/var/lib/postgresql/${new_version}/data" \
+      tianon/postgres-upgrade:"${old_version}-to-${new_version}"
+
+    docker run --rm -v "$data_old:/data" busybox:1.30.1-uclibc chmod 777 -R /data
+    rm -rf "$data_old"
+  fi
 
   service_start "$SERVICE" "${@:2}"
 
