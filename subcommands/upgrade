@@ -11,7 +11,7 @@ get_simple_version() {
   # 11.2 => 11
   # 11 => 11
   local version=$1
-  IFS=. read -r -a arr <<< "$version"
+  IFS=. read -r -a arr <<< "${version%-*}"
 
   if [ "${arr[0]}" -lt 10  ]; then
     echo "${arr[0]}.${arr[1]}"
