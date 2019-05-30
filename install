@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
 
 plugin-install() {
   pull-docker-image() {
@@ -10,7 +11,7 @@ plugin-install() {
       echo " !        docker pull ${IMAGE}" 1>&2
       return
     fi
-    if [[ "$(docker images -q "${IMAGE}" 2> /dev/null)" == "" ]]; then
+    if [[ "$(docker images -q "${IMAGE}" 2>/dev/null)" == "" ]]; then
       docker pull "${IMAGE}"
     fi
   }
@@ -31,7 +32,7 @@ plugin-install() {
   _SUDOERS_FILE="/etc/sudoers.d/dokku-${PLUGIN_COMMAND_PREFIX}"
 
   touch "$_SUDOERS_FILE"
-  cat > "$_SUDOERS_FILE" <<EOL
+  cat >"$_SUDOERS_FILE" <<EOL
 %dokku ALL=(ALL) NOPASSWD:/bin/rm -f /etc/cron.d/dokku-${PLUGIN_COMMAND_PREFIX}-*
 %dokku ALL=(ALL) NOPASSWD:/bin/chown root\:root /etc/cron.d/dokku-${PLUGIN_COMMAND_PREFIX}-*
 %dokku ALL=(ALL) NOPASSWD:/bin/chmod 644 /etc/cron.d/dokku-${PLUGIN_COMMAND_PREFIX}-*

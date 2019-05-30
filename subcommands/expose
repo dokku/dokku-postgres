@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
@@ -10,7 +11,8 @@ service-expose-cmd() {
   #A service, service to run command against
   #A ports, a list of ports to run against
   declare desc="expose a $PLUGIN_SERVICE service on custom port if provided (random port otherwise)"
-  local cmd="$PLUGIN_COMMAND_PREFIX:expose" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  local cmd="$PLUGIN_COMMAND_PREFIX:expose" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" PORTS_LIST=("${@:2}")
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"

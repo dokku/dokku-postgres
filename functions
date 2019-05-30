@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common-functions"
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$PLUGIN_AVAILABLE_PATH/config/functions"
@@ -24,7 +25,8 @@ service_create() {
   is_valid_service_name "$SERVICE" || dokku_log_fail "Please specify a valid name for the service. Valid characters are: [A-Za-z0-9_]+"
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
   [[ ! -d "$PLUGIN_DATA_ROOT/$SERVICE" ]] || dokku_log_fail "$PLUGIN_SERVICE service $SERVICE already exists"
-  SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"; LINKS_FILE="$SERVICE_ROOT/LINKS"
+  SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  LINKS_FILE="$SERVICE_ROOT/LINKS"
 
   service_parse_args "${@:2}"
 
@@ -47,14 +49,14 @@ service_create() {
     PASSWORD="$SERVICE_PASSWORD"
     dokku_log_warn "Specified password may not be as secure as the auto-generated password"
   fi
-  echo "$PASSWORD" > "$SERVICE_ROOT/PASSWORD"
+  echo "$PASSWORD" >"$SERVICE_ROOT/PASSWORD"
   chmod 640 "$SERVICE_ROOT/PASSWORD"
 
   [[ -n "$SERVICE_CUSTOM_ENV" ]] && POSTGRES_CUSTOM_ENV="$SERVICE_CUSTOM_ENV"
   if [[ -n $POSTGRES_CUSTOM_ENV ]]; then
-    echo "$POSTGRES_CUSTOM_ENV" | tr ';' "\n" > "$SERVICE_ROOT/ENV"
+    echo "$POSTGRES_CUSTOM_ENV" | tr ';' "\n" >"$SERVICE_ROOT/ENV"
   else
-    echo "" > "$SERVICE_ROOT/ENV"
+    echo "" >"$SERVICE_ROOT/ENV"
   fi
   service_create_container "$SERVICE"
 }
@@ -68,21 +70,21 @@ service_create_container() {
   local PREVIOUS_ID
 
   ID=$(docker run --name "$SERVICE_NAME" -v "$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data" -e "POSTGRES_PASSWORD=$PASSWORD" --env-file="$SERVICE_ROOT/ENV" -d --restart always --label dokku=service --label dokku.service=postgres "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION")
-  echo "$ID" > "$SERVICE_ROOT/ID"
+  echo "$ID" >"$SERVICE_ROOT/ID"
 
   dokku_log_verbose_quiet "Waiting for container to be ready"
-  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" dokku/wait:0.3.0 -p "$PLUGIN_DATASTORE_WAIT_PORT" > /dev/null
+  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" dokku/wait:0.3.0 -p "$PLUGIN_DATASTORE_WAIT_PORT" >/dev/null
 
   dokku_log_verbose_quiet "Creating container database"
   DATABASE_NAME="$(get_database_name "$SERVICE")"
-  docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2> /dev/null || dokku_log_verbose_quiet 'Already exists'
+  docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2>/dev/null || dokku_log_verbose_quiet 'Already exists'
 
   dokku_log_verbose_quiet "Securing connection to database"
-  service_stop "$SERVICE" > /dev/null
-  docker run --rm -i -v "$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" bash -s < "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/enable_ssl.sh" &> /dev/null
+  service_stop "$SERVICE" >/dev/null
+  docker run --rm -i -v "$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" bash -s <"$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/enable_ssl.sh" &>/dev/null
 
   PREVIOUS_ID=$(docker ps -aq --no-trunc --filter "status=exited" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
-  docker start "$PREVIOUS_ID" > /dev/null
+  docker start "$PREVIOUS_ID" >/dev/null
   service_port_unpause "$SERVICE"
 
   dokku_log_info2 "$PLUGIN_SERVICE container created: $SERVICE"
@@ -133,7 +135,7 @@ service_start() {
   local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
 
   if [[ -n $PREVIOUS_ID ]]; then
-    docker start "$PREVIOUS_ID" > /dev/null
+    docker start "$PREVIOUS_ID" >/dev/null
     service_port_unpause "$SERVICE"
     dokku_log_info2 "Container started"
   elif service_image_exists "$SERVICE" && [[ -n "$PASSWORD" ]]; then

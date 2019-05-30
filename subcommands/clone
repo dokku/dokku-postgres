@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
@@ -15,7 +16,8 @@ service-clone-cmd() {
   #F -p|--password PASSWORD, override the user-level service password
   #F -r|--root-password PASSWORD, override the root-level service password
   declare desc="create container <new-name> then copy data from <name> into <new-name>"
-  local cmd="$PLUGIN_COMMAND_PREFIX:clone" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  local cmd="$PLUGIN_COMMAND_PREFIX:clone" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" NEW_SERVICE="$2" CLONE_FLAGS_LIST=("${@:3}")
   is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 
@@ -27,15 +29,15 @@ service-clone-cmd() {
   local ID="$(cat "$SERVICE_ROOT/ID")"
   is_container_status "$ID" "Running" || dokku_log_fail "Service ${SERVICE} container is not running"
 
-  PLUGIN_IMAGE=$(service_version "$SERVICE" |  grep -o "^.*:" | sed -r "s/://g")
-  PLUGIN_IMAGE_VERSION=$(service_version "$SERVICE" |  grep -o ":.*$" | sed -r "s/://g")
+  PLUGIN_IMAGE=$(service_version "$SERVICE" | grep -o "^.*:" | sed -r "s/://g")
+  PLUGIN_IMAGE_VERSION=$(service_version "$SERVICE" | grep -o ":.*$" | sed -r "s/://g")
 
   service_parse_args "${@:3}"
 
   dokku_log_info2 "Cloning $SERVICE to $NEW_SERVICE @ $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
   service_create "$NEW_SERVICE" "${@:3}"
   dokku_log_info1 "Copying data from $SERVICE to $NEW_SERVICE"
-  service_export "$SERVICE" | service_import "$NEW_SERVICE" > /dev/null 2>&1 || true
+  service_export "$SERVICE" | service_import "$NEW_SERVICE" >/dev/null 2>&1 || true
   dokku_log_info2 "Done"
 }
 

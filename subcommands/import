@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
@@ -9,7 +10,8 @@ service-import-cmd() {
   #E dokku $PLUGIN_COMMAND_PREFIX:import lolipop < database.dump
   #A service, service to run command against
   declare desc="import a dump into the $PLUGIN_SERVICE service database"
-  local cmd="$PLUGIN_COMMAND_PREFIX:import" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  local cmd="$PLUGIN_COMMAND_PREFIX:import" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"
   is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 

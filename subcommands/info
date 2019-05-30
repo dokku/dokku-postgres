@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
@@ -30,7 +31,8 @@ service-info-cmd() {
   #F --status, show the service running status
   #F --version, show the service image version
   declare desc="print the connection information"
-  local cmd="$PLUGIN_COMMAND_PREFIX:info" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  local cmd="$PLUGIN_COMMAND_PREFIX:info" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" INFO_FLAG="$2"
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"

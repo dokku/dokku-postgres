@@ -3,8 +3,11 @@ export DOKKU_LIB_ROOT="/var/lib/dokku"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
 
 flunk() {
-  { if [ "$#" -eq 0 ]; then cat -
-    else echo "$*"
+  {
+    if [ "$#" -eq 0 ]; then
+      cat -
+    else
+      echo "$*"
     fi
   }
   return 1
@@ -12,7 +15,8 @@ flunk() {
 
 assert_equal() {
   if [ "$1" != "$2" ]; then
-    { echo "expected: $1"
+    {
+      echo "expected: $1"
       echo "actual:   $2"
     } | flunk
   fi
@@ -59,8 +63,10 @@ assert_contains() {
 # shellcheck disable=SC2154
 assert_output() {
   local expected
-  if [ $# -eq 0 ]; then expected="$(cat -)"
-  else expected="$1"
+  if [ $# -eq 0 ]; then
+    expected="$(cat -)"
+  else
+    expected="$1"
   fi
   assert_equal "$expected" "$output"
 }

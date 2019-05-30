@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_AVAILABLE_PATH/config/functions"
 
 docker_ports_options() {
   declare desc="Exports a list of exposed ports"
   declare PORTS=("$@")
-  for (( i=0; i < ${#PLUGIN_DATASTORE_PORTS[@]}; i++ )); do
+  for ((i = 0; i < ${#PLUGIN_DATASTORE_PORTS[@]}; i++)); do
     echo -n "-p ${PORTS[i]}:${PLUGIN_DATASTORE_PORTS[i]} "
   done
 }
@@ -27,11 +28,11 @@ get_database_name() {
 get_random_ports() {
   declare desc="Retrieves N random ports"
   declare iterations="${1:-1}"
-  for (( i=0; i < iterations; i++ )); do
+  for ((i = 0; i < iterations; i++)); do
     local port=$RANDOM
     local quit=0
     while [ "$quit" -ne 1 ]; do
-      netstat -an | grep $port > /dev/null
+      netstat -an | grep $port >/dev/null
       # shellcheck disable=SC2181
       if [ $? -gt 0 ]; then
         quit=1
@@ -59,7 +60,7 @@ is_container_status() {
   declare desc="Returns 0 or 1 depending upon whether a given container has a certain status"
   declare CID="$1" STATUS="$2"
   local TEMPLATE="{{.State.$STATUS}}"
-  local CONTAINER_STATUS=$(docker inspect -f "$TEMPLATE" "$CID" 2> /dev/null || true)
+  local CONTAINER_STATUS=$(docker inspect -f "$TEMPLATE" "$CID" 2>/dev/null || true)
 
   if [[ "$CONTAINER_STATUS" == "true" ]]; then
     return 0
@@ -108,7 +109,7 @@ service_alternative_alias() {
   declare desc="Retrieves an alternative alias for a service"
   declare EXISTING_CONFIG="$1"
   local COLORS=(AQUA BLACK BLUE FUCHSIA GRAY GREEN LIME MAROON NAVY OLIVE PURPLE RED SILVER TEAL WHITE YELLOW)
-  local ALIAS;
+  local ALIAS
 
   for COLOR in "${COLORS[@]}"; do
     ALIAS="${PLUGIN_ALT_ALIAS}_${COLOR}"
@@ -126,11 +127,11 @@ service_app_links() {
   declare APP="$1"
   local SERVICE LINKED_APP
 
-  pushd "$PLUGIN_DATA_ROOT" > /dev/null
+  pushd "$PLUGIN_DATA_ROOT" >/dev/null
   for SERVICE in *; do
     [[ -f "$SERVICE/LINKS" ]] || continue
     for LINKED_APP in $(<"$SERVICE/LINKS"); do
-      if [[ "$LINKED_APP" == "$APP" ]] ; then
+      if [[ "$LINKED_APP" == "$APP" ]]; then
         echo "$SERVICE"
       fi
     done
@@ -159,10 +160,10 @@ service_backup() {
   TMPDIR=$(mktemp -d)
   trap 'rm -rf "$TMPDIR" > /dev/null' RETURN INT TERM EXIT
 
-  docker inspect "$ID" &> /dev/null || dokku_log_fail "Service container does not exist"
+  docker inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"
   is_container_status "$ID" "Running" || dokku_log_fail "Service container is not running"
 
-  (service_export "$SERVICE" > "${TMPDIR}/export")
+  (service_export "$SERVICE" >"${TMPDIR}/export")
 
   # Build parameter list for s3backup tool
   BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e BUCKET_NAME=$BUCKET_NAME"
@@ -195,19 +196,19 @@ service_backup_auth() {
   local SERVICE_BACKUP_ROOT="$PLUGIN_DATA_ROOT/$SERVICE/backup"
 
   mkdir "$SERVICE_BACKUP_ROOT"
-  echo "$AWS_ACCESS_KEY_ID" > "$SERVICE_BACKUP_ROOT/AWS_ACCESS_KEY_ID"
-  echo "$AWS_SECRET_ACCESS_KEY" > "$SERVICE_BACKUP_ROOT/AWS_SECRET_ACCESS_KEY"
+  echo "$AWS_ACCESS_KEY_ID" >"$SERVICE_BACKUP_ROOT/AWS_ACCESS_KEY_ID"
+  echo "$AWS_SECRET_ACCESS_KEY" >"$SERVICE_BACKUP_ROOT/AWS_SECRET_ACCESS_KEY"
 
   if [[ -n "$AWS_DEFAULT_REGION" ]]; then
-    echo "$AWS_DEFAULT_REGION" > "$SERVICE_BACKUP_ROOT/AWS_DEFAULT_REGION"
+    echo "$AWS_DEFAULT_REGION" >"$SERVICE_BACKUP_ROOT/AWS_DEFAULT_REGION"
   fi
 
   if [[ -n "$AWS_SIGNATURE_VERSION" ]]; then
-    echo "$AWS_SIGNATURE_VERSION" > "$SERVICE_BACKUP_ROOT/AWS_SIGNATURE_VERSION"
+    echo "$AWS_SIGNATURE_VERSION" >"$SERVICE_BACKUP_ROOT/AWS_SIGNATURE_VERSION"
   fi
 
   if [[ -n "$ENDPOINT_URL" ]]; then
-    echo "$ENDPOINT_URL" > "$SERVICE_BACKUP_ROOT/ENDPOINT_URL"
+    echo "$ENDPOINT_URL" >"$SERVICE_BACKUP_ROOT/ENDPOINT_URL"
   fi
 }
 
@@ -231,7 +232,7 @@ service_backup_schedule() {
     dokku_log_fail "Invalid flag provided, only '--use-iam' allowed"
   fi
 
-  echo "${SCHEDULE} dokku ${DOKKU_BIN} ${PLUGIN_COMMAND_PREFIX}:backup ${SERVICE} ${BUCKET_NAME} ${USE_IAM_OPTIONAL_FLAG}" > "$TMP_CRON_FILE"
+  echo "${SCHEDULE} dokku ${DOKKU_BIN} ${PLUGIN_COMMAND_PREFIX}:backup ${SERVICE} ${BUCKET_NAME} ${USE_IAM_OPTIONAL_FLAG}" >"$TMP_CRON_FILE"
   sudo /bin/mv "$TMP_CRON_FILE" "$CRON_FILE"
   sudo /bin/chown root:root "$CRON_FILE"
   sudo /bin/chmod 644 "$CRON_FILE"
@@ -264,7 +265,7 @@ service_backup_set_encryption() {
   local SERVICE_BACKUP_ENCRYPTION_ROOT="${SERVICE_ROOT}/backup-encryption/"
 
   mkdir "$SERVICE_BACKUP_ENCRYPTION_ROOT"
-  echo "$ENCRYPTION_KEY" > "${SERVICE_BACKUP_ENCRYPTION_ROOT}/ENCRYPTION_KEY"
+  echo "$ENCRYPTION_KEY" >"${SERVICE_BACKUP_ENCRYPTION_ROOT}/ENCRYPTION_KEY"
 }
 
 service_backup_unset_encryption() {
@@ -290,8 +291,8 @@ service_container_rm() {
   fi
 
   dokku_log_verbose_quiet "Removing container"
-  docker update --restart=no "$SERVICE_NAME" > /dev/null 2>&1
-  if ! docker rm "$SERVICE_NAME" > /dev/null 2>&1; then
+  docker update --restart=no "$SERVICE_NAME" >/dev/null 2>&1
+  if ! docker rm "$SERVICE_NAME" >/dev/null 2>&1; then
     dokku_log_fail "Unable to remove container for service $SERVICE"
   fi
 }
@@ -302,7 +303,7 @@ service_enter() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local ID="$(cat "$SERVICE_ROOT/ID")"
 
-  docker inspect "$ID" &> /dev/null || dokku_log_fail "Service container does not exist"
+  docker inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"
   is_container_status "$ID" "Running" || dokku_log_fail "Service container is not running"
 
   local EXEC_CMD=""
@@ -318,7 +319,7 @@ service_exposed_ports() {
   local PORT_FILE="$SERVICE_ROOT/PORT"
   [[ ! -f $PORT_FILE ]] && echo '-' && return 0
   local PORTS=($(cat "$PORT_FILE"))
-  for (( i=0; i < ${#PLUGIN_DATASTORE_PORTS[@]}; i++ )); do
+  for ((i = 0; i < ${#PLUGIN_DATASTORE_PORTS[@]}; i++)); do
     echo -n "${PLUGIN_DATASTORE_PORTS[i]}->${PORTS[i]} "
   done
 }
@@ -327,7 +328,7 @@ service_image_exists() {
   declare desc="Checks if the current image exists"
   local IMAGE="$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
 
-  if [[ "$(docker images -q "$IMAGE" 2> /dev/null)" == "" ]]; then
+  if [[ "$(docker images -q "$IMAGE" 2>/dev/null)" == "" ]]; then
     return 1
   fi
 
@@ -415,10 +416,10 @@ service_link() {
 
   [[ -n $LINK ]] && dokku_log_fail "Already linked as $LINK"
   touch "$LINKS_FILE"
-  echo "$APP" >> "$LINKS_FILE"
+  echo "$APP" >>"$LINKS_FILE"
   sort "$LINKS_FILE" -u -o "$LINKS_FILE"
 
-  if declare -f -F add_passed_docker_option > /dev/null; then
+  if declare -f -F add_passed_docker_option >/dev/null; then
     # shellcheck disable=SC2034
     local passed_phases=(build deploy run)
     add_passed_docker_option passed_phases[@] "--link $SERVICE_NAME:$SERVICE_DNS_HOSTNAME"
@@ -436,14 +437,14 @@ service_linked_apps() {
   local LINKS_FILE="$SERVICE_ROOT/LINKS"
 
   touch "$LINKS_FILE"
-  [[ -z $(< "$LINKS_FILE") ]] && echo '-' && return 0
+  [[ -z $(<"$LINKS_FILE") ]] && echo '-' && return 0
 
-  tr '\n' ' ' < "$LINKS_FILE"
+  tr '\n' ' ' <"$LINKS_FILE"
 }
 
 service_list() {
   declare desc="Lists all services and their status"
-  local SERVICES=$(ls "$PLUGIN_DATA_ROOT" 2> /dev/null)
+  local SERVICES=$(ls "$PLUGIN_DATA_ROOT" 2>/dev/null)
   if [[ -z $SERVICES ]]; then
     dokku_log_warn "There are no $PLUGIN_SERVICE services"
   else
@@ -471,7 +472,7 @@ service_logs() {
     DOKKU_LOGS_ARGS="--follow"
   fi
 
-  docker inspect "$ID" &> /dev/null || dokku_log_fail "Service container does not exist"
+  docker inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"
   is_container_status "$ID" "Running" || dokku_log_warn "Service logs may not be output as service is not running"
 
   # shellcheck disable=SC2086
@@ -480,24 +481,26 @@ service_logs() {
 
 service_parse_args() {
   declare desc="cli arg parser"
-  local next_index=1; local skip=false; local args=("$@")
+  local next_index=1
+  local skip=false
+  local args=("$@")
 
   for arg in "$@"; do
     shift
     case "$arg" in
-      "--alias")                 set -- "$@" "-a" ;;
-      "--config-options")        set -- "$@" "-c" ;;
-      "--custom-env")            set -- "$@" "-C" ;;
-      "--database")              set -- "$@" "-d" ;;
-      "--image-version")         set -- "$@" "-I" ;;
-      "--image")                 set -- "$@" "-i" ;;
-      "--memory")                set -- "$@" "-m" ;;
-      "--password")              set -- "$@" "-p" ;;
-      "--querystring")           set -- "$@" "-q" ;;
-      "--restart-apps")          set -- "$@" "-R" ;;
-      "--root-password")         set -- "$@" "-r" ;;
-      "--user")                  set -- "$@" "-u" ;;
-      *)                         set -- "$@" "$arg"
+      "--alias") set -- "$@" "-a" ;;
+      "--config-options") set -- "$@" "-c" ;;
+      "--custom-env") set -- "$@" "-C" ;;
+      "--database") set -- "$@" "-d" ;;
+      "--image-version") set -- "$@" "-I" ;;
+      "--image") set -- "$@" "-i" ;;
+      "--memory") set -- "$@" "-m" ;;
+      "--password") set -- "$@" "-p" ;;
+      "--querystring") set -- "$@" "-q" ;;
+      "--restart-apps") set -- "$@" "-R" ;;
+      "--root-password") set -- "$@" "-r" ;;
+      "--user") set -- "$@" "-u" ;;
+      *) set -- "$@" "$arg" ;;
     esac
   done
 
@@ -505,33 +508,45 @@ service_parse_args() {
   while getopts "a:c:C:d:i:I:m:p:q:R:r:u:" opt; do
     case "$opt" in
       a)
-         SERVICE_ALIAS="${OPTARG^^}"; export SERVICE_ALIAS="${SERVICE_ALIAS%_URL}"
-         ;;
-      c) export PLUGIN_CONFIG_OPTIONS=$OPTARG
-         ;;
-      C) export SERVICE_CUSTOM_ENV=$OPTARG
-         ;;
-      d) export SERVICE_DATABASE=$OPTARG
-         ;;
-      i) export PLUGIN_IMAGE=$OPTARG
-         ;;
-      I) export PLUGIN_IMAGE_VERSION=$OPTARG
-         ;;
-      m) export SERVICE_MEMORY=$OPTARG
-         ;;
-      p) export SERVICE_PASSWORD=$OPTARG
-         ;;
-      q) export SERVICE_QUERYSTRING=${OPTARG#"?"}
-         ;;
-      R) export SERVICE_RESTART_APPS=$OPTARG
-         ;;
-      r) export SERVICE_ROOT_PASSWORD=$OPTARG
-         ;;
-      u) export SERVICE_USER=$OPTARG
-         ;;
+        SERVICE_ALIAS="${OPTARG^^}"
+        export SERVICE_ALIAS="${SERVICE_ALIAS%_URL}"
+        ;;
+      c)
+        export PLUGIN_CONFIG_OPTIONS=$OPTARG
+        ;;
+      C)
+        export SERVICE_CUSTOM_ENV=$OPTARG
+        ;;
+      d)
+        export SERVICE_DATABASE=$OPTARG
+        ;;
+      i)
+        export PLUGIN_IMAGE=$OPTARG
+        ;;
+      I)
+        export PLUGIN_IMAGE_VERSION=$OPTARG
+        ;;
+      m)
+        export SERVICE_MEMORY=$OPTARG
+        ;;
+      p)
+        export SERVICE_PASSWORD=$OPTARG
+        ;;
+      q)
+        export SERVICE_QUERYSTRING=${OPTARG#"?"}
+        ;;
+      R)
+        export SERVICE_RESTART_APPS=$OPTARG
+        ;;
+      r)
+        export SERVICE_ROOT_PASSWORD=$OPTARG
+        ;;
+      u)
+        export SERVICE_USER=$OPTARG
+        ;;
     esac
   done
-  shift "$(( OPTIND - 1 ))" # remove options from positional parameters
+  shift "$((OPTIND - 1))" # remove options from positional parameters
 }
 
 service_port_expose() {
@@ -564,8 +579,8 @@ service_port_pause() {
     return
   fi
 
-  docker stop "$EXPOSED_NAME" > /dev/null 2>&1 || true
-  docker rm "$EXPOSED_NAME" > /dev/null 2>&1 || true
+  docker stop "$EXPOSED_NAME" >/dev/null 2>&1 || true
+  docker rm "$EXPOSED_NAME" >/dev/null 2>&1 || true
   if [[ "$LOG_FAIL" == "true" ]]; then
     dokku_log_info1 "Service $SERVICE unexposed"
   fi
@@ -602,10 +617,10 @@ service_port_unpause() {
     PORTS=($(cat "$PORT_FILE"))
   fi
 
-  echo "${PORTS[@]}" > "$PORT_FILE"
+  echo "${PORTS[@]}" >"$PORT_FILE"
 
   # shellcheck disable=SC2046
-  docker run -d --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" --name "$EXPOSED_NAME" $(docker_ports_options "${PORTS[@]}") --restart always --label dokku=ambassador --label "dokku.ambassador=$PLUGIN_COMMAND_PREFIX" dokku/ambassador:0.2.0 > /dev/null
+  docker run -d --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" --name "$EXPOSED_NAME" $(docker_ports_options "${PORTS[@]}") --restart always --label dokku=ambassador --label "dokku.ambassador=$PLUGIN_COMMAND_PREFIX" dokku/ambassador:0.2.0 >/dev/null
   if [[ "$LOG_FAIL" == "true" ]]; then
     dokku_log_info1 "Service $SERVICE exposed on port(s) [container->host]: $(service_exposed_ports "$SERVICE")"
   fi
@@ -646,7 +661,7 @@ service_set_alias() {
   local ALIAS_FILE="$SERVICE_ROOT/ALIAS"
 
   touch "$ALIAS_FILE"
-  echo "$ALIAS" > "$ALIAS_FILE"
+  echo "$ALIAS" >"$ALIAS_FILE"
 }
 
 service_status() {
@@ -662,7 +677,7 @@ service_status() {
   is_container_status "$ID" "Restarting" && echo "restarting" && return 0
   is_container_status "$ID" "Running" && echo "running" && return 0
 
-  CONTAINER_STATUS=$(docker inspect -f "{{.State.Status}}" "$CID" 2> /dev/null || true)
+  CONTAINER_STATUS=$(docker inspect -f "{{.State.Status}}" "$CID" 2>/dev/null || true)
   [[ -n "$CONTAINER_STATUS" ]] && echo "$CONTAINER_STATUS" && return 0
   echo "missing" && return 0
 }
@@ -670,14 +685,14 @@ service_status() {
 service_stop() {
   declare desc="Stops a running service"
   declare SERVICE="$1"
-  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE";
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local ID=$(docker ps -aq --no-trunc --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
   [[ -z $ID ]] && dokku_log_warn "Service is already stopped" && return 0
 
   if [[ -n $ID ]]; then
     dokku_log_info2_quiet "Stopping container"
-    docker stop "$SERVICE_NAME" > /dev/null
+    docker stop "$SERVICE_NAME" >/dev/null
     service_port_pause "$SERVICE"
     dokku_log_verbose_quiet "Container stopped"
   else
@@ -697,7 +712,7 @@ service_unlink() {
 
   remove_from_links_file "$SERVICE" "$APP"
 
-  if declare -f -F add_passed_docker_option > /dev/null; then
+  if declare -f -F add_passed_docker_option >/dev/null; then
     # shellcheck disable=SC2034
     local passed_phases=(build deploy run)
     remove_passed_docker_option passed_phases[@] "--link $SERVICE_NAME:$SERVICE_DNS_HOSTNAME"
@@ -713,7 +728,7 @@ service_version() {
   declare desc="Displays the running version for an image"
   declare SERVICE="$1"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
-  docker inspect -f '{{.Config.Image}}' "$SERVICE_NAME" 2> /dev/null || true
+  docker inspect -f '{{.Config.Image}}' "$SERVICE_NAME" 2>/dev/null || true
 }
 
 update_plugin_scheme_for_app() {

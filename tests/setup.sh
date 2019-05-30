@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -eo pipefail; [[ $TRACE ]] && set -x
+set -eo pipefail
+[[ $TRACE ]] && set -x
 wget https://raw.githubusercontent.com/dokku/dokku/master/bootstrap.sh
 if [[ "$DOKKU_VERSION" == "master" ]]; then
   sudo bash bootstrap.sh

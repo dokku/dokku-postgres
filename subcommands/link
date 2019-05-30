@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
@@ -42,7 +43,8 @@ service-link-cmd() {
   #F -a|--alias "BLUE_DATABASE", an alternative alias to use for linking to an app via environment variable
   #F -q|--querystring "pool=5", ampersand delimited querystring arguments to append to the service link
   declare desc="link the $PLUGIN_SERVICE service to the app"
-  local cmd="$PLUGIN_COMMAND_PREFIX:link" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  local cmd="$PLUGIN_COMMAND_PREFIX:link" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" APP="$2" LINK_FLAGS_LIST=("${@:3}")
   APP=${APP:="$DOKKU_APP_NAME"}
 

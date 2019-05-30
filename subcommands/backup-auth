@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
-set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
@@ -20,7 +21,8 @@ service-backup-auth-cmd() {
   #A aws-signature-version, (optional) the AWS signature version to use when signing S3 requests
   #A endpoint-url, (optional) an aws endpoint to upload to
   declare desc="sets up authentication for backups on the $PLUGIN_SERVICE service"
-  local cmd="$PLUGIN_COMMAND_PREFIX:backup-auth" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  local cmd="$PLUGIN_COMMAND_PREFIX:backup-auth" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" AWS_ACCESS_KEY_ID="$2" AWS_SECRET_ACCESS_KEY="$3" AWS_DEFAULT_REGION="$4" AWS_SIGNATURE_VERSION="$5" ENDPOINT_URL="$6"
   is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 
