@@ -84,6 +84,18 @@ is_implemented_command() {
   return 0
 }
 
+is_valid_service_name() {
+  declare desc="Validates a service name"
+  declare SERVICE="$1"
+  [[ -z "$SERVICE" ]] && return 1
+
+  if [[ "$SERVICE" =~ ^[A-Za-z0-9_]+$ ]]; then
+    return 0
+  fi
+
+  return 1
+}
+
 remove_from_links_file() {
   declare desc="Removes an app from the service link file"
   declare SERVICE="$1" APP="$2"
@@ -117,13 +129,6 @@ retry-docker-command() {
     dokku_log_verbose "Container command retried ${i} time(s): ${COMMAND}"
   fi
   [[ "$success" == "true" ]] || dokku_log_fail "Failed to run command: ${COMMAND}"
-}
-
-service_dns_hostname() {
-  declare desc="Retrieves the alias of a service"
-  declare SERVICE="$1"
-  local SERVICE_NAME="$(get_service_name "$SERVICE")"
-  echo "$SERVICE_NAME" | tr ._ -
 }
 
 service_alternative_alias() {
@@ -271,14 +276,6 @@ service_backup_schedule_cat() {
   cat "$CRON_FILE"
 }
 
-service_backup_unschedule() {
-  declare desc="unschedules the backup of the service"
-  declare SERVICE="$1"
-  local CRON_FILE="/etc/cron.d/dokku-${PLUGIN_COMMAND_PREFIX}-${SERVICE}"
-
-  sudo /bin/rm -f "$CRON_FILE"
-}
-
 service_backup_set_encryption() {
   declare desc="Sets up backup encryption"
   declare SERVICE="$1" ENCRYPTION_KEY="$2"
@@ -287,6 +284,14 @@ service_backup_set_encryption() {
 
   mkdir "$SERVICE_BACKUP_ENCRYPTION_ROOT"
   echo "$ENCRYPTION_KEY" >"${SERVICE_BACKUP_ENCRYPTION_ROOT}/ENCRYPTION_KEY"
+}
+
+service_backup_unschedule() {
+  declare desc="unschedules the backup of the service"
+  declare SERVICE="$1"
+  local CRON_FILE="/etc/cron.d/dokku-${PLUGIN_COMMAND_PREFIX}-${SERVICE}"
+
+  sudo /bin/rm -f "$CRON_FILE"
 }
 
 service_backup_unset_encryption() {
@@ -316,6 +321,13 @@ service_container_rm() {
   if ! docker rm "$SERVICE_NAME" >/dev/null 2>&1; then
     dokku_log_fail "Unable to remove container for service $SERVICE"
   fi
+}
+
+service_dns_hostname() {
+  declare desc="Retrieves the alias of a service"
+  declare SERVICE="$1"
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
+  echo "$SERVICE_NAME" | tr ._ -
 }
 
 service_enter() {
@@ -767,16 +779,4 @@ verify_service_name() {
   [[ -z "$SERVICE" ]] && dokku_log_fail "(verify_service_name) SERVICE must not be null"
   [[ ! -d "$PLUGIN_DATA_ROOT/$SERVICE" ]] && dokku_log_fail "$PLUGIN_SERVICE service $SERVICE does not exist"
   return 0
-}
-
-is_valid_service_name() {
-  declare desc="Validates a service name"
-  declare SERVICE="$1"
-  [[ -z "$SERVICE" ]] && return 1
-
-  if [[ "$SERVICE" =~ ^[A-Za-z0-9_]+$ ]]; then
-    return 0
-  fi
-
-  return 1
 }
