@@ -98,6 +98,27 @@ remove_from_links_file() {
   sort "$LINKS_FILE" -u -o "$LINKS_FILE"
 }
 
+retry-docker-command() {
+  local ID="$1" COMMAND="$2"
+  local i=0 success=false
+  until [ $i -ge 100 ]; do
+    set +e
+    docker exec -it "$ID" sh -c "$COMMAND" 2>/dev/null
+    exit_code=$?
+    set -e
+    if [[ "$exit_code" == 0 ]]; then
+      success=true
+      break
+    fi
+    i=$((i + 1))
+    sleep 1
+  done
+  if [[ $i -gt 0 ]]; then
+    dokku_log_verbose "Container command retried ${i} time(s): ${COMMAND}"
+  fi
+  [[ "$success" == "true" ]] || dokku_log_fail "Failed to run command: ${COMMAND}"
+}
+
 service_dns_hostname() {
   declare desc="Retrieves the alias of a service"
   declare SERVICE="$1"
