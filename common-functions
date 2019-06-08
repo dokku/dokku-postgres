@@ -19,10 +19,14 @@ get_container_ip() {
 
 get_database_name() {
   declare desc="Retrieves a sanitized database name"
-  declare DATABASE="$1"
-  # some datastores do not like special characters in database names
-  # so we need to normalize them out
-  echo "$DATABASE" | tr .- _
+  declare SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+
+  if [[ ! -f "$SERVICE_ROOT/DATABASE_NAME" ]]; then
+    echo "$SERVICE" > "$SERVICE_ROOT/DATABASE_NAME"
+  fi
+
+  cat "$SERVICE_ROOT/DATABASE_NAME"
 }
 
 get_random_ports() {
@@ -89,7 +93,7 @@ is_valid_service_name() {
   declare SERVICE="$1"
   [[ -z "$SERVICE" ]] && return 1
 
-  if [[ "$SERVICE" =~ ^[A-Za-z0-9_]+$ ]]; then
+  if [[ "$SERVICE" =~ ^[A-Za-z0-9_-]+$ ]]; then
     return 0
   fi
 
@@ -779,4 +783,14 @@ verify_service_name() {
   [[ -z "$SERVICE" ]] && dokku_log_fail "(verify_service_name) SERVICE must not be null"
   [[ ! -d "$PLUGIN_DATA_ROOT/$SERVICE" ]] && dokku_log_fail "$PLUGIN_SERVICE service $SERVICE does not exist"
   return 0
+}
+
+write_database_name() {
+  declare desc="Writes a sanitized database name"
+  declare SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+
+  # some datastores do not like special characters in database names
+  # so we need to normalize them out
+  echo "$SERVICE" | tr .- _ > "$SERVICE_ROOT/DATABASE_NAME"
 }
