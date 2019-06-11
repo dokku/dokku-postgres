@@ -14,7 +14,7 @@ docker_ports_options() {
 get_container_ip() {
   declare desc="Retrieves the ip address of a container"
   declare CONTAINER_ID="$1"
-  docker inspect --format '{{ .NetworkSettings.IPAddress }}' "$CONTAINER_ID"
+  docker inspect --format '{{ .NetworkSettings.IPAddress }}' "$CONTAINER_ID" 2>/dev/null
 }
 
 get_database_name() {

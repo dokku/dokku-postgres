@@ -129,6 +129,10 @@ service_start() {
   local ID=$(docker ps -aq --no-trunc --filter "status=running" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
   if [[ -n $ID ]]; then
     [[ -z $QUIET ]] && dokku_log_warn "Service is already started"
+    if [[ ! -f "$SERVICE_ROOT/ID" ]] || [[ "$(cat "$SERVICE_ROOT/ID")" != "$ID" ]]; then
+      [[ -z $QUIET ]] && dokku_log_warn "Updating local container ID"
+      echo "$ID" >"$SERVICE_ROOT/ID"
+    fi
     return 0
   fi
 
