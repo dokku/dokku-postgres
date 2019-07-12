@@ -4,5 +4,6 @@ env:
   - DOKKU_VERSION=master
   - DOKKU_VERSION=v0.17.0
 install: make setup
+before_script: sudo sysctl -w vm.max_map_count=262144
 script: make test
 after_failure: make report
