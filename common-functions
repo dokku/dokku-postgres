@@ -591,7 +591,7 @@ service_password() {
   declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local PASSWORD_FILE="$SERVICE_ROOT/PASSWORD"
-  if [[ -f "$PASSWORD" ]]; then
+  if [[ -f "$PASSWORD_FILE" ]]; then
     cat "$PASSWORD_FILE"
   fi
 }
@@ -601,7 +601,7 @@ service_root_password() {
   declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local PASSWORD_FILE="$SERVICE_ROOT/ROOTPASSWORD"
-  if [[ -f "$PASSWORD" ]]; then
+  if [[ -f "$PASSWORD_FILE" ]]; then
     cat "$PASSWORD_FILE"
   fi
 }
