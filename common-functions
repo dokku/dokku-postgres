@@ -468,7 +468,7 @@ service_link() {
 }
 
 service_linked_apps() {
-  declare desc="Lists all applications linked to a service"
+  declare desc="Lists all apps linked to a service for info output"
   declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local LINKS_FILE="$SERVICE_ROOT/LINKS"
@@ -477,6 +477,18 @@ service_linked_apps() {
   [[ -z $(<"$LINKS_FILE") ]] && echo '-' && return 0
 
   tr '\n' ' ' <"$LINKS_FILE"
+}
+
+service_links() {
+  declare desc="Lists all apps linked to a service"
+  declare SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local LINKS_FILE="$SERVICE_ROOT/LINKS"
+
+  touch "$LINKS_FILE"
+  [[ -z $(<"$LINKS_FILE") ]] && return 0
+
+  cat "$LINKS_FILE"
 }
 
 service_list() {
