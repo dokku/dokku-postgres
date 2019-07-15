@@ -45,7 +45,7 @@ service-destroy-cmd() {
   service_container_rm "$SERVICE"
 
   dokku_log_verbose_quiet "Removing data"
-  docker run --rm -v "$SERVICE_HOST_ROOT/data:/data" -v "$SERVICE_HOST_ROOT/config:/config" busybox:1.30.1-uclibc chmod 777 -R /config /data
+  docker run --rm -v "$SERVICE_HOST_ROOT/data:/data" -v "$SERVICE_HOST_ROOT/config:/config" busybox:1.31.0-uclibc chmod 777 -R /config /data
   rm -rf "$SERVICE_ROOT"
 
   dokku_log_info2 "$PLUGIN_SERVICE container deleted: $SERVICE"

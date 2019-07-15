@@ -68,7 +68,7 @@ service_create_container() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_HOST_ROOT="$PLUGIN_DATA_HOST_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
-  local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
+  local PASSWORD="$(service_password "$SERVICE")"
   local DATABASE_NAME="$(get_database_name "$SERVICE")"
   local PREVIOUS_ID
 
@@ -76,7 +76,7 @@ service_create_container() {
   echo "$ID" >"$SERVICE_ROOT/ID"
 
   dokku_log_verbose_quiet "Waiting for container to be ready"
-  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" dokku/wait:0.3.0 -p "$PLUGIN_DATASTORE_WAIT_PORT" >/dev/null
+  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" dokku/wait:0.4.0 -p "$PLUGIN_DATASTORE_WAIT_PORT" >/dev/null
 
   dokku_log_verbose_quiet "Creating container database"
   docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2>/dev/null || dokku_log_verbose_quiet 'Already exists'
@@ -98,7 +98,7 @@ service_export() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local DATABASE_NAME="$(get_database_name "$SERVICE")"
-  local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
+  local PASSWORD="$(service_password "$SERVICE")"
 
   [[ -n $SSH_TTY ]] && stty -opost
   docker exec "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_dump -Fc --no-acl --no-owner -h localhost -U postgres -w "$DATABASE_NAME"
@@ -113,7 +113,7 @@ service_import() {
   local SERVICE_HOST_ROOT="$PLUGIN_DATA_HOST_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local DATABASE_NAME="$(get_database_name "$SERVICE")"
-  local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
+  local PASSWORD="$(service_password "$SERVICE")"
 
   if [[ -t 0 ]]; then
     dokku_log_fail "No data provided on stdin."
@@ -138,7 +138,7 @@ service_start() {
 
   dokku_log_info2_quiet "Starting container"
   local PREVIOUS_ID=$(docker ps -aq --no-trunc --filter "status=exited" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
-  local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
+  local PASSWORD="$(service_password "$SERVICE")"
 
   if [[ -n $PREVIOUS_ID ]]; then
     docker start "$PREVIOUS_ID" >/dev/null
@@ -153,9 +153,8 @@ service_start() {
 
 service_url() {
   local SERVICE="$1"
-  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_DNS_HOSTNAME="$(service_dns_hostname "$SERVICE")"
   local DATABASE_NAME="$(get_database_name "$SERVICE")"
-  local PASSWORD="$(cat "$SERVICE_ROOT/PASSWORD")"
+  local PASSWORD="$(service_password "$SERVICE")"
   echo "$PLUGIN_SCHEME://postgres:$PASSWORD@$SERVICE_DNS_HOSTNAME:${PLUGIN_DATASTORE_PORTS[0]}/$DATABASE_NAME"
 }
