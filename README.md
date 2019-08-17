@@ -59,9 +59,7 @@ dokku postgres:create lolipop
 # version to use for the service
 # it *must* be compatible with the
 # official postgres image
-export POSTGRES_IMAGE="postgres"
-export POSTGRES_IMAGE_VERSION="11.4"
-dokku postgres:create lolipop
+dokku postgres:create lolipop --image postgres --image-version 11.4
 
 # you can also specify custom environment
 # variables to start the postgres service
@@ -192,7 +190,7 @@ At the moment a database can’t be upgraded (or downgraded) inplace. Instead a 
 $ dokku postgres:create db9.5
 
 # Migrate it like this for example
-$ POSTGRES_IMAGE_VERSION=9.6 dokku postgres:clone db9.5 db9.6
+$ dokku postgres:clone db9.5 db9.6 --image-version 9.6
 
 # If it was linked to an application, first link the new DB
 $ dokku postgres:link db9.6 my_app
