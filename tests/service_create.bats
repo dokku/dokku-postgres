@@ -16,6 +16,15 @@ load test_helper
   dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" service-with-dashes
 }
 
+@test "($PLUGIN_COMMAND_PREFIX:create) service with changed shm size" {
+  run dokku "$PLUGIN_COMMAND_PREFIX:create" foobar-256 --shm-size="256m"
+  run docker exec -it dokku.postgres.foobar-256 df -h /dev/shm
+  assert_contains "${lines[*]}" "shm"
+  assert_contains "${lines[*]}" "256M"
+
+  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" foobar-256
+}
+
 @test "($PLUGIN_COMMAND_PREFIX:create) error when there are no arguments" {
   run dokku "$PLUGIN_COMMAND_PREFIX:create"
   assert_contains "${lines[*]}" "Please specify a valid name for the service"
