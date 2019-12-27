@@ -217,7 +217,7 @@ service_backup() {
   fi
 
   # shellcheck disable=SC2086
-  docker run --rm $BACKUP_PARAMETERS dokku/s3backup:0.10.0
+  docker run --rm $BACKUP_PARAMETERS dokku/s3backup:0.10.1
 }
 
 service_backup_auth() {
