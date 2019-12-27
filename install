@@ -18,7 +18,7 @@ plugin-install() {
 
   pull-docker-image "${PLUGIN_IMAGE}:${PLUGIN_IMAGE_VERSION}"
   pull-docker-image "busybox:1.31.0-uclibc"
-  pull-docker-image "dokku/ambassador:0.3.0"
+  pull-docker-image "dokku/ambassador:0.3.1"
   pull-docker-image "dokku/s3backup:0.10.1"
   pull-docker-image "dokku/wait:0.4.0"
 
