@@ -740,13 +740,7 @@ service_status() {
   local ID="$(cat "$SERVICE_ROOT/ID")"
   local CONTAINER_STATUS
 
-  is_container_status "$ID" "Dead" && echo "dead" && return 0
-  is_container_status "$ID" "OOMKilled" && echo "oomkilled" && return 0
-  is_container_status "$ID" "Paused" && echo "paused" && return 0
-  is_container_status "$ID" "Restarting" && echo "restarting" && return 0
-  is_container_status "$ID" "Running" && echo "running" && return 0
-
-  CONTAINER_STATUS=$(docker inspect -f "{{.State.Status}}" "$CID" 2>/dev/null || true)
+  CONTAINER_STATUS=$(docker inspect -f "{{.State.Status}}" "$ID" 2>/dev/null || true)
   [[ -n "$CONTAINER_STATUS" ]] && echo "$CONTAINER_STATUS" && return 0
   echo "missing" && return 0
 }
