@@ -494,19 +494,16 @@ service_links() {
 service_list() {
   declare desc="Lists all services and their status"
   local SERVICES=$(ls "$PLUGIN_DATA_ROOT" 2>/dev/null)
+
   if [[ -z $SERVICES ]]; then
     dokku_log_warn "There are no $PLUGIN_SERVICE services"
-  else
-    LIST=""
-    if [[ -z "$DOKKU_QUIET_OUTPUT" ]]; then
-      LIST="NAME,VERSION,STATUS,EXPOSED PORTS,LINKS\n"
-    fi
-
-    for SERVICE in $SERVICES; do
-      LIST+="$SERVICE,$(service_version "$SERVICE"),$(service_status "$SERVICE"),$(service_exposed_ports "$SERVICE"),$(service_linked_apps "$SERVICE")\n"
-    done
-    printf "%b" "$LIST" | column -t -s,
+    return
   fi
+
+  dokku_log_info2_quiet "Postgres services"
+  for SERVICE in $SERVICES; do
+    echo "$SERVICE"
+  done
 }
 
 service_logs() {
