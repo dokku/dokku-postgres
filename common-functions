@@ -500,7 +500,7 @@ service_list() {
     return
   fi
 
-  dokku_log_info2_quiet "Postgres services"
+  dokku_log_info2_quiet "$PLUGIN_SERVICE services"
   for SERVICE in $SERVICES; do
     echo "$SERVICE"
   done
