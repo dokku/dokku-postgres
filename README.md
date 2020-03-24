@@ -284,10 +284,10 @@ Please ensure the proper images are in place when `docker pull` is disabled.
 
 Official Postgres docker images doesn't include postgis extension. To be able to use postgis, you will need postgres+postgis docker container compatible with official ones. 
 
-You can use for example `mdillon/postgis` container:
+You can use for example `postgis/postgis` container:
 
 ```
-export POSTGRES_IMAGE="mdillon/postgis" 
+export POSTGRES_IMAGE="postgis/postgis" 
 export POSTGRES_IMAGE_VERSION="latest"
 
 dokku postgres:create postgis-database
