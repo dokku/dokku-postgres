@@ -75,6 +75,7 @@ dokku postgres:info lolipop
 # you can also retrieve a specific piece of service info via flags
 dokku postgres:info lolipop --data-dir
 dokku postgres:info lolipop --dsn
+dokku postgres:info lolipop --exposed-dsn
 dokku postgres:info lolipop --exposed-ports
 dokku postgres:info lolipop --id
 dokku postgres:info lolipop --internal-ip
@@ -263,6 +264,27 @@ The `import` command should be used with any non-plain-text files exported by `p
 
 ```shell
 dokku postgres:connect db < ./dump.sql
+```
+
+## Exposed DSN
+
+```shell
+# expose the database (you must open the exposed port on your firewall if you have one)
+dokku postgres:expose lolipop
+
+# exposed dsn available on service info
+dokku postgres:info lolipop
+=====> Container Information
+       ...
+       Exposed dsn:         postgres://postgres:SOME_PASSWORD@dokku.me:28804/lolipop
+       Exposed ports:       5432->28804
+       ...
+```
+
+So now you connect to your database with [`pgcli`](https://www.pgcli.com/) or with your favorite app.
+
+```shell
+pgcli $(ssh dokku@dokku.me postgres:info lolipop --exposed-dsn)
 ```
 
 ## Security

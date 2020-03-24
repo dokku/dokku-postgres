@@ -12,6 +12,7 @@ service-info-cmd() {
   #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --config-dir
   #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --data-dir
   #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --dsn
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --exposed-dsn
   #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --exposed-ports
   #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --id
   #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --internal-ip
@@ -23,6 +24,7 @@ service-info-cmd() {
   #F --config-dir, show the service configuration directory
   #F --data-dir, show the service data directory
   #F --dsn, show the service DSN
+  #F --exposed-dsn, show the exposed service DSN (you must expose the service first)
   #F --exposed-ports, show service exposed ports
   #F --id, show the service container id
   #F --internal-ip, show the service internal ip
