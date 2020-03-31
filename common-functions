@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_AVAILABLE_PATH/config/functions"
@@ -217,7 +218,7 @@ service_backup() {
   fi
 
   # shellcheck disable=SC2086
-  docker run --rm $BACKUP_PARAMETERS dokku/s3backup:0.10.1
+  docker run --rm $BACKUP_PARAMETERS "$PLUGIN_S3BACKUP_IMAGE"
 }
 
 service_backup_auth() {
@@ -686,7 +687,7 @@ service_port_unpause() {
   echo "${PORTS[@]}" >"$PORT_FILE"
 
   # shellcheck disable=SC2046
-  docker run -d --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" --name "$EXPOSED_NAME" $(docker_ports_options "${PORTS[@]}") --restart always --label dokku=ambassador --label "dokku.ambassador=$PLUGIN_COMMAND_PREFIX" dokku/ambassador:0.3.1 >/dev/null
+  docker run -d --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" --name "$EXPOSED_NAME" $(docker_ports_options "${PORTS[@]}") --restart always --label dokku=ambassador --label "dokku.ambassador=$PLUGIN_COMMAND_PREFIX" "$PLUGIN_AMBASSADOR_IMAGE" >/dev/null
   if [[ "$LOG_FAIL" == "true" ]]; then
     dokku_log_info1 "Service $SERVICE exposed on port(s) [container->host]: $(service_exposed_ports "$SERVICE")"
   fi
