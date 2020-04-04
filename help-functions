@@ -191,7 +191,7 @@ fn-help-subcommand-args() {
     if [[ "$arg" == *_FLAG ]]; then
       arg="${arg/_FLAG/}"
       if [[ $arg == "INFO" ]]; then
-        arg="SINGLE_INFO_FLAG..."
+        arg="SINGLE_INFO_FLAG"
         args+=" ${BLUE}[--${arg//_/-}]${NORMAL}"
       else
         args+=" ${BLUE}[-${arg:0:1}|--${arg//_/-}]${NORMAL}"
