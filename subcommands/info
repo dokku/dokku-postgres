@@ -30,7 +30,7 @@ service-info-cmd() {
   #F --service-root, show the service root directory
   #F --status, show the service running status
   #F --version, show the service image version
-  declare desc="print the connection information"
+  declare desc="print the service information"
   local cmd="$PLUGIN_COMMAND_PREFIX:info" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" INFO_FLAG="$2"

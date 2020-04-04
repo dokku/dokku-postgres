@@ -5,6 +5,17 @@ import os
 import re
 
 
+def compile(service, version, alias, scheme, ports, unimplemented, dokku_version):
+    return "\n\n".join([
+        header(service),
+        description(service, version),
+        requirements_section(dokku_version),
+        installation_section(service, dokku_version),
+        commands_section(service, alias, scheme, ports, unimplemented),
+        usage_section(service, alias, scheme, ports, unimplemented),
+    ]).replace("\n\n\n\n\n", "\n").replace("\n\n\n\n", "\n").replace("\n\n\n", "\n\n")
+
+
 def header(service):
     return " ".join([
         f"# dokku {service}",
@@ -17,7 +28,7 @@ def description(service, version):
     return f"Official {service} plugin for dokku. Currently defaults to installing [{service} {version}](https://hub.docker.com/_/{service}/)."
 
 
-def requirements(dokku_version):
+def requirements_section(dokku_version):
     return "\n".join([
         "## Requirements",
         "",
@@ -26,7 +37,7 @@ def requirements(dokku_version):
     ])
 
 
-def installation(service, dokku_version):
+def installation_section(service, dokku_version):
     return "\n".join([
         "## Installation",
         "",
@@ -37,7 +48,7 @@ def installation(service, dokku_version):
     ])
 
 
-def commands(service, alias, scheme, ports):
+def commands_section(service, alias, scheme, ports, unimplemented):
     content = [
         "## Commands",
         "",
@@ -50,6 +61,8 @@ def commands(service, alias, scheme, ports):
     command_list = []
     descriptions = []
     for filename in subcommands:
+        if filename in unimplemented:
+            continue
         data = command_data(filename, service, alias, scheme, ports)
         description = data["description"]
         arguments = data["arguments_string"]
@@ -68,77 +81,65 @@ def commands(service, alias, scheme, ports):
     return "\n".join(content)
 
 
-def usage(service, alias, scheme, ports):
+def usage_section(service, alias, scheme, ports, unimplemented):
     return "\n\n".join([
         "## Usage",
         f"Help for any commands can be displayed by specifying the command as an argument to {service}:help. Please consult the `{service}:help` command for any undocumented commands.",
-        usage_intro(service, alias, scheme, ports),
-        usage_lifecycle(service, alias, scheme, ports),
-        usage_automation(service, alias, scheme, ports),
-        usage_data_management(service, alias, scheme, ports),
-        usage_backup(service, alias, scheme, ports),
-        usage_docker_pull(service, alias, scheme, ports),
+        usage_intro(service, alias, scheme, ports, unimplemented),
+        usage_lifecycle(service, alias, scheme, ports, unimplemented),
+        usage_automation(service, alias, scheme, ports, unimplemented),
+        usage_data_management(service, alias, scheme, ports, unimplemented),
+        usage_backup(service, alias, scheme, ports, unimplemented),
+        usage_docker_pull(service, alias, scheme, ports, unimplemented),
     ])
 
 
-def usage_intro(service, alias, scheme, ports):
-    return "\n".join([
-        "### Basic Usage",
-        command_help("list", service, alias, scheme, ports),
-        command_help("create", service, alias, scheme, ports),
-        command_help("info", service, alias, scheme, ports),
-        command_help("logs", service, alias, scheme, ports),
-        command_help("link", service, alias, scheme, ports),
-        command_help("unlink", service, alias, scheme, ports),
-        command_help("destroy", service, alias, scheme, ports),
-    ])
+def usage_intro(service, alias, scheme, ports, unimplemented):
+    commands = ["create", "info", "list", "logs", "link", "unlink"]
+    content = ["### Basic Usage"]
+
+    return fetch_commands_content(service, alias, scheme, ports, unimplemented, commands, content)
 
 
-def usage_lifecycle(service, alias, scheme, ports):
-    return "\n".join([
+def usage_lifecycle(service, alias, scheme, ports, unimplemented):
+    commands = ["connect", "enter", "expose", "unexpose", "promote", "start", "stop", "restart", "upgrade"]
+    content = [
         "### Service Lifecycle",
         "",
         "The lifecycle of each service can be managed through the following commands:",
         "",
-        command_help("connect", service, alias, scheme, ports),
-        command_help("enter", service, alias, scheme, ports),
-        command_help("expose", service, alias, scheme, ports),
-        command_help("unexpose", service, alias, scheme, ports),
-        command_help("promote", service, alias, scheme, ports),
-        command_help("restart", service, alias, scheme, ports),
-        command_help("start", service, alias, scheme, ports),
-        command_help("stop", service, alias, scheme, ports),
-        command_help("upgrade", service, alias, scheme, ports),
-    ])
+    ]
+
+    return fetch_commands_content(service, alias, scheme, ports, unimplemented, commands, content)
 
 
-def usage_automation(service, alias, scheme, ports):
-    return "\n".join([
+def usage_automation(service, alias, scheme, ports, unimplemented):
+    commands = ["app-links", "clone", "exists", "linked", "links"]
+    content = [
         "### Service Automation",
         "",
         "Service scripting can be executed using the following commands:",
         "",
-        command_help("app-links", service, alias, scheme, ports),
-        command_help("clone", service, alias, scheme, ports),
-        command_help("exists", service, alias, scheme, ports),
-        command_help("linked", service, alias, scheme, ports),
-        command_help("links", service, alias, scheme, ports),
-    ])
+    ]
+
+    return fetch_commands_content(service, alias, scheme, ports, unimplemented, commands, content)
 
 
-def usage_data_management(service, alias, scheme, ports):
-    return "\n".join([
+def usage_data_management(service, alias, scheme, ports, unimplemented):
+    commands = ["import", "export"]
+    content = [
         "### Data Management",
         "",
         "The underlying service data can be imported and exported with the following commands:",
         "",
-        command_help("import", service, alias, scheme, ports),
-        command_help("export", service, alias, scheme, ports),
-    ])
+    ]
+
+    return fetch_commands_content(service, alias, scheme, ports, unimplemented, commands, content)
 
 
-def usage_backup(service, alias, scheme, ports):
-    return "\n".join([
+def usage_backup(service, alias, scheme, ports, unimplemented):
+    commands = ["backup-auth", "backup-deauth", "backup", "backup-set-encryption", "backup-unset-encryption", "backup-schedule", "backup-schedule-cat", "backup-unschedule",]
+    content = [
         "### Backups",
         "",
         "Datastore backups are supported via AWS S3 and S3 compatible services like [minio](https://github.com/minio/minio).",
@@ -147,18 +148,12 @@ def usage_backup(service, alias, scheme, ports):
         "",
         "Backups can be performed using the backup commands:",
         "",
-        command_help("backup-auth", service, alias, scheme, ports),
-        command_help("backup-deauth", service, alias, scheme, ports),
-        command_help("backup", service, alias, scheme, ports),
-        command_help("backup-set-encryption", service, alias, scheme, ports),
-        command_help("backup-unset-encryption", service, alias, scheme, ports),
-        command_help("backup-schedule", service, alias, scheme, ports),
-        command_help("backup-schedule-cat", service, alias, scheme, ports),
-        command_help("backup-unschedule", service, alias, scheme, ports),
-    ])
+    ]
+
+    return fetch_commands_content(service, alias, scheme, ports, unimplemented, commands, content)
 
 
-def usage_docker_pull(service, alias, scheme, ports):
+def usage_docker_pull(service, alias, scheme, ports, unimplemented):
     service_prefix = service.upper()
     return "\n".join([
         "### Disabling `docker pull` calls",
@@ -167,6 +162,21 @@ def usage_docker_pull(service, alias, scheme, ports):
         "",
         "Please ensure the proper images are in place when `docker pull` is disabled.",
     ])
+
+
+def fetch_commands_content(service, alias, scheme, ports, unimplemented, commands, content):
+    i = 0
+    for command in commands:
+        output = command_help(command, service, alias, scheme, ports, unimplemented)
+        if output == "":
+            continue
+        content.append(output)
+        i += 1
+
+    if i == 0:
+        return ""
+
+    return "\n".join(content)
 
 
 def parse_args(line):
@@ -195,7 +205,10 @@ def parse_args(line):
     return " ".join(arguments)
 
 
-def command_help(command, service, alias, scheme, ports):
+def command_help(command, service, alias, scheme, ports, unimplemented):
+    if command in unimplemented:
+        return ""
+
     data = command_data(command, service, alias, scheme, ports)
     content = [
         f"### {data['description']}",
@@ -222,11 +235,9 @@ def command_help(command, service, alias, scheme, ports):
 
     if len(data["examples"]) > 0:
         content.append("")
-        content.append("examples:")
-        content.append("")
         content.append(data["examples"])
 
-    return "\n".join(content)
+    return "\n" + "\n".join(content)
 
 
 def command_data(command, service, alias, scheme, ports):
@@ -339,7 +350,7 @@ def command_data(command, service, alias, scheme, ports):
 
 def process_sentence(sentence_lines):
     sentence_lines = " ".join(sentence_lines)
-    sentences = ". ".join(i.strip().capitalize() for i in sentence_lines.split("."))
+    sentences = ". ".join(i.strip().capitalize() for i in sentence_lines.split(".")).strip()
     if not sentences.endswith(".") and not sentences.endswith(":"):
         sentences += ":"
     return sentences
@@ -359,21 +370,11 @@ def process_codeblock(codeblock_lines):
     return f"```\n{codeblock_lines}\n```"
 
 
-def compile(service, version, alias, scheme, ports, dokku_version):
-    return "\n\n".join([
-        header(service),
-        description(service, version),
-        requirements(dokku_version),
-        installation(service, dokku_version),
-        commands(service, alias, scheme, ports),
-        usage(service, alias, scheme, ports),
-    ])
-
-
 def main():
     service = None
     version = None
     alias = None
+    unimplemented = []
     with open("config") as f:
         for line in f.readlines():
             if "IMAGE_VERSION=${" in line:
@@ -386,8 +387,12 @@ def main():
                 scheme = re.search('"(.+)"', line).group(1)
             if "PLUGIN_DATASTORE_PORTS=" in line:
                 ports = re.search('\((.+)\)', line).group(1).split(" ")
+            if "PLUGIN_UNIMPLEMENTED_SUBCOMMANDS=" in line:
+                match = re.search('\((.+)\)', line)
+                if match is not None:
+                    unimplemented = [s.strip('"') for s in match.group(1).split(" ")]
 
-    text = compile(service, version, alias, scheme, ports, "0.12.x+")
+    text = compile(service, version, alias, scheme, ports, unimplemented, "0.12.x+")
 
     base_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     readme_file = os.path.join(base_path, 'README.md')

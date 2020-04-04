@@ -35,7 +35,7 @@ postgres:exists <service>                          # check if the postgres servi
 postgres:export <service>                          # export a dump of the postgres service database
 postgres:expose <service> <ports...>               # expose a postgres service on custom port if provided (random port otherwise)
 postgres:import <service>                          # import a dump into the postgres service database
-postgres:info <service> [--single-info-flag]       # print the connection information
+postgres:info <service> [--single-info-flag]       # print the service information
 postgres:link <service> <app> [--link-flags...]    # link the postgres service to the app
 postgres:linked <service> <app>                    # check if the postgres service is linked to an app
 postgres:links <service>                           # list all apps linked to the postgres service
@@ -55,20 +55,7 @@ postgres:upgrade <service> [--upgrade-flags...]    # upgrade service <service> t
 Help for any commands can be displayed by specifying the command as an argument to postgres:help. Please consult the `postgres:help` command for any undocumented commands.
 
 ### Basic Usage
-### list all postgres services
 
-```shell
-# usage
-dokku postgres:list 
-```
-
-examples:
-
-List all services:
-
-```shell
-dokku postgres:list
-```
 ### create a postgres service
 
 ```shell
@@ -76,15 +63,13 @@ dokku postgres:list
 dokku postgres:create <service> [--create-flags...]
 ```
 
-examples:
-
 Create a postgres service named lolipop:
 
 ```shell
 dokku postgres:create lolipop
 ```
 
-You can also specify the image and image version to use for the service. It *must* be compatible with the ${plugin_image} image. :
+You can also specify the image and image version to use for the service. It *must* be compatible with the ${plugin_image} image.
 
 ```shell
 export DATABASE_IMAGE="${PLUGIN_IMAGE}"
@@ -92,20 +77,19 @@ export DATABASE_IMAGE_VERSION="${PLUGIN_IMAGE_VERSION}"
 dokku postgres:create lolipop
 ```
 
-You can also specify custom environment variables to start the postgres service in semi-colon separated form. :
+You can also specify custom environment variables to start the postgres service in semi-colon separated form.
 
 ```shell
 export DATABASE_CUSTOM_ENV="USER=alpha;HOST=beta"
 dokku postgres:create lolipop
 ```
-### print the connection information
+
+### print the service information
 
 ```shell
 # usage
 dokku postgres:info <service> [--single-info-flag]
 ```
-
-examples:
 
 Get connection information as follows:
 
@@ -127,14 +111,26 @@ dokku postgres:info lolipop --service-root
 dokku postgres:info lolipop --status
 dokku postgres:info lolipop --version
 ```
+
+### list all postgres services
+
+```shell
+# usage
+dokku postgres:list 
+```
+
+List all services:
+
+```shell
+dokku postgres:list
+```
+
 ### print the most recent log(s) for this service
 
 ```shell
 # usage
 dokku postgres:logs <service> [-t|--tail]
 ```
-
-examples:
 
 You can tail logs for a particular service:
 
@@ -147,6 +143,7 @@ By default, logs will not be tailed, but you can do this with the --tail flag:
 ```shell
 dokku postgres:logs lolipop --tail
 ```
+
 ### link the postgres service to the app
 
 ```shell
@@ -154,9 +151,7 @@ dokku postgres:logs lolipop --tail
 dokku postgres:link <service> <app> [--link-flags...]
 ```
 
-examples:
-
-A postgres service can be linked to a container. This will use native docker links via the docker-options plugin. Here we link it to our 'playground' app. :
+A postgres service can be linked to a container. This will use native docker links via the docker-options plugin. Here we link it to our 'playground' app.
 
 > NOTE: this will restart your app
 
@@ -187,7 +182,7 @@ The host exposed here only works internally in docker containers. If you want yo
 dokku postgres:link other_service playground
 ```
 
-It is possible to change the protocol for database_url by setting the environment variable database_database_scheme on the app. Doing so will after linking will cause the plugin to think the service is not linked, and we advise you to unlink before proceeding. :
+It is possible to change the protocol for database_url by setting the environment variable database_database_scheme on the app. Doing so will after linking will cause the plugin to think the service is not linked, and we advise you to unlink before proceeding.
 
 ```shell
 dokku config:set playground DATABASE_DATABASE_SCHEME=postgres2
@@ -199,6 +194,7 @@ This will cause database_url to be set as:
 ```
 postgres2://lolipop:SOME_PASSWORD@dokku-postgres-lolipop:5432/lolipop
 ```
+
 ### unlink the postgres service from the app
 
 ```shell
@@ -206,28 +202,12 @@ postgres2://lolipop:SOME_PASSWORD@dokku-postgres-lolipop:5432/lolipop
 dokku postgres:unlink <service> <app>
 ```
 
-examples:
-
 You can unlink a postgres service:
 
 > NOTE: this will restart your app and unset related environment variables
 
 ```shell
 dokku postgres:unlink lolipop playground
-```
-### delete the postgres service/data/container if there are no links left
-
-```shell
-# usage
-dokku postgres:destroy <service> [-f|--force]
-```
-
-examples:
-
-Destroy the service, it's data, and the running container:
-
-```shell
-dokku postgres:destroy lolipop
 ```
 
 ### Service Lifecycle
@@ -241,13 +221,12 @@ The lifecycle of each service can be managed through the following commands:
 dokku postgres:connect <service>
 ```
 
-examples:
-
 Connect to the service via the postgres connection tool:
 
 ```shell
 dokku postgres:connect lolipop
 ```
+
 ### enter or run a command in a running postgres service container
 
 ```shell
@@ -255,19 +234,18 @@ dokku postgres:connect lolipop
 dokku postgres:enter <service>
 ```
 
-examples:
-
-A bash prompt can be opened against a running service. Filesystem changes will not be saved to disk. :
+A bash prompt can be opened against a running service. Filesystem changes will not be saved to disk.
 
 ```shell
 dokku postgres:enter lolipop
 ```
 
-You may also run a command directly against the service. Filesystem changes will not be saved to disk. :
+You may also run a command directly against the service. Filesystem changes will not be saved to disk.
 
 ```shell
 dokku postgres:enter lolipop touch /tmp/test
 ```
+
 ### expose a postgres service on custom port if provided (random port otherwise)
 
 ```shell
@@ -275,13 +253,12 @@ dokku postgres:enter lolipop touch /tmp/test
 dokku postgres:expose <service> <ports...>
 ```
 
-examples:
-
 Expose the service on the service's normal ports, allowing access to it from the public interface (0. 0. 0. 0):
 
 ```shell
 dokku postgres:expose lolipop ${PLUGIN_DATASTORE_PORTS[@]}
 ```
+
 ### unexpose a previously exposed postgres service
 
 ```shell
@@ -289,21 +266,18 @@ dokku postgres:expose lolipop ${PLUGIN_DATASTORE_PORTS[@]}
 dokku postgres:unexpose <service>
 ```
 
-examples:
-
 Unexpose the service, removing access to it from the public interface (0. 0. 0. 0):
 
 ```shell
 dokku postgres:unexpose lolipop
 ```
+
 ### promote service <service> as DATABASE_URL in <app>
 
 ```shell
 # usage
 dokku postgres:promote <service> <app>
 ```
-
-examples:
 
 If you have a postgres service linked to an app and try to link another postgres service another link environment variable will be generated automatically:
 
@@ -326,20 +300,7 @@ DATABASE_URL=postgres://other_service:ANOTHER_PASSWORD@dokku-postgres-other-serv
 DOKKU_DATABASE_BLUE_URL=postgres://other_service:ANOTHER_PASSWORD@dokku-postgres-other-service:5432/other_service
 DOKKU_DATABASE_SILVER_URL=postgres://lolipop:SOME_PASSWORD@dokku-postgres-lolipop:5432/lolipop
 ```
-### graceful shutdown and restart of the postgres service container
 
-```shell
-# usage
-dokku postgres:restart <service>
-```
-
-examples:
-
-Restart the service:
-
-```shell
-dokku postgres:restart lolipop
-```
 ### start a previously stopped postgres service
 
 ```shell
@@ -347,13 +308,12 @@ dokku postgres:restart lolipop
 dokku postgres:start <service>
 ```
 
-examples:
-
 Start the service:
 
 ```shell
 dokku postgres:start lolipop
 ```
+
 ### stop a running postgres service
 
 ```shell
@@ -361,21 +321,31 @@ dokku postgres:start lolipop
 dokku postgres:stop <service>
 ```
 
-examples:
-
 Stop the service and the running container:
 
 ```shell
 dokku postgres:stop lolipop
 ```
+
+### graceful shutdown and restart of the postgres service container
+
+```shell
+# usage
+dokku postgres:restart <service>
+```
+
+Restart the service:
+
+```shell
+dokku postgres:restart lolipop
+```
+
 ### upgrade service <service> to the specified versions
 
 ```shell
 # usage
 dokku postgres:upgrade <service> [--upgrade-flags...]
 ```
-
-examples:
 
 You can upgrade an existing service to a new image or image-version:
 
@@ -394,13 +364,12 @@ Service scripting can be executed using the following commands:
 dokku postgres:app-links <app>
 ```
 
-examples:
-
-List all postgres services that are linked to the 'playground' app. :
+List all postgres services that are linked to the 'playground' app.
 
 ```shell
 dokku postgres:app-links playground
 ```
+
 ### create container <new-name> then copy data from <name> into <new-name>
 
 ```shell
@@ -408,13 +377,12 @@ dokku postgres:app-links playground
 dokku postgres:clone <service> <new-service> [--clone-flags...]
 ```
 
-examples:
-
 You can clone an existing service to a new one:
 
 ```shell
 dokku postgres:clone lolipop lolipop-2
 ```
+
 ### check if the postgres service exists
 
 ```shell
@@ -422,13 +390,12 @@ dokku postgres:clone lolipop lolipop-2
 dokku postgres:exists <service>
 ```
 
-examples:
-
-Here we check if the lolipop postgres service exists. :
+Here we check if the lolipop postgres service exists.
 
 ```shell
 dokku postgres:exists lolipop
 ```
+
 ### check if the postgres service is linked to an app
 
 ```shell
@@ -436,13 +403,12 @@ dokku postgres:exists lolipop
 dokku postgres:linked <service> <app>
 ```
 
-examples:
-
-Here we check if the lolipop postgres service is linked to the 'playground' app. :
+Here we check if the lolipop postgres service is linked to the 'playground' app.
 
 ```shell
 dokku postgres:linked lolipop playground
 ```
+
 ### list all apps linked to the postgres service
 
 ```shell
@@ -450,9 +416,7 @@ dokku postgres:linked lolipop playground
 dokku postgres:links <service>
 ```
 
-examples:
-
-List all apps linked to the 'lolipop' postgres service. :
+List all apps linked to the 'lolipop' postgres service.
 
 ```shell
 dokku postgres:links lolipop
@@ -469,21 +433,18 @@ The underlying service data can be imported and exported with the following comm
 dokku postgres:import <service>
 ```
 
-examples:
-
 Import a datastore dump:
 
 ```shell
 dokku postgres:import lolipop < database.dump
 ```
+
 ### export a dump of the postgres service database
 
 ```shell
 # usage
 dokku postgres:export <service>
 ```
-
-examples:
 
 By default, datastore output is exported to stdout:
 
@@ -512,8 +473,6 @@ Backups can be performed using the backup commands:
 dokku postgres:backup-auth <service> <aws-access-key-id> <aws-secret-access-key> <aws-default-region> <aws-signature-version> <endpoint-url>
 ```
 
-examples:
-
 Setup s3 backup authentication:
 
 ```shell
@@ -537,6 +496,7 @@ More specific example for minio auth:
 ```shell
 dokku postgres:backup-auth lolipop MINIO_ACCESS_KEY_ID MINIO_SECRET_ACCESS_KEY us-east-1 s3v4 https://YOURMINIOSERVICE
 ```
+
 ### removes backup authentication for the postgres service
 
 ```shell
@@ -544,13 +504,12 @@ dokku postgres:backup-auth lolipop MINIO_ACCESS_KEY_ID MINIO_SECRET_ACCESS_KEY u
 dokku postgres:backup-deauth <service>
 ```
 
-examples:
-
 Remove s3 authentication:
 
 ```shell
 dokku postgres:backup-deauth lolipop
 ```
+
 ### creates a backup of the postgres service to an existing s3 bucket
 
 ```shell
@@ -558,13 +517,12 @@ dokku postgres:backup-deauth lolipop
 dokku postgres:backup <service> <bucket-name> [--use-iam]
 ```
 
-examples:
-
 Backup the 'lolipop' service to the 'my-s3-bucket' bucket on aws:
 
 ```shell
 dokku postgres:backup lolipop my-s3-bucket --use-iam
 ```
+
 ### sets encryption for all future backups of postgres service
 
 ```shell
@@ -572,13 +530,12 @@ dokku postgres:backup lolipop my-s3-bucket --use-iam
 dokku postgres:backup-set-encryption <service> <passphrase>
 ```
 
-examples:
-
 Set a gpg passphrase for backups:
 
 ```shell
 dokku postgres:backup-set-encryption lolipop
 ```
+
 ### unsets encryption for future backups of the postgres service
 
 ```shell
@@ -586,21 +543,18 @@ dokku postgres:backup-set-encryption lolipop
 dokku postgres:backup-unset-encryption <service>
 ```
 
-examples:
-
 Unset a gpg encryption key for backups:
 
 ```shell
 dokku postgres:backup-unset-encryption lolipop
 ```
+
 ### schedules a backup of the postgres service
 
 ```shell
 # usage
 dokku postgres:backup-schedule <service> <schedule> <bucket-name> [--use-iam]
 ```
-
-examples:
 
 Schedule a backup:
 
@@ -615,6 +569,7 @@ Schedule a backup and authenticate via iam:
 ```shell
 dokku postgres:backup-schedule lolipop "0 3 * * *" my-s3-bucket --use-iam
 ```
+
 ### cat the contents of the configured backup cronfile for the service
 
 ```shell
@@ -622,21 +577,18 @@ dokku postgres:backup-schedule lolipop "0 3 * * *" my-s3-bucket --use-iam
 dokku postgres:backup-schedule-cat <service>
 ```
 
-examples:
-
 Cat the contents of the configured backup cronfile for the service:
 
 ```shell
 dokku postgres:backup-schedule-cat lolipop
 ```
+
 ### unschedules the backup of the postgres service
 
 ```shell
 # usage
 dokku postgres:backup-unschedule <service>
 ```
-
-examples:
 
 Remove the scheduled backup from cron:
 
