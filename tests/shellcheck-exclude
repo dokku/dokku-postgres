@@ -1,3 +1,7 @@
 # SC1090 - Can't follow non-constant source. Use a directive to specify location - https://github.com/koalaman/shellcheck/wiki/SC1090
 # SC2034 - Variable appears unused. Verify it or export it - https://github.com/koalaman/shellcheck/wiki/SC2034
 # SC2155 - Declare and assign separately to avoid masking return values - https://github.com/koalaman/shellcheck/wiki/SC2155
+# SC2206 - Quote to prevent word splitting/globbing, or split robustly with mapfile or read -a - https://github.com/koalaman/shellcheck/wiki/SC2206
+# SC2207 - Prefer mapfile or read -a to split command output (or quote to avoid splitting) - https://github.com/koalaman/shellcheck/wiki/SC2207
+# SC2220 - Invalid flags are not handled. Add a *) case - https://github.com/koalaman/shellcheck/wiki/SC2220
+# SC2230 - which is non-standard. Use builtin 'command -v' instead - https://github.com/koalaman/shellcheck/wiki/SC2230
