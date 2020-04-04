@@ -1,5 +1,7 @@
 HARDWARE = $(shell uname -m)
 SYSTEM_NAME  = $(shell uname -s | tr '[:upper:]' '[:lower:]')
+SHFMT_VERSION = 3.0.2
+
 
 bats:
 ifeq ($(SYSTEM_NAME),darwin)
@@ -28,7 +30,7 @@ ifneq ($(shell shfmt --version >/dev/null 2>&1 ; echo $$?),0)
 ifeq ($(shfmt),Darwin)
 	brew install shfmt
 else
-	wget -qO /tmp/shfmt https://github.com/mvdan/sh/releases/download/v2.6.2/shfmt_v2.6.2_linux_amd64
+	wget -qO /tmp/shfmt https://github.com/mvdan/sh/releases/download/v$(SHFMT_VERSION)/shfmt_v$(SHFMT_VERSION)_linux_amd64
 	chmod +x /tmp/shfmt
 	sudo mv /tmp/shfmt /usr/local/bin/shfmt
 endif
