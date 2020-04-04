@@ -93,3 +93,14 @@ ifneq ($(TRAVIS_PULL_REQUEST),false)
 endif
 endif
 endif
+
+.PHONY: clean
+clean:
+	rm -f README.md
+
+.PHONY: generate
+generate: clean README.md
+
+.PHONY: README.md
+README.md:
+	bin/generate

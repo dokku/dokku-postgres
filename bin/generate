@@ -1,0 +1,399 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from __future__ import print_function
+import os
+import re
+
+
+def header(service):
+    return " ".join([
+        f"# dokku {service}",
+        f"[![Build Status](https://img.shields.io/travis/dokku/dokku-{service}.svg?branch=master \"Build Status\")](https://travis-ci.org/dokku/dokku-{service})",
+        f"[![IRC Network](https://img.shields.io/badge/irc-freenode-blue.svg \"IRC Freenode\")](https://webchat.freenode.net/?channels=dokku)",
+    ])
+
+
+def description(service, version):
+    return f"Official {service} plugin for dokku. Currently defaults to installing [{service} {version}](https://hub.docker.com/_/{service}/)."
+
+
+def requirements(dokku_version):
+    return "\n".join([
+        "## Requirements",
+        "",
+        f"- dokku {dokku_version}",
+        "- docker 1.8.x",
+    ])
+
+
+def installation(service, dokku_version):
+    return "\n".join([
+        "## Installation",
+        "",
+        "```shell",
+        f"# on {dokku_version}",
+        f"sudo dokku plugin:install https://github.com/dokku/dokku-{service}.git {service}",
+        "```",
+    ])
+
+
+def commands(service, alias, scheme, ports):
+    content = [
+        "## Commands",
+        "",
+        "```",
+    ]
+
+    subcommands = os.listdir("subcommands")
+    subcommands.sort()
+
+    command_list = []
+    descriptions = []
+    for filename in subcommands:
+        data = command_data(filename, service, alias, scheme, ports)
+        description = data["description"]
+        arguments = data["arguments_string"]
+
+        command_list.append(f"{service}:{filename} {arguments}")
+        descriptions.append(description)
+
+    maxlen = max(map(len, command_list))
+    if maxlen > 50:
+        maxlen = 50
+    for command, description in zip(command_list, descriptions):
+        space_count = maxlen - len(command)
+        content.append("{0}{1} # {2}".format(command, " " * space_count, description))
+
+    content.append("```")
+    return "\n".join(content)
+
+
+def usage(service, alias, scheme, ports):
+    return "\n\n".join([
+        "## Usage",
+        f"Help for any commands can be displayed by specifying the command as an argument to {service}:help. Please consult the `{service}:help` command for any undocumented commands.",
+        usage_intro(service, alias, scheme, ports),
+        usage_lifecycle(service, alias, scheme, ports),
+        usage_automation(service, alias, scheme, ports),
+        usage_data_management(service, alias, scheme, ports),
+        usage_backup(service, alias, scheme, ports),
+        usage_docker_pull(service, alias, scheme, ports),
+    ])
+
+
+def usage_intro(service, alias, scheme, ports):
+    return "\n".join([
+        "### Basic Usage",
+        command_help("list", service, alias, scheme, ports),
+        command_help("create", service, alias, scheme, ports),
+        command_help("info", service, alias, scheme, ports),
+        command_help("logs", service, alias, scheme, ports),
+        command_help("link", service, alias, scheme, ports),
+        command_help("unlink", service, alias, scheme, ports),
+        command_help("destroy", service, alias, scheme, ports),
+    ])
+
+
+def usage_lifecycle(service, alias, scheme, ports):
+    return "\n".join([
+        "### Service Lifecycle",
+        "",
+        "The lifecycle of each service can be managed through the following commands:",
+        "",
+        command_help("connect", service, alias, scheme, ports),
+        command_help("enter", service, alias, scheme, ports),
+        command_help("expose", service, alias, scheme, ports),
+        command_help("unexpose", service, alias, scheme, ports),
+        command_help("promote", service, alias, scheme, ports),
+        command_help("restart", service, alias, scheme, ports),
+        command_help("start", service, alias, scheme, ports),
+        command_help("stop", service, alias, scheme, ports),
+        command_help("upgrade", service, alias, scheme, ports),
+    ])
+
+
+def usage_automation(service, alias, scheme, ports):
+    return "\n".join([
+        "### Service Automation",
+        "",
+        "Service scripting can be executed using the following commands:",
+        "",
+        command_help("app-links", service, alias, scheme, ports),
+        command_help("clone", service, alias, scheme, ports),
+        command_help("exists", service, alias, scheme, ports),
+        command_help("linked", service, alias, scheme, ports),
+        command_help("links", service, alias, scheme, ports),
+    ])
+
+
+def usage_data_management(service, alias, scheme, ports):
+    return "\n".join([
+        "### Data Management",
+        "",
+        "The underlying service data can be imported and exported with the following commands:",
+        "",
+        command_help("import", service, alias, scheme, ports),
+        command_help("export", service, alias, scheme, ports),
+    ])
+
+
+def usage_backup(service, alias, scheme, ports):
+    return "\n".join([
+        "### Backups",
+        "",
+        "Datastore backups are supported via AWS S3 and S3 compatible services like [minio](https://github.com/minio/minio).",
+        "",
+        "You may skip the `backup-auth` step if your dokku install is running within EC2 and has access to the bucket via an IAM profile. In that case, use the `--use-iam` option with the `backup` command.",
+        "",
+        "Backups can be performed using the backup commands:",
+        "",
+        command_help("backup-auth", service, alias, scheme, ports),
+        command_help("backup-deauth", service, alias, scheme, ports),
+        command_help("backup", service, alias, scheme, ports),
+        command_help("backup-set-encryption", service, alias, scheme, ports),
+        command_help("backup-unset-encryption", service, alias, scheme, ports),
+        command_help("backup-schedule", service, alias, scheme, ports),
+        command_help("backup-schedule-cat", service, alias, scheme, ports),
+        command_help("backup-unschedule", service, alias, scheme, ports),
+    ])
+
+
+def usage_docker_pull(service, alias, scheme, ports):
+    service_prefix = service.upper()
+    return "\n".join([
+        "### Disabling `docker pull` calls",
+        "",
+        f"If you wish to disable the `docker pull` calls that the plugin triggers, you may set the `{service_prefix}_DISABLE_PULL` environment variable to `true`. Once disabled, you will need to pull the service image you wish to deploy as shown in the `stderr` output.",
+        "",
+        "Please ensure the proper images are in place when `docker pull` is disabled.",
+    ])
+
+
+def parse_args(line):
+    line = line.strip()
+    arguments = []
+    for arg in re.findall("([A-Z_]+)", line):
+        arg = arg.replace("_", "-").lower()
+        if arg.endswith("optional-flag"):
+            arg = arg.replace("-optional-flag", "")
+            arguments.append(f"[--{arg}]")
+        elif arg.endswith("-flag"):
+            if arg == "info-flag":
+                arguments.append(f"[--single-info-flag]")
+            else:
+                arg = arg.replace("-flag", "")
+                first_letter = arg[0]
+                arguments.append(f"[-{first_letter}|--{arg}]")
+        elif arg.endswith("-flags-list"):
+            arg = arg.replace("-list", "")
+            arguments.append(f"[--{arg}...]")
+        elif arg.endswith("list"):
+            arg = arg.replace("-list", "")
+            arguments.append(f"<{arg}...>")
+        else:
+            arguments.append(f"<{arg}>")
+    return " ".join(arguments)
+
+
+def command_help(command, service, alias, scheme, ports):
+    data = command_data(command, service, alias, scheme, ports)
+    content = [
+        f"### {data['description']}",
+        "",
+        "```shell",
+        "# usage",
+        f"dokku {service}:{command} {data['arguments_string']}",
+        "```",
+    ]
+
+    # if len(data["arguments"]) > 0:
+    #     content.append("")
+    #     content.append("arguments:")
+    #     content.append("")
+    # for argument in data["arguments"]:
+    #     content.append(f"- {argument}")
+
+    # if len(data["flags"]) > 0:
+    #     content.append("")
+    #     content.append("flags:")
+    #     content.append("")
+    # for flag in data["flags"]:
+    #     content.append(f"- {flag}")
+
+    if len(data["examples"]) > 0:
+        content.append("")
+        content.append("examples:")
+        content.append("")
+        content.append(data["examples"])
+
+    return "\n".join(content)
+
+
+def command_data(command, service, alias, scheme, ports):
+    description = None
+    arguments = []
+    arguments_string = ""
+    example_lines = []
+    flags = []
+    with open(os.path.join("subcommands", command)) as f:
+        for line in f.readlines():
+            line = line.strip()
+            line = line.replace("$PLUGIN_SERVICE", service)
+            line = line.replace("$PLUGIN_COMMAND_PREFIX", service)
+            line = line.replace("${PLUGIN_COMMAND_PREFIX}", service)
+            line = line.replace("${PLUGIN_DEFAULT_ALIAS}", alias)
+            line = line.replace("${PLUGIN_SCHEME}", scheme)
+            line = line.replace("${PLUGIN_DATASTORE_PORTS[0]}", ports[0])
+
+            if "declare desc" in line:
+                description = re.search('"(.+)"', line).group(1)
+            elif "$1" in line:
+                arguments_string = parse_args(line)
+            elif line.startswith("#A "):
+                argument = line.replace("#A ", "")
+                parts = [a.strip() for a in argument.split(",", 1)]
+                arguments.append(f"`{parts[0]}`: {parts[1]}")
+            elif line.startswith("#F "):
+                flag = line.replace("#F ", "")
+                parts = [a.strip() for a in flag.split(",", 1)]
+                flags.append(f"`{parts[0]}`: {parts[1]}")
+            elif line.startswith("#E "):
+                example_lines.append(line.replace("#E ", ""))
+
+    examples = []
+    sentence_lines = []
+    command_lines = []
+    codeblock_lines = []
+    blockquote_lines = []
+    for line in example_lines:
+        if line.startswith("export") or line.startswith("dokku"):
+            if len(blockquote_lines) > 0:
+                examples.append("\n" + process_blockquote(blockquote_lines))
+                blockquote_lines = []
+            if len(codeblock_lines) > 0:
+                examples.append("\n" + process_codeblock(codeblock_lines))
+                codeblock_lines = []
+            if len(sentence_lines) > 0:
+                examples.append("\n" + process_sentence(sentence_lines))
+                sentence_lines = []
+
+            command_lines.append(line)
+        elif line.startswith("    "):
+            if len(blockquote_lines) > 0:
+                examples.append("\n" + process_blockquote(blockquote_lines))
+                blockquote_lines = []
+            if len(command_lines) > 0:
+                examples.append("\n" + process_command(command_lines))
+                command_lines = []
+            if len(sentence_lines) > 0:
+                examples.append("\n" + process_sentence(sentence_lines))
+                sentence_lines = []
+
+            codeblock_lines.append(line.strip())
+        elif line.startswith(">"):
+            if len(codeblock_lines) > 0:
+                examples.append("\n" + process_codeblock(codeblock_lines))
+                codeblock_lines = []
+            if len(command_lines) > 0:
+                examples.append("\n" + process_command(command_lines))
+                command_lines = []
+            if len(sentence_lines) > 0:
+                examples.append("\n" + process_sentence(sentence_lines))
+                sentence_lines = []
+
+            blockquote_lines.append(line)
+        else:
+            if len(blockquote_lines) > 0:
+                examples.append("\n" + process_blockquote(blockquote_lines))
+                blockquote_lines = []
+            if len(codeblock_lines) > 0:
+                examples.append("\n" + process_codeblock(codeblock_lines))
+                codeblock_lines = []
+            if len(command_lines) > 0:
+                examples.append("\n" + process_command(command_lines))
+                command_lines = []
+
+            sentence_lines.append(line)
+
+    if len(blockquote_lines) > 0:
+        examples.append("\n" + process_blockquote(blockquote_lines))
+        blockquote_lines = []
+    if len(codeblock_lines) > 0:
+        examples.append("\n" + process_codeblock(codeblock_lines))
+        codeblock_lines = []
+    if len(command_lines) > 0:
+        examples.append("\n" + process_command(command_lines))
+        command_lines = []
+    if len(sentence_lines) > 0:
+        examples.append("\n" + process_sentence(sentence_lines))
+        sentence_lines = []
+
+    return {
+        "description": description,
+        "arguments_string": arguments_string,
+        "arguments": arguments,
+        "flags": flags,
+        "examples": "\n".join(examples).strip(),
+    }
+
+
+def process_sentence(sentence_lines):
+    sentence_lines = " ".join(sentence_lines)
+    sentences = ". ".join(i.strip().capitalize() for i in sentence_lines.split("."))
+    if not sentences.endswith(".") and not sentences.endswith(":"):
+        sentences += ":"
+    return sentences
+
+
+def process_blockquote(blockquote_lines):
+    return "\n".join(blockquote_lines)
+
+
+def process_command(command_lines):
+    command_lines = "\n".join(command_lines)
+    return f"```shell\n{command_lines}\n```"
+
+
+def process_codeblock(codeblock_lines):
+    codeblock_lines = "\n".join(codeblock_lines)
+    return f"```\n{codeblock_lines}\n```"
+
+
+def compile(service, version, alias, scheme, ports, dokku_version):
+    return "\n\n".join([
+        header(service),
+        description(service, version),
+        requirements(dokku_version),
+        installation(service, dokku_version),
+        commands(service, alias, scheme, ports),
+        usage(service, alias, scheme, ports),
+    ])
+
+
+def main():
+    service = None
+    version = None
+    alias = None
+    with open("config") as f:
+        for line in f.readlines():
+            if "IMAGE_VERSION=${" in line:
+                version = re.search('"(.+)"', line).group(1)
+            if "PLUGIN_COMMAND_PREFIX=" in line:
+                service = re.search('"(.+)"', line).group(1)
+            if "PLUGIN_DEFAULT_ALIAS=" in line:
+                alias = re.search('"(.+)"', line).group(1)
+            if "PLUGIN_SCHEME=" in line:
+                scheme = re.search('"(.+)"', line).group(1)
+            if "PLUGIN_DATASTORE_PORTS=" in line:
+                ports = re.search('\((.+)\)', line).group(1).split(" ")
+
+    text = compile(service, version, alias, scheme, ports, "0.12.x+")
+
+    base_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    readme_file = os.path.join(base_path, 'README.md')
+    with open(readme_file, 'w') as f:
+        f.write(text)
+
+
+if __name__ == "__main__":
+    main()
