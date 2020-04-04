@@ -1,6 +1,7 @@
 HARDWARE = $(shell uname -m)
 SYSTEM_NAME  = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 SHFMT_VERSION = 3.0.2
+XUNIT_TO_GITHUB_VERSION = 0.3.0
 
 
 bats:
@@ -65,7 +66,7 @@ unit-tests:
 
 tmp/xunit-to-github:
 	mkdir -p tmp
-	curl -o tmp/xunit-to-github.tgz -sL https://github.com/josegonzalez/go-xunit-to-github/releases/download/v0.3.0/xunit-to-github_0.3.0_$(SYSTEM_NAME)_$(HARDWARE).tgz
+	curl -o tmp/xunit-to-github.tgz -sL https://github.com/josegonzalez/go-xunit-to-github/releases/download/v$(XUNIT_TO_GITHUB_VERSION)/xunit-to-github_$(XUNIT_TO_GITHUB_VERSION)_$(SYSTEM_NAME)_$(HARDWARE).tgz
 	tar xf tmp/xunit-to-github.tgz -C tmp
 	chmod +x tmp/xunit-to-github
 
