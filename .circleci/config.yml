@@ -1,0 +1,64 @@
+version: 2
+jobs:
+  build-master:
+    environment:
+      DOKKU_VERSION: master
+    machine:
+      docker_layer_caching: false
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run: pyenv global 3.7.0
+      - run: make setup
+      - run: sudo sysctl -w vm.max_map_count=262144
+      - run:
+          command: |
+            make generate;
+            if [[ $(git diff) ]]; then
+              echo "Please run `make generate`";
+              git status --short;
+              git diff;
+              exit 1;
+            fi
+      - run: make test
+      - store_artifacts:
+          path: build
+          destination: build
+      - store_artifacts:
+          path: tmp/test-results
+          destination: test-results
+
+  build-version:
+    environment:
+      DOKKU_VERSION: v0.19.0
+    machine:
+      docker_layer_caching: false
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run: pyenv global 3.7.0
+      - run: make setup
+      - run: sudo sysctl -w vm.max_map_count=262144
+      - run:
+          command: |
+            make generate;
+            if [[ $(git diff) ]]; then
+              echo "Please run `make generate`";
+              git status --short;
+              git diff;
+              exit 1;
+            fi
+      - run: make test
+      - store_artifacts:
+          path: build
+          destination: build
+      - store_artifacts:
+          path: tmp/test-results
+          destination: test-results
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - "build-master"
+      - "build-version"
