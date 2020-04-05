@@ -27,6 +27,8 @@ jobs:
       - store_artifacts:
           path: tmp/test-results
           destination: test-results
+      - store_test_results:
+          path: test-results
 
   build-version:
     environment:
@@ -55,6 +57,8 @@ jobs:
       - store_artifacts:
           path: tmp/test-results
           destination: test-results
+      - store_test_results:
+          path: test-results
 
 workflows:
   version: 2
