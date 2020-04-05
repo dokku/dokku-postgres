@@ -5,6 +5,9 @@ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 762E3157
 echo "deb http://nginx.org/packages/ubuntu $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list
 curl -fsSL https://nginx.org/keys/nginx_signing.key | sudo apt-key add -
 
+sudo mkdir -p /etc/nginx
+sudo curl https://raw.githubusercontent.com/dokku/dokku/master/tests/dhparam.pem -o /etc/nginx/dhparam.pem
+
 echo "dokku dokku/skip_key_file boolean true" | sudo debconf-set-selections
 wget https://raw.githubusercontent.com/dokku/dokku/master/bootstrap.sh
 if [[ "$DOKKU_VERSION" == "master" ]]; then
