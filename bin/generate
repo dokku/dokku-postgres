@@ -19,8 +19,8 @@ def compile(service, version, alias, scheme, ports, unimplemented, dokku_version
 def header(service):
     return " ".join([
         f"# dokku {service}",
-        f"[![Build Status](https://img.shields.io/travis/dokku/dokku-{service}.svg?branch=master \"Build Status\")](https://travis-ci.org/dokku/dokku-{service})",
-        f"[![IRC Network](https://img.shields.io/badge/irc-freenode-blue.svg \"IRC Freenode\")](https://webchat.freenode.net/?channels=dokku)",
+        f"[![Build Status](https://img.shields.io/circleci/project/github/dokku/dokku-{service}.svg?branch=master&style=flat-square \"Build Status\")](https://circleci.com/gh/dokku/dokku-{service}/tree/master)",
+        f"[![IRC Network](https://img.shields.io/badge/irc-freenode-blue.svg?style=flat-square \"IRC Freenode\")](https://webchat.freenode.net/?channels=dokku)",
     ])
 
 
