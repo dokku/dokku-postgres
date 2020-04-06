@@ -1,24 +1,25 @@
-version: 2
-jobs:
-  build-master:
-    environment:
-      DOKKU_VERSION: master
-    machine:
-      docker_layer_caching: false
-      image: ubuntu-1604:201903-01
+version: 2.1
+
+commands:
+  build:
+    description: "run the build"
+    parameters:
+      python_version:
+        type: string
+        default: "3.7.0"
     steps:
       - checkout
-      - run: pyenv global 3.7.0
+      - run: pyenv global << parameters.python_version >>
       - run: make setup
       - run: sudo sysctl -w vm.max_map_count=262144
       - run:
           command: |
-            make generate;
-            if [[ $(git diff) ]]; then
-              echo "Please run `make generate`";
-              git status --short;
-              git diff;
-              exit 1;
+            make generate
+            if ! git diff --quiet README.md; then
+              echo "Please run `make generate`"
+              git status --short
+              git --no-pager diff README.md
+              exit 1
             fi
       - run: make test
       - store_artifacts:
@@ -30,35 +31,26 @@ jobs:
       - store_test_results:
           path: tmp/test-results
 
-  build-version:
-    environment:
-      DOKKU_VERSION: v0.19.0
+executors:
+  machine:
     machine:
       docker_layer_caching: false
       image: ubuntu-1604:201903-01
+
+jobs:
+  build-master:
+    environment:
+      DOKKU_VERSION: master
+    executor: machine
     steps:
-      - checkout
-      - run: pyenv global 3.7.0
-      - run: make setup
-      - run: sudo sysctl -w vm.max_map_count=262144
-      - run:
-          command: |
-            make generate;
-            if [[ $(git diff) ]]; then
-              echo "Please run `make generate`";
-              git status --short;
-              git diff;
-              exit 1;
-            fi
-      - run: make test
-      - store_artifacts:
-          path: build
-          destination: build
-      - store_artifacts:
-          path: tmp/test-results
-          destination: test-results
-      - store_test_results:
-          path: tmp/test-results
+      - build
+
+  build-version:
+    environment:
+      DOKKU_VERSION: v0.19.0
+    executor: machine
+    steps:
+      - build
 
 workflows:
   version: 2
