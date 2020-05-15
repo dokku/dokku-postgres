@@ -226,12 +226,12 @@ def command_help(command, service, alias, scheme, ports, unimplemented):
     # for argument in data["arguments"]:
     #     content.append(f"- {argument}")
 
-    # if len(data["flags"]) > 0:
-    #     content.append("")
-    #     content.append("flags:")
-    #     content.append("")
-    # for flag in data["flags"]:
-    #     content.append(f"- {flag}")
+    if len(data["flags"]) > 0:
+        content.append("")
+        content.append("flags:")
+        content.append("")
+    for flag in data["flags"]:
+        content.append(f"- {flag}")
 
     if len(data["examples"]) > 0:
         content.append("")
