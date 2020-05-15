@@ -5,7 +5,7 @@ import os
 import re
 
 
-def compile(service, version, alias, scheme, ports, unimplemented, dokku_version):
+def compile(service, version, variable, alias, image, scheme, ports, unimplemented, dokku_version):
     return (
         "\n\n".join(
             [
@@ -13,8 +13,8 @@ def compile(service, version, alias, scheme, ports, unimplemented, dokku_version
                 description(service, version),
                 requirements_section(dokku_version),
                 installation_section(service, dokku_version),
-                commands_section(service, alias, scheme, ports, unimplemented),
-                usage_section(service, alias, scheme, ports, unimplemented),
+                commands_section(service, variable, alias, image, scheme, ports, unimplemented),
+                usage_section(service, variable, alias, image, scheme, ports, unimplemented),
             ]
         )
         .replace("\n\n\n\n\n", "\n")
@@ -56,7 +56,7 @@ def installation_section(service, dokku_version):
     )
 
 
-def commands_section(service, alias, scheme, ports, unimplemented):
+def commands_section(service, variable, alias, image, scheme, ports, unimplemented):
     content = [
         "## Commands",
         "",
@@ -71,7 +71,7 @@ def commands_section(service, alias, scheme, ports, unimplemented):
     for filename in subcommands:
         if filename in unimplemented:
             continue
-        data = command_data(filename, service, alias, scheme, ports)
+        data = command_data(filename, service, variable, alias, image, scheme, ports)
         description = data["description"]
         arguments = data["arguments_string"]
 
@@ -89,31 +89,31 @@ def commands_section(service, alias, scheme, ports, unimplemented):
     return "\n".join(content)
 
 
-def usage_section(service, alias, scheme, ports, unimplemented):
+def usage_section(service, variable, alias, image, scheme, ports, unimplemented):
     return "\n\n".join(
         [
             "## Usage",
             f"Help for any commands can be displayed by specifying the command as an argument to {service}:help. Please consult the `{service}:help` command for any undocumented commands.",
-            usage_intro(service, alias, scheme, ports, unimplemented),
-            usage_lifecycle(service, alias, scheme, ports, unimplemented),
-            usage_automation(service, alias, scheme, ports, unimplemented),
-            usage_data_management(service, alias, scheme, ports, unimplemented),
-            usage_backup(service, alias, scheme, ports, unimplemented),
-            usage_docker_pull(service, alias, scheme, ports, unimplemented),
+            usage_intro(service, variable, alias, image, scheme, ports, unimplemented),
+            usage_lifecycle(service, variable, alias, image, scheme, ports, unimplemented),
+            usage_automation(service, variable, alias, image, scheme, ports, unimplemented),
+            usage_data_management(service, variable, alias, image, scheme, ports, unimplemented),
+            usage_backup(service, variable, alias, image, scheme, ports, unimplemented),
+            usage_docker_pull(service, variable, alias, image, scheme, ports, unimplemented),
         ]
     )
 
 
-def usage_intro(service, alias, scheme, ports, unimplemented):
+def usage_intro(service, variable, alias, image, scheme, ports, unimplemented):
     commands = ["create", "info", "list", "logs", "link", "unlink"]
     content = ["### Basic Usage"]
 
     return fetch_commands_content(
-        service, alias, scheme, ports, unimplemented, commands, content
+        service, variable, alias, image, scheme, ports, unimplemented, commands, content
     )
 
 
-def usage_lifecycle(service, alias, scheme, ports, unimplemented):
+def usage_lifecycle(service, variable, alias, image, scheme, ports, unimplemented):
     commands = [
         "connect",
         "enter",
@@ -133,11 +133,11 @@ def usage_lifecycle(service, alias, scheme, ports, unimplemented):
     ]
 
     return fetch_commands_content(
-        service, alias, scheme, ports, unimplemented, commands, content
+        service, variable, alias, image, scheme, ports, unimplemented, commands, content
     )
 
 
-def usage_automation(service, alias, scheme, ports, unimplemented):
+def usage_automation(service, variable, alias, image, scheme, ports, unimplemented):
     commands = ["app-links", "clone", "exists", "linked", "links"]
     content = [
         "### Service Automation",
@@ -147,11 +147,11 @@ def usage_automation(service, alias, scheme, ports, unimplemented):
     ]
 
     return fetch_commands_content(
-        service, alias, scheme, ports, unimplemented, commands, content
+        service, variable, alias, image, scheme, ports, unimplemented, commands, content
     )
 
 
-def usage_data_management(service, alias, scheme, ports, unimplemented):
+def usage_data_management(service, variable, alias, image, scheme, ports, unimplemented):
     commands = ["import", "export"]
     content = [
         "### Data Management",
@@ -161,11 +161,11 @@ def usage_data_management(service, alias, scheme, ports, unimplemented):
     ]
 
     return fetch_commands_content(
-        service, alias, scheme, ports, unimplemented, commands, content
+        service, variable, alias, image, scheme, ports, unimplemented, commands, content
     )
 
 
-def usage_backup(service, alias, scheme, ports, unimplemented):
+def usage_backup(service, variable, alias, image, scheme, ports, unimplemented):
     commands = [
         "backup-auth",
         "backup-deauth",
@@ -188,11 +188,11 @@ def usage_backup(service, alias, scheme, ports, unimplemented):
     ]
 
     return fetch_commands_content(
-        service, alias, scheme, ports, unimplemented, commands, content
+        service, variable, alias, image, scheme, ports, unimplemented, commands, content
     )
 
 
-def usage_docker_pull(service, alias, scheme, ports, unimplemented):
+def usage_docker_pull(service, variable, alias, image, scheme, ports, unimplemented):
     service_prefix = service.upper()
     return "\n".join(
         [
@@ -206,11 +206,11 @@ def usage_docker_pull(service, alias, scheme, ports, unimplemented):
 
 
 def fetch_commands_content(
-    service, alias, scheme, ports, unimplemented, commands, content
+    service, variable, alias, image, scheme, ports, unimplemented, commands, content
 ):
     i = 0
     for command in commands:
-        output = command_help(command, service, alias, scheme, ports, unimplemented)
+        output = command_help(command, service, variable, alias, image, scheme, ports, unimplemented)
         if output == "":
             continue
         content.append(output)
@@ -248,11 +248,11 @@ def parse_args(line):
     return " ".join(arguments)
 
 
-def command_help(command, service, alias, scheme, ports, unimplemented):
+def command_help(command, service, variable, alias, image, scheme, ports, unimplemented):
     if command in unimplemented:
         return ""
 
-    data = command_data(command, service, alias, scheme, ports)
+    data = command_data(command, service, variable, alias, image, scheme, ports)
     content = [
         f"### {data['description']}",
         "",
@@ -283,7 +283,7 @@ def command_help(command, service, alias, scheme, ports, unimplemented):
     return "\n" + "\n".join(content)
 
 
-def command_data(command, service, alias, scheme, ports):
+def command_data(command, service, variable, alias, image, scheme, ports):
     description = None
     arguments = []
     arguments_string = ""
@@ -295,9 +295,12 @@ def command_data(command, service, alias, scheme, ports):
             line = line.replace("$PLUGIN_SERVICE", service)
             line = line.replace("$PLUGIN_COMMAND_PREFIX", service)
             line = line.replace("${PLUGIN_COMMAND_PREFIX}", service)
+            line = line.replace("${PLUGIN_VARIABLE}", variable)
             line = line.replace("${PLUGIN_DEFAULT_ALIAS}", alias)
+            line = line.replace("${PLUGIN_IMAGE}", image)
             line = line.replace("${PLUGIN_SCHEME}", scheme)
             line = line.replace("${PLUGIN_DATASTORE_PORTS[0]}", ports[0])
+            line = line.replace("${PLUGIN_DATASTORE_PORTS[@]}", " ".join(ports))
 
             if "declare desc" in line:
                 description = re.search('"(.+)"', line).group(1)
@@ -394,11 +397,34 @@ def command_data(command, service, alias, scheme, ports):
 def process_sentence(sentence_lines):
     sentence_lines = " ".join(sentence_lines)
     sentences = ". ".join(
-        i.strip().capitalize() for i in sentence_lines.split(".")
+        upperfirst(i.strip()) for i in sentence_lines.split(".")
     ).strip()
     if not sentences.endswith(".") and not sentences.endswith(":"):
         sentences += ":"
-    return sentences
+
+    text = []
+    for sentence in sentences.split("."):
+        parts = []
+        for word in sentence.strip().split(" "):
+            if word.isupper() and len(word) > 1:
+                for ending in [':', '.']:
+                    if word.endswith(ending):
+                        word = '`{0}`{1}'.format(word[:-1], ending)
+                else:
+                    word = '`{0}`'.format(word)
+            parts.append(word)
+        text.append(" ".join(parts))
+
+    text = ". ".join(text)
+
+    # some cleanup
+    text = text.replace("(0. 0. 0. 0)", "(`0.0.0.0`)")
+
+    return text
+
+
+def upperfirst(x):
+    return x[:1].upper() + x[1:]
 
 
 def process_blockquote(blockquote_lines):
@@ -418,16 +444,22 @@ def process_codeblock(codeblock_lines):
 def main():
     service = None
     version = None
+    variable = None
+    image = None
     alias = None
     unimplemented = []
     with open("config") as f:
         for line in f.readlines():
             if "IMAGE_VERSION=${" in line:
                 version = re.search('"(.+)"', line).group(1)
+            if "_IMAGE=${" in line:
+                image = re.search('"(.+)"', line).group(1)
             if "PLUGIN_COMMAND_PREFIX=" in line:
                 service = re.search('"(.+)"', line).group(1)
             if "PLUGIN_DEFAULT_ALIAS=" in line:
                 alias = re.search('"(.+)"', line).group(1)
+            if "PLUGIN_VARIABLE=" in line:
+                variable = re.search('"(.+)"', line).group(1)
             if "PLUGIN_SCHEME=" in line:
                 scheme = re.search('"(.+)"', line).group(1)
             if "PLUGIN_DATASTORE_PORTS=" in line:
@@ -437,7 +469,7 @@ def main():
                 if match is not None:
                     unimplemented = [s.strip('"') for s in match.group(1).split(" ")]
 
-    text = compile(service, version, alias, scheme, ports, unimplemented, "0.12.x+")
+    text = compile(service, version, variable, alias, image, scheme, ports, unimplemented, "0.12.x+")
 
     base_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     readme_file = os.path.join(base_path, "README.md")

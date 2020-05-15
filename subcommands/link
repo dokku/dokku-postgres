@@ -30,10 +30,10 @@ service-link-cmd() {
   #E use the 'expose' subcommand. another service can be linked to your app:
   #E dokku $PLUGIN_COMMAND_PREFIX:link other_service playground
   #E it is possible to change the protocol for ${PLUGIN_DEFAULT_ALIAS}_URL by setting the
-  #E environment variable ${PLUGIN_DEFAULT_ALIAS}_DATABASE_SCHEME on the app. doing so will
+  #E environment variable ${PLUGIN_VARIABLE}_DATABASE_SCHEME on the app. doing so will
   #E after linking will cause the plugin to think the service is not
   #E linked, and we advise you to unlink before proceeding.
-  #E dokku config:set playground ${PLUGIN_DEFAULT_ALIAS}_DATABASE_SCHEME=${PLUGIN_SCHEME}2
+  #E dokku config:set playground ${PLUGIN_VARIABLE}_DATABASE_SCHEME=${PLUGIN_SCHEME}2
   #E dokku $PLUGIN_COMMAND_PREFIX:link lolipop playground
   #E this will cause ${PLUGIN_DEFAULT_ALIAS}_URL to be set as:
   #E
