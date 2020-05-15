@@ -76,7 +76,7 @@ fn-help-contents() {
 
 fn-help-contents-subcommand() {
   declare SUBCOMMAND="$1" FULL_OUTPUT="$2"
-  local TMPDIR=$(mktemp -d)
+  local TMPDIR=$(mktemp -d --tmpdir)
   local UNCLEAN_FILE="${TMPDIR}/cmd-unclean" CLEAN_FILE="${TMPDIR}/cmd-clean"
   local BOLD CMD_OUTPUT CYAN EXAMPLE LIGHT_GRAY NORMAL
   trap 'rm -rf "$TMPDIR" > /dev/null' RETURN INT TERM EXIT

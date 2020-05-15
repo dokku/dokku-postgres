@@ -188,7 +188,7 @@ service_backup() {
     dokku_log_fail "Provide AWS credentials or use the --use-iam flag"
   fi
 
-  TMPDIR=$(mktemp -d)
+  TMPDIR=$(mktemp -d --tmpdir)
   trap 'rm -rf "$TMPDIR" > /dev/null' RETURN INT TERM EXIT
 
   docker inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"
