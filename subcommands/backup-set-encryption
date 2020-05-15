@@ -6,7 +6,7 @@ source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-backup-set-encryption-cmd() {
-  #E set a GPG passphrase for backups
+  #E set the GPG-compatible passphrase for encrypting backups for backups
   #E dokku $PLUGIN_COMMAND_PREFIX:backup-set-encryption lolipop
   #A service, service to run command against
   #A passphrase, a GPG-compatible passphrase

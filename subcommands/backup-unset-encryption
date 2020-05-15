@@ -6,7 +6,7 @@ source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-backup-unset-encryption-cmd() {
-  #E unset a GPG encryption key for backups
+  #E unset the GPG encryption passphrase for backups
   #E dokku $PLUGIN_COMMAND_PREFIX:backup-unset-encryption lolipop
   #A service, service to run command against
   declare desc="unsets encryption for future backups of the $PLUGIN_SERVICE service"
