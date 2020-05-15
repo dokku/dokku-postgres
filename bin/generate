@@ -6,22 +6,31 @@ import re
 
 
 def compile(service, version, alias, scheme, ports, unimplemented, dokku_version):
-    return "\n\n".join([
-        header(service),
-        description(service, version),
-        requirements_section(dokku_version),
-        installation_section(service, dokku_version),
-        commands_section(service, alias, scheme, ports, unimplemented),
-        usage_section(service, alias, scheme, ports, unimplemented),
-    ]).replace("\n\n\n\n\n", "\n").replace("\n\n\n\n", "\n").replace("\n\n\n", "\n\n")
+    return (
+        "\n\n".join(
+            [
+                header(service),
+                description(service, version),
+                requirements_section(dokku_version),
+                installation_section(service, dokku_version),
+                commands_section(service, alias, scheme, ports, unimplemented),
+                usage_section(service, alias, scheme, ports, unimplemented),
+            ]
+        )
+        .replace("\n\n\n\n\n", "\n")
+        .replace("\n\n\n\n", "\n")
+        .replace("\n\n\n", "\n\n")
+    )
 
 
 def header(service):
-    return " ".join([
-        f"# dokku {service}",
-        f"[![Build Status](https://img.shields.io/circleci/project/github/dokku/dokku-{service}.svg?branch=master&style=flat-square \"Build Status\")](https://circleci.com/gh/dokku/dokku-{service}/tree/master)",
-        f"[![IRC Network](https://img.shields.io/badge/irc-freenode-blue.svg?style=flat-square \"IRC Freenode\")](https://webchat.freenode.net/?channels=dokku)",
-    ])
+    return " ".join(
+        [
+            f"# dokku {service}",
+            f'[![Build Status](https://img.shields.io/circleci/project/github/dokku/dokku-{service}.svg?branch=master&style=flat-square "Build Status")](https://circleci.com/gh/dokku/dokku-{service}/tree/master)',
+            f'[![IRC Network](https://img.shields.io/badge/irc-freenode-blue.svg?style=flat-square "IRC Freenode")](https://webchat.freenode.net/?channels=dokku)',
+        ]
+    )
 
 
 def description(service, version):
@@ -29,23 +38,22 @@ def description(service, version):
 
 
 def requirements_section(dokku_version):
-    return "\n".join([
-        "## Requirements",
-        "",
-        f"- dokku {dokku_version}",
-        "- docker 1.8.x",
-    ])
+    return "\n".join(
+        ["## Requirements", "", f"- dokku {dokku_version}", "- docker 1.8.x",]
+    )
 
 
 def installation_section(service, dokku_version):
-    return "\n".join([
-        "## Installation",
-        "",
-        "```shell",
-        f"# on {dokku_version}",
-        f"sudo dokku plugin:install https://github.com/dokku/dokku-{service}.git {service}",
-        "```",
-    ])
+    return "\n".join(
+        [
+            "## Installation",
+            "",
+            "```shell",
+            f"# on {dokku_version}",
+            f"sudo dokku plugin:install https://github.com/dokku/dokku-{service}.git {service}",
+            "```",
+        ]
+    )
 
 
 def commands_section(service, alias, scheme, ports, unimplemented):
@@ -82,27 +90,41 @@ def commands_section(service, alias, scheme, ports, unimplemented):
 
 
 def usage_section(service, alias, scheme, ports, unimplemented):
-    return "\n\n".join([
-        "## Usage",
-        f"Help for any commands can be displayed by specifying the command as an argument to {service}:help. Please consult the `{service}:help` command for any undocumented commands.",
-        usage_intro(service, alias, scheme, ports, unimplemented),
-        usage_lifecycle(service, alias, scheme, ports, unimplemented),
-        usage_automation(service, alias, scheme, ports, unimplemented),
-        usage_data_management(service, alias, scheme, ports, unimplemented),
-        usage_backup(service, alias, scheme, ports, unimplemented),
-        usage_docker_pull(service, alias, scheme, ports, unimplemented),
-    ])
+    return "\n\n".join(
+        [
+            "## Usage",
+            f"Help for any commands can be displayed by specifying the command as an argument to {service}:help. Please consult the `{service}:help` command for any undocumented commands.",
+            usage_intro(service, alias, scheme, ports, unimplemented),
+            usage_lifecycle(service, alias, scheme, ports, unimplemented),
+            usage_automation(service, alias, scheme, ports, unimplemented),
+            usage_data_management(service, alias, scheme, ports, unimplemented),
+            usage_backup(service, alias, scheme, ports, unimplemented),
+            usage_docker_pull(service, alias, scheme, ports, unimplemented),
+        ]
+    )
 
 
 def usage_intro(service, alias, scheme, ports, unimplemented):
     commands = ["create", "info", "list", "logs", "link", "unlink"]
     content = ["### Basic Usage"]
 
-    return fetch_commands_content(service, alias, scheme, ports, unimplemented, commands, content)
+    return fetch_commands_content(
+        service, alias, scheme, ports, unimplemented, commands, content
+    )
 
 
 def usage_lifecycle(service, alias, scheme, ports, unimplemented):
-    commands = ["connect", "enter", "expose", "unexpose", "promote", "start", "stop", "restart", "upgrade"]
+    commands = [
+        "connect",
+        "enter",
+        "expose",
+        "unexpose",
+        "promote",
+        "start",
+        "stop",
+        "restart",
+        "upgrade",
+    ]
     content = [
         "### Service Lifecycle",
         "",
@@ -110,7 +132,9 @@ def usage_lifecycle(service, alias, scheme, ports, unimplemented):
         "",
     ]
 
-    return fetch_commands_content(service, alias, scheme, ports, unimplemented, commands, content)
+    return fetch_commands_content(
+        service, alias, scheme, ports, unimplemented, commands, content
+    )
 
 
 def usage_automation(service, alias, scheme, ports, unimplemented):
@@ -122,7 +146,9 @@ def usage_automation(service, alias, scheme, ports, unimplemented):
         "",
     ]
 
-    return fetch_commands_content(service, alias, scheme, ports, unimplemented, commands, content)
+    return fetch_commands_content(
+        service, alias, scheme, ports, unimplemented, commands, content
+    )
 
 
 def usage_data_management(service, alias, scheme, ports, unimplemented):
@@ -134,11 +160,22 @@ def usage_data_management(service, alias, scheme, ports, unimplemented):
         "",
     ]
 
-    return fetch_commands_content(service, alias, scheme, ports, unimplemented, commands, content)
+    return fetch_commands_content(
+        service, alias, scheme, ports, unimplemented, commands, content
+    )
 
 
 def usage_backup(service, alias, scheme, ports, unimplemented):
-    commands = ["backup-auth", "backup-deauth", "backup", "backup-set-encryption", "backup-unset-encryption", "backup-schedule", "backup-schedule-cat", "backup-unschedule",]
+    commands = [
+        "backup-auth",
+        "backup-deauth",
+        "backup",
+        "backup-set-encryption",
+        "backup-unset-encryption",
+        "backup-schedule",
+        "backup-schedule-cat",
+        "backup-unschedule",
+    ]
     content = [
         "### Backups",
         "",
@@ -150,21 +187,27 @@ def usage_backup(service, alias, scheme, ports, unimplemented):
         "",
     ]
 
-    return fetch_commands_content(service, alias, scheme, ports, unimplemented, commands, content)
+    return fetch_commands_content(
+        service, alias, scheme, ports, unimplemented, commands, content
+    )
 
 
 def usage_docker_pull(service, alias, scheme, ports, unimplemented):
     service_prefix = service.upper()
-    return "\n".join([
-        "### Disabling `docker pull` calls",
-        "",
-        f"If you wish to disable the `docker pull` calls that the plugin triggers, you may set the `{service_prefix}_DISABLE_PULL` environment variable to `true`. Once disabled, you will need to pull the service image you wish to deploy as shown in the `stderr` output.",
-        "",
-        "Please ensure the proper images are in place when `docker pull` is disabled.",
-    ])
+    return "\n".join(
+        [
+            "### Disabling `docker pull` calls",
+            "",
+            f"If you wish to disable the `docker pull` calls that the plugin triggers, you may set the `{service_prefix}_DISABLE_PULL` environment variable to `true`. Once disabled, you will need to pull the service image you wish to deploy as shown in the `stderr` output.",
+            "",
+            "Please ensure the proper images are in place when `docker pull` is disabled.",
+        ]
+    )
 
 
-def fetch_commands_content(service, alias, scheme, ports, unimplemented, commands, content):
+def fetch_commands_content(
+    service, alias, scheme, ports, unimplemented, commands, content
+):
     i = 0
     for command in commands:
         output = command_help(command, service, alias, scheme, ports, unimplemented)
@@ -350,7 +393,9 @@ def command_data(command, service, alias, scheme, ports):
 
 def process_sentence(sentence_lines):
     sentence_lines = " ".join(sentence_lines)
-    sentences = ". ".join(i.strip().capitalize() for i in sentence_lines.split(".")).strip()
+    sentences = ". ".join(
+        i.strip().capitalize() for i in sentence_lines.split(".")
+    ).strip()
     if not sentences.endswith(".") and not sentences.endswith(":"):
         sentences += ":"
     return sentences
@@ -386,17 +431,17 @@ def main():
             if "PLUGIN_SCHEME=" in line:
                 scheme = re.search('"(.+)"', line).group(1)
             if "PLUGIN_DATASTORE_PORTS=" in line:
-                ports = re.search('\((.+)\)', line).group(1).split(" ")
+                ports = re.search("\((.+)\)", line).group(1).split(" ")
             if "PLUGIN_UNIMPLEMENTED_SUBCOMMANDS=" in line:
-                match = re.search('\((.+)\)', line)
+                match = re.search("\((.+)\)", line)
                 if match is not None:
                     unimplemented = [s.strip('"') for s in match.group(1).split(" ")]
 
     text = compile(service, version, alias, scheme, ports, unimplemented, "0.12.x+")
 
     base_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    readme_file = os.path.join(base_path, 'README.md')
-    with open(readme_file, 'w') as f:
+    readme_file = os.path.join(base_path, "README.md")
+    with open(readme_file, "w") as f:
         f.write(text)
 
 
