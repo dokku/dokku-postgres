@@ -21,6 +21,7 @@ export PLUGIN_SCHEME="postgres"
 export PLUGIN_SERVICE="Postgres"
 export PLUGIN_VARIABLE="POSTGRES"
 export PLUGIN_BASE_PATH="$PLUGIN_PATH"
+export PLUGIN_CONFIG_SUFFIX="data"
 if [[ -n $DOKKU_API_VERSION ]]; then
   export PLUGIN_BASE_PATH="$PLUGIN_ENABLED_PATH"
 fi
