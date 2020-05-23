@@ -80,8 +80,8 @@ dokku postgres:create lolipop
 You can also specify the image and image version to use for the service. It *must* be compatible with the postgres image. 
 
 ```shell
-export DATABASE_IMAGE="postgres"
-export DATABASE_IMAGE_VERSION="${PLUGIN_IMAGE_VERSION}"
+export POSTGRES_IMAGE="postgres"
+export POSTGRES_IMAGE_VERSION="${PLUGIN_IMAGE_VERSION}"
 dokku postgres:create lolipop
 ```
 
