@@ -189,7 +189,7 @@ service_backup() {
     dokku_log_fail "Provide AWS credentials or use the --use-iam flag"
   fi
 
-  if [[ ! -f "S3_STORAGE_CLASS_FILE" ]]; then
+  if [[ -f "S3_STORAGE_CLASS_FILE" ]]; then
     BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e S3_STORAGE_CLASS=$(cat "$S3_STORAGE_CLASS_FILE")"
   fi
 
