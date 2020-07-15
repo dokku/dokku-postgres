@@ -21,7 +21,7 @@ postgres:app-links <app>                           # list all postgres service l
 postgres:backup <service> <bucket-name> [--use-iam] # creates a backup of the postgres service to an existing s3 bucket
 postgres:backup-auth <service> <aws-access-key-id> <aws-secret-access-key> <aws-default-region> <aws-signature-version> <endpoint-url> # sets up authentication for backups on the postgres service
 postgres:backup-deauth <service>                   # removes backup authentication for the postgres service
-postgres:backup-s3class <service> <s> <-storage-class> # sets the S3 storage class to be used for backups on the postgres service
+postgres:backup-s3class <service> <storage-class>  # sets the S3 storage class to be used for backups on the postgres service
 postgres:backup-schedule <service> <schedule> <bucket-name> [--use-iam] # schedules a backup of the postgres service
 postgres:backup-schedule-cat <service>             # cat the contents of the configured backup cronfile for the service
 postgres:backup-set-encryption <service> <passphrase> # sets encryption for all future backups of postgres service
