@@ -20,6 +20,7 @@ service-backup-s3class-cmd() {
   [[ -z "$STORAGE_CLASS" ]] && dokku_log_fail "Please specify an aws S3 storage class"
   [[ ! "$S3_STORAGE_CLASS" =~ ^(STANDARD|REDUCED_REDUNDANCY|STANDARD_IA|ONEZONE_IA|INTELLIGENT_TIERING|GLACIER|DEEP_ARCHIVE)$ ]] && dokku_log_fail "$STORAGE_CLASS is not a valid S3 storage class. Read https://docs.aws.amazon.com/cli/latest/reference/s3/cp.html for more information."
   service_backup_s3class "$SERVICE" "$STORAGE_CLASS"
+  echo "Set the storage class to $STORAGE_CLASS"
 }
 
 service-backup-s3class-cmd "$@"
