@@ -25,6 +25,7 @@ plugin-install() {
   mkdir -p "$PLUGIN_DATA_ROOT" || echo "Failed to create $PLUGIN_SERVICE data directory"
   chown dokku:dokku "$PLUGIN_DATA_ROOT"
 
+  fn-plugin-property-setup "$PLUGIN_COMMAND_PREFIX"
   mkdir -p "$PLUGIN_CONFIG_ROOT" || echo "Failed to create $PLUGIN_SERVICE config directory"
   chown dokku:dokku "$PLUGIN_CONFIG_ROOT"
 

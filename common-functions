@@ -3,6 +3,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_AVAILABLE_PATH/config/functions"
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/property-functions"
 
 docker_ports_options() {
   declare desc="Exports a list of exposed ports"
@@ -176,7 +177,6 @@ service_backup() {
   local BACKUP_ENCRYPTION_CONFIG_ROOT="$PLUGIN_DATA_ROOT/$SERVICE/backup-encryption"
   local AWS_ACCESS_KEY_ID_FILE="$SERVICE_BACKUP_ROOT/AWS_ACCESS_KEY_ID"
   local AWS_SECRET_ACCESS_KEY_FILE="$SERVICE_BACKUP_ROOT/AWS_SECRET_ACCESS_KEY"
-  local S3_STORAGE_CLASS_FILE="$SERVICE_BACKUP_ROOT/S3_STORAGE_CLASS"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local ID="$(cat "$SERVICE_ROOT/ID")"
   local BACKUP_PARAMETERS=""
@@ -189,8 +189,8 @@ service_backup() {
     dokku_log_fail "Provide AWS credentials or use the --use-iam flag"
   fi
 
-  if [[ -f "$S3_STORAGE_CLASS_FILE" ]]; then
-    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e S3_STORAGE_CLASS=$(cat "$S3_STORAGE_CLASS_FILE")"
+  if fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "S3_STORAGE_CLASS"; then
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e S3_STORAGE_CLASS=$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "S3_STORAGE_CLASS")"
   fi
 
   TMPDIR=$(mktemp -d --tmpdir)
@@ -265,11 +265,7 @@ service_backup_deauth() {
 service_backup_s3class() {
   declare desc="Sets the S3 storage class to be used for the backup"
   declare SERVICE="$1" S3_STORAGE_CLASS="$2"
-  local SERVICE_BACKUP_ROOT="$PLUGIN_DATA_ROOT/$SERVICE/backup/"
-
-  mkdir -p "$SERVICE_BACKUP_ROOT"
-  echo "$S3_STORAGE_CLASS" >"$SERVICE_BACKUP_ROOT/S3_STORAGE_CLASS"
-
+  fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "S3_STORAGE_CLASS" "$S3_STORAGE_CLASS"
 }
 
 service_backup_schedule() {
