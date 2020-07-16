@@ -3,6 +3,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_AVAILABLE_PATH/config/functions"
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/property-functions"
 
 docker_ports_options() {
   declare desc="Exports a list of exposed ports"
@@ -23,11 +24,11 @@ get_database_name() {
   declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
 
-  if [[ ! -f "$SERVICE_ROOT/DATABASE_NAME" ]]; then
-    echo "$SERVICE" > "$SERVICE_ROOT/DATABASE_NAME"
+  if ! fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "DATABASE_NAME"; then
+    fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "DATABASE_NAME" "$SERVICE"
   fi
 
-  cat "$SERVICE_ROOT/DATABASE_NAME"
+  fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "DATABASE_NAME"
 }
 
 get_random_ports() {
@@ -174,16 +175,14 @@ service_backup() {
   declare SERVICE="$1" BUCKET_NAME="$2" USE_IAM_OPTIONAL_FLAG="$3"
   local SERVICE_BACKUP_ROOT="$PLUGIN_DATA_ROOT/$SERVICE/backup"
   local BACKUP_ENCRYPTION_CONFIG_ROOT="$PLUGIN_DATA_ROOT/$SERVICE/backup-encryption"
-  local AWS_ACCESS_KEY_ID_FILE="$SERVICE_BACKUP_ROOT/AWS_ACCESS_KEY_ID"
-  local AWS_SECRET_ACCESS_KEY_FILE="$SERVICE_BACKUP_ROOT/AWS_SECRET_ACCESS_KEY"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local ID="$(cat "$SERVICE_ROOT/ID")"
+  local ID=$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "ID")
   local BACKUP_PARAMETERS=""
 
   if [[ -z "$USE_IAM_OPTIONAL_FLAG" ]]; then
     [[ ! -f "$AWS_ACCESS_KEY_ID_FILE" ]] && dokku_log_fail "Missing AWS_ACCESS_KEY_ID file"
     [[ ! -f "$AWS_SECRET_ACCESS_KEY_FILE" ]] && dokku_log_fail "Missing AWS_SECRET_ACCESS_KEY file"
-    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_ACCESS_KEY_ID=$(cat "$AWS_ACCESS_KEY_ID_FILE") -e AWS_SECRET_ACCESS_KEY=$(cat "$AWS_SECRET_ACCESS_KEY_FILE")"
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_ACCESS_KEY_ID=$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_AWS_ACCESS_KEY_ID") -e AWS_SECRET_ACCESS_KEY=$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_AWS_SECRET_ACCESS_KEY_ID")"
   elif [[ "$USE_IAM_OPTIONAL_FLAG" != "--use-iam" ]] && [[ "$USE_IAM_OPTIONAL_FLAG" != "-u" ]]; then
     dokku_log_fail "Provide AWS credentials or use the --use-iam flag"
   fi
@@ -201,20 +200,20 @@ service_backup() {
   BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e BACKUP_NAME=${PLUGIN_COMMAND_PREFIX}-${SERVICE}"
   BACKUP_PARAMETERS="$BACKUP_PARAMETERS -v ${TMPDIR}:/backup"
 
-  if [[ -f "$SERVICE_BACKUP_ROOT/AWS_DEFAULT_REGION" ]]; then
-    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_DEFAULT_REGION=$(cat "$SERVICE_BACKUP_ROOT/AWS_DEFAULT_REGION")"
+  if fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_AWS_DEFAULT_REGION"; then
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_DEFAULT_REGION=$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_AWS_DEFAULT_REGION")"
   fi
 
-  if [[ -f "$SERVICE_BACKUP_ROOT/AWS_SIGNATURE_VERSION" ]]; then
-    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_SIGNATURE_VERSION=$(cat "$SERVICE_BACKUP_ROOT/AWS_SIGNATURE_VERSION")"
+  if fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_AWS_SIGNATURE_VERSION"; then
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_SIGNATURE_VERSION=$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_AWS_SIGNATURE_VERSION")"
   fi
 
-  if [[ -f "$SERVICE_BACKUP_ROOT/ENDPOINT_URL" ]]; then
-    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e ENDPOINT_URL=$(cat "$SERVICE_BACKUP_ROOT/ENDPOINT_URL")"
+  if fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_ENDPOINT_URL"; then
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e ENDPOINT_URL=$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_ENDPOINT_URL")"
   fi
 
-  if [[ -f "$BACKUP_ENCRYPTION_CONFIG_ROOT/ENCRYPTION_KEY" ]]; then
-    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e ENCRYPTION_KEY=$(cat "$BACKUP_ENCRYPTION_CONFIG_ROOT/ENCRYPTION_KEY")"
+    if fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_ENCRYPTION_KEY"; then
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e ENCRYPTION_KEY=$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_ENCRYPTION_KEY")"
   fi
 
   # shellcheck disable=SC2086
@@ -224,32 +223,31 @@ service_backup() {
 service_backup_auth() {
   declare desc="Sets up authentication"
   declare SERVICE="$1" AWS_ACCESS_KEY_ID="$2" AWS_SECRET_ACCESS_KEY="$3" AWS_DEFAULT_REGION="$4" AWS_SIGNATURE_VERSION="$5" ENDPOINT_URL="$6"
-  local SERVICE_BACKUP_ROOT="$PLUGIN_DATA_ROOT/$SERVICE/backup"
 
-  mkdir "$SERVICE_BACKUP_ROOT"
-  echo "$AWS_ACCESS_KEY_ID" >"$SERVICE_BACKUP_ROOT/AWS_ACCESS_KEY_ID"
-  echo "$AWS_SECRET_ACCESS_KEY" >"$SERVICE_BACKUP_ROOT/AWS_SECRET_ACCESS_KEY"
+  fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_AWS_ACCESS_KEY_ID" "$AWS_ACCESS_KEY_ID"
+  fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_AWS_SECRET_ACCESS_KEY" "$AWS_SECRET_ACCESS_KEY"
 
   if [[ -n "$AWS_DEFAULT_REGION" ]]; then
-    echo "$AWS_DEFAULT_REGION" >"$SERVICE_BACKUP_ROOT/AWS_DEFAULT_REGION"
+    fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_AWS_DEFAULT_REGION" "$AWS_DEFAULT_REGION"
   fi
 
   if [[ -n "$AWS_SIGNATURE_VERSION" ]]; then
-    echo "$AWS_SIGNATURE_VERSION" >"$SERVICE_BACKUP_ROOT/AWS_SIGNATURE_VERSION"
+    fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_AWS_SIGNATURE_VERSION" "$AWS_SIGNATURE_VERSION"
   fi
 
   if [[ -n "$ENDPOINT_URL" ]]; then
-    echo "$ENDPOINT_URL" >"$SERVICE_BACKUP_ROOT/ENDPOINT_URL"
+    fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_ENDPOINT_URL" "$ENDPOINT_URL"
   fi
 }
 
 service_backup_deauth() {
   declare desc="Removes authentication"
   declare SERVICE="$1"
-  local SERVICE_ROOT="${PLUGIN_DATA_ROOT}/${SERVICE}"
-  local SERVICE_BACKUP_ROOT="${SERVICE_ROOT}/backup/"
-
-  rm -rf "$SERVICE_BACKUP_ROOT"
+  fn-plugin-property-delete "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_AWS_ACCESS_KEY_ID"
+  fn-plugin-property-delete "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_AWS_SECRET_ACCESS_KEY"
+  fn-plugin-property-delete "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_AWS_DEFAULT_REGION"
+  fn-plugin-property-delete "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_AWS_SIGNATURE_VERSION"
+  fn-plugin-property-delete "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_ENDPOINT_URL"
 }
 
 service_backup_schedule() {
@@ -284,11 +282,8 @@ service_backup_schedule_cat() {
 service_backup_set_encryption() {
   declare desc="Sets up backup encryption"
   declare SERVICE="$1" ENCRYPTION_KEY="$2"
-  local SERVICE_ROOT="${PLUGIN_DATA_ROOT}/${SERVICE}"
-  local SERVICE_BACKUP_ENCRYPTION_ROOT="${SERVICE_ROOT}/backup-encryption/"
+  fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_ENCRYPTION_KEY" "$ENCRYPTION_KEY"
 
-  mkdir "$SERVICE_BACKUP_ENCRYPTION_ROOT"
-  echo "$ENCRYPTION_KEY" >"${SERVICE_BACKUP_ENCRYPTION_ROOT}/ENCRYPTION_KEY"
 }
 
 service_backup_unschedule() {
@@ -302,10 +297,7 @@ service_backup_unschedule() {
 service_backup_unset_encryption() {
   declare desc="Removes backup encryption"
   declare SERVICE="$1"
-  local SERVICE_ROOT="${PLUGIN_DATA_ROOT}/${SERVICE}"
-  local SERVICE_BACKUP_ENCRYPTION_ROOT="${SERVICE_ROOT}/backup-encryption/"
-
-  rm -rf "$SERVICE_BACKUP_ENCRYPTION_ROOT"
+  fn-plugin-property-delete "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "BACKUP_ENCRYPTION_KEY"
 }
 
 service_container_rm() {
@@ -339,7 +331,7 @@ service_enter() {
   declare desc="enters running app container of specified proc type"
   declare SERVICE="$1" && shift 1
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local ID="$(cat "$SERVICE_ROOT/ID")"
+  local ID=$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "ID")
 
   docker inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"
   is_container_status "$ID" "Running" || dokku_log_fail "Service container is not running"
@@ -354,9 +346,8 @@ service_exposed_ports() {
   declare desc="Lists exposed ports for a service"
   declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local PORT_FILE="$SERVICE_ROOT/PORT"
   [[ ! -f $PORT_FILE ]] && echo '-' && return 0
-  local PORTS=($(cat "$PORT_FILE"))
+  local PORTS=($(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS"))
   for ((i = 0; i < ${#PLUGIN_DATASTORE_PORTS[@]}; i++)); do
     echo -n "${PLUGIN_DATASTORE_PORTS[i]}->${PORTS[i]} "
   done
@@ -379,7 +370,7 @@ service_info() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_URL=$(service_url "$SERVICE")
   local PORT_FILE="$SERVICE_ROOT/PORT"
-  local SERVICE_CONTAINER_ID="$(cat "$SERVICE_ROOT/ID")"
+  local SERVICE_CONTAINER_ID="$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "ID")"
   local flag key valid_flags
 
   local flag_map=(
@@ -489,7 +480,7 @@ service_links() {
   touch "$LINKS_FILE"
   [[ -z $(<"$LINKS_FILE") ]] && return 0
 
-  cat "$LINKS_FILE"
+  fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS"
 }
 
 service_list() {
@@ -511,7 +502,7 @@ service_logs() {
   declare desc="Displays logs for a service"
   declare SERVICE="$1" TAIL_FLAG="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local ID=$(cat "$SERVICE_ROOT/ID")
+  local ID=$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "ID")
   local RE_INTEGER='^[0-9]+$'
 
   DOKKU_LOGS_ARGS="--tail 100"
@@ -599,20 +590,16 @@ service_parse_args() {
 service_password() {
   declare desc="Fetch the password for a service"
   declare SERVICE="$1"
-  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local PASSWORD_FILE="$SERVICE_ROOT/PASSWORD"
-  if [[ -f "$PASSWORD_FILE" ]]; then
-    cat "$PASSWORD_FILE"
+  if fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PASSWORD"; then
+    fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PASSWORD"
   fi
 }
 
 service_root_password() {
   declare desc="Fetch the root password for a service"
   declare SERVICE="$1"
-  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local PASSWORD_FILE="$SERVICE_ROOT/ROOTPASSWORD"
-  if [[ -f "$PASSWORD_FILE" ]]; then
-    cat "$PASSWORD_FILE"
+  if fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "ROOTPASSWORD"; then
+    fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "ROOTPASSWORD"
   fi
 }
 
@@ -631,9 +618,9 @@ service_port_pause() {
   local PORT_FILE="$SERVICE_ROOT/PORT"
 
   if [[ "$LOG_FAIL" == "true" ]]; then
-    [[ ! -f "$PORT_FILE" ]] && dokku_log_fail "Service not exposed"
+    fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS" && dokku_log_fail "Service not exposed"
   else
-    [[ ! -f "$PORT_FILE" ]] && return 0
+    fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS" && return 0
   fi
 
   local GREP_NAME="^/${EXPOSED_NAME}$"
@@ -656,10 +643,8 @@ service_port_pause() {
 service_port_unexpose() {
   declare desc="Wrapper for pausing exposed service ports"
   declare SERVICE="$1"
-  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local PORT_FILE="$SERVICE_ROOT/PORT"
   service_port_pause "$SERVICE" "true"
-  rm -rf "$PORT_FILE"
+  fn-plugin-property-delete "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS"
 }
 
 service_port_unpause() {
@@ -673,18 +658,18 @@ service_port_unpause() {
   local PORTS=(${@:3})
   # shellcheck disable=SC2068
   PORTS=(${PORTS[@]:-$(get_random_ports ${#PLUGIN_DATASTORE_PORTS[@]})})
-  local ID=$(cat "$SERVICE_ROOT/ID")
+  local ID=$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "ID")
 
   [[ "${#PORTS[@]}" != "${#PLUGIN_DATASTORE_PORTS[@]}" ]] && dokku_log_fail "${#PLUGIN_DATASTORE_PORTS[@]} ports to be exposed need to be provided in the following order: ${PLUGIN_DATASTORE_PORTS[*]}"
 
   if [[ "$LOG_FAIL" == "true" ]]; then
-    [[ -f "$PORT_FILE" ]] && PORTS=($(cat "$PORT_FILE")) && dokku_log_fail "Service $SERVICE already exposed on port(s) ${PORTS[*]}"
+    fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS" && IFS=" " read -r -a PORTS <<< "$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS")" && dokku_log_fail "Service $SERVICE already exposed on port(s) ${PORTS[*]}"
   else
-    [[ ! -f "$PORT_FILE" ]] && return 0
-    PORTS=($(cat "$PORT_FILE"))
+    fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS" && return 0
+    IFS=" " read -r -a PORTS <<< "$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS")"
   fi
 
-  echo "${PORTS[@]}" >"$PORT_FILE"
+  fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS" "${PORTS[@]}"
 
   # shellcheck disable=SC2046
   docker run -d --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" --name "$EXPOSED_NAME" $(docker_ports_options "${PORTS[@]}") --restart always --label dokku=ambassador --label "dokku.ambassador=$PLUGIN_COMMAND_PREFIX" "$PLUGIN_AMBASSADOR_IMAGE" >/dev/null
@@ -724,18 +709,14 @@ service_promote() {
 service_set_alias() {
   declare desc="Sets the alias in use for a service"
   declare SERVICE="$1" ALIAS="$2"
-  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local ALIAS_FILE="$SERVICE_ROOT/ALIAS"
 
-  touch "$ALIAS_FILE"
-  echo "$ALIAS" >"$ALIAS_FILE"
+  fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "ALIAS" "$ALIAS"
 }
 
 service_status() {
   declare desc="Displays the status of a service"
   declare SERVICE="$1"
-  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local ID="$(cat "$SERVICE_ROOT/ID")"
+  local ID=$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "ID")
   local CONTAINER_STATUS
 
   CONTAINER_STATUS=$(docker inspect -f "{{.State.Status}}" "$ID" 2>/dev/null || true)
@@ -746,7 +727,6 @@ service_status() {
 service_stop() {
   declare desc="Stops a running service"
   declare SERVICE="$1"
-  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local ID=$(docker ps -aq --no-trunc --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
   [[ -z $ID ]] && dokku_log_warn "Service is already stopped" && return 0
