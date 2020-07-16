@@ -106,13 +106,13 @@ remove_from_links_file() {
   declare desc="Removes an app from the service link file"
   declare SERVICE="$1" APP="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  if ! fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "$APP" "LINKS"; then
+  if ! fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS"; then
     return
   fi
 
   EXISTING_LINKS="$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS" "")"
-  echo "$EXISTING_LINKS" | sed "/^$APP\n\$/d"
-  EXISTING_LINKS="$(echo -e "$APP\n$EXISTING_LINKS" | sort -u)"
+  EXISTING_LINKS="$(echo "$EXISTING_LINKS" | sort -u | sed -e "/^$APP\$/d" -e "/^$/d")"
+  fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS" "$EXISTING_LINKS"
 }
 
 retry-docker-command() {
@@ -444,7 +444,7 @@ service_link() {
   [[ -n $LINK ]] && dokku_log_fail "Already linked as $LINK"
 
   EXISTING_LINKS="$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS" "")"
-  EXISTING_LINKS="$(echo -e "$APP\n$EXISTING_LINKS" | sort -u)"
+  EXISTING_LINKS="$(echo -e "$APP\n$EXISTING_LINKS" | sort -u | sed "/^$/d")"
   fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS" "$EXISTING_LINKS"
 
 
@@ -464,7 +464,7 @@ service_linked_apps() {
   declare SERVICE="$1"
 
   EXISTING_LINKS="$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS" "")"
-  [[ -z $EXISTING_LINKS ]] && echo '-' && return 0
+  [[ -z $EXISTING_LINKS ]] && echo "-" && return 0
 
   echo "$EXISTING_LINKS" | tr '\n' ' '
 }
