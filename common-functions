@@ -106,14 +106,15 @@ remove_from_links_file() {
   declare desc="Removes an app from the service link file"
   declare SERVICE="$1" APP="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local LINKS_FILE="$SERVICE_ROOT/LINKS"
-
-  if [[ ! -f "$LINKS_FILE" ]]; then
+  if ! fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "$APP" "LINKS"; then
     return
   fi
 
   sed -i.bak "/^$APP\$/d" "$LINKS_FILE" && rm "$LINKS_FILE.bak"
   sort "$LINKS_FILE" -u -o "$LINKS_FILE"
+  EXISTING_LINKS="$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS" "")"
+  echo "$EXISTING_LINKS" > sed "/^$APP\n\$/d"
+  EXISTING_LINKS="$(echo -e "$EXISTING_LINKS$APP\n" | sort -u)"
 }
 
 retry-docker-command() {
@@ -161,8 +162,8 @@ service_app_links() {
 
   pushd "$PLUGIN_DATA_ROOT" >/dev/null
   for SERVICE in *; do
-    [[ -f "$SERVICE/LINKS" ]] || continue
-    for LINKED_APP in $(<"$SERVICE/LINKS"); do
+    ! fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS" || continue
+    for LINKED_APP in $(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS"); do
       if [[ "$LINKED_APP" == "$APP" ]]; then
         echo "$SERVICE"
       fi
@@ -346,7 +347,7 @@ service_exposed_ports() {
   declare desc="Lists exposed ports for a service"
   declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  [[ ! -f $PORT_FILE ]] && echo '-' && return 0
+   ! fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS" && echo '-' && return 0
   local PORTS=($(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS"))
   for ((i = 0; i < ${#PLUGIN_DATASTORE_PORTS[@]}; i++)); do
     echo -n "${PLUGIN_DATASTORE_PORTS[i]}->${PORTS[i]} "
@@ -427,7 +428,6 @@ service_link() {
   local EXISTING_CONFIG=$(config_all "$APP")
   local LINK=$(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1) || true
   local SERVICE_DNS_HOSTNAME=$(service_dns_hostname "$SERVICE")
-  local LINKS_FILE="$SERVICE_ROOT/LINKS"
   local ALIAS="$PLUGIN_DEFAULT_ALIAS"
   local DEFAULT_ALIAS
 
@@ -444,9 +444,11 @@ service_link() {
   fi
 
   [[ -n $LINK ]] && dokku_log_fail "Already linked as $LINK"
-  touch "$LINKS_FILE"
-  echo "$APP" >>"$LINKS_FILE"
-  sort "$LINKS_FILE" -u -o "$LINKS_FILE"
+
+  EXISTING_LINKS="$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS" "")"
+  EXISTING_LINKS="$(echo -e "$APP\n$EXISTING_LINKS" | sort -u)"
+  fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS" "$EXISTING_LINKS"
+
 
   if declare -f -F add_passed_docker_option >/dev/null; then
     # shellcheck disable=SC2034
@@ -462,25 +464,21 @@ service_link() {
 service_linked_apps() {
   declare desc="Lists all apps linked to a service for info output"
   declare SERVICE="$1"
-  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local LINKS_FILE="$SERVICE_ROOT/LINKS"
 
-  touch "$LINKS_FILE"
-  [[ -z $(<"$LINKS_FILE") ]] && echo '-' && return 0
+  EXISTING_LINKS="$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS" "")"
+  [[ -z $EXISTING_LINKS ]] && echo '-' && return 0
 
-  tr '\n' ' ' <"$LINKS_FILE"
+  echo "$EXISTING_LINKS" | tr '\n' ' '
 }
 
 service_links() {
   declare desc="Lists all apps linked to a service"
   declare SERVICE="$1"
-  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local LINKS_FILE="$SERVICE_ROOT/LINKS"
 
-  touch "$LINKS_FILE"
-  [[ -z $(<"$LINKS_FILE") ]] && return 0
+  EXISTING_LINKS="$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS" "")"
+  [[ -z $EXISTING_LINKS ]] && echo '-' && return 0
 
-  fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS"
+  echo "$EXISTING_LINKS"
 }
 
 service_list() {
@@ -618,9 +616,9 @@ service_port_pause() {
   local PORT_FILE="$SERVICE_ROOT/PORT"
 
   if [[ "$LOG_FAIL" == "true" ]]; then
-    fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS" && dokku_log_fail "Service not exposed"
+    ! fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS" && dokku_log_fail "Service not exposed"
   else
-    fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS" && return 0
+    ! fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS" && return 0
   fi
 
   local GREP_NAME="^/${EXPOSED_NAME}$"
@@ -665,7 +663,7 @@ service_port_unpause() {
   if [[ "$LOG_FAIL" == "true" ]]; then
     fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS" && IFS=" " read -r -a PORTS <<< "$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS")" && dokku_log_fail "Service $SERVICE already exposed on port(s) ${PORTS[*]}"
   else
-    fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS" && return 0
+    ! fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS" && return 0
     IFS=" " read -r -a PORTS <<< "$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PORTS")"
   fi
 
@@ -792,9 +790,9 @@ verify_service_name() {
 write_database_name() {
   declare desc="Writes a sanitized database name"
   declare SERVICE="$1"
-  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
 
   # some datastores do not like special characters in database names
   # so we need to normalize them out
-  echo "$SERVICE" | tr .- _ > "$SERVICE_ROOT/DATABASE_NAME"
+  fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "DATABASE_NAME" "$(echo "$SERVICE" | tr .- _)"
+
 }
