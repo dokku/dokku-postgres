@@ -4,6 +4,8 @@ set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/property-functions"
+
 
 service-clone-cmd() {
   #E you can clone an existing service to a new one
@@ -25,8 +27,7 @@ service-clone-cmd() {
   [[ -z "$NEW_SERVICE" ]] && dokku_log_fail "Please specify a name for the new service"
   verify_service_name "$SERVICE"
 
-  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local ID="$(cat "$SERVICE_ROOT/ID")"
+  local ID=$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "ID")
   is_container_status "$ID" "Running" || dokku_log_fail "Service ${SERVICE} container is not running"
 
   PLUGIN_IMAGE=$(service_version "$SERVICE" | grep -o "^.*:" | sed -r "s/://g")

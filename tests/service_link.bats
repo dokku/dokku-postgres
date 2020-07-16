@@ -62,7 +62,7 @@ teardown() {
   echo "output: $output"
   echo "status: $status"
   url=$(dokku config:get my_app DATABASE_URL)
-  password="$(sudo cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  password="$(sudo cat "$PLUGIN_CONFIG_ROOT/l/PASSWORD")"
   assert_contains "$url" "postgres://postgres:$password@dokku-postgres-l:5432/l"
   assert_success
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
@@ -95,7 +95,7 @@ teardown() {
   dokku config:set my_app POSTGRES_DATABASE_SCHEME=postgres2
   dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app
   url=$(dokku config:get my_app DATABASE_URL)
-  password="$(sudo cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  password="$(sudo cat "$PLUGIN_CONFIG_ROOT/l/PASSWORD")"
   assert_contains "$url" "postgres2://postgres:$password@dokku-postgres-l:5432/l"
   assert_success
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app
@@ -112,7 +112,7 @@ teardown() {
 @test "($PLUGIN_COMMAND_PREFIX:link) uses a specified config url when alias is specified" {
   dokku "$PLUGIN_COMMAND_PREFIX:link" l my_app --alias "ALIAS"
   url=$(dokku config:get my_app ALIAS_URL)
-  password="$(sudo cat "$PLUGIN_DATA_ROOT/l/PASSWORD")"
+  password="$(sudo cat "$PLUGIN_CONFIG_ROOT/l/PASSWORD")"
   assert_contains "$url" "postgres://postgres:$password@dokku-postgres-l:5432/l"
   assert_success
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l my_app

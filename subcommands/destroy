@@ -19,11 +19,10 @@ service-destroy-cmd() {
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
   verify_service_name "$SERVICE"
   SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  LINKS_FILE="$SERVICE_ROOT/LINKS"
   SERVICE_HOST_ROOT="$PLUGIN_DATA_HOST_ROOT/$SERVICE"
   SERVICE_NAME="$(get_service_name "$SERVICE")"
 
-  [[ -s "$LINKS_FILE" ]] && dokku_log_fail "Cannot delete linked service"
+  [[ $(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS" "") == "" ]] && dokku_log_fail "Cannot delete linked service"
 
   if [[ "$FORCE_FLAG" == "force" ]] || [[ "$FORCE_FLAG" == "-f" ]] || [[ "$FORCE_FLAG" == "--force" ]]; then
     DOKKU_APPS_FORCE_DELETE=1

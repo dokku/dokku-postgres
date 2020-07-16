@@ -110,11 +110,9 @@ remove_from_links_file() {
     return
   fi
 
-  sed -i.bak "/^$APP\$/d" "$LINKS_FILE" && rm "$LINKS_FILE.bak"
-  sort "$LINKS_FILE" -u -o "$LINKS_FILE"
   EXISTING_LINKS="$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS" "")"
-  echo "$EXISTING_LINKS" > sed "/^$APP\n\$/d"
-  EXISTING_LINKS="$(echo -e "$EXISTING_LINKS$APP\n" | sort -u)"
+  echo "$EXISTING_LINKS" | sed "/^$APP\n\$/d"
+  EXISTING_LINKS="$(echo -e "$APP\n$EXISTING_LINKS" | sort -u)"
 }
 
 retry-docker-command() {
