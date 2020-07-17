@@ -39,7 +39,7 @@ plugin-install() {
           fi
         done
         if [ -d "$SERVICE"/backup ]; then
-          for BACKUPPROP in "$PLUGIN_DATA_ROOT"/"$SERVICE"/*; do
+          for BACKUPPROP in "$PLUGIN_DATA_ROOT"/"$SERVICE"/backup/*; do
                 mv "$BACKUPPROP" "$PLUGIN_CONFIG_ROOT/$SERVICE/BACKUP_$BACKUPPROP"
           done
         fi
