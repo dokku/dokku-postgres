@@ -35,11 +35,13 @@ plugin-install() {
   for SERVICE in *; do
     if [ -d "$SERVICE" ]; then
         mkdir -p "$PLUGIN_CONFIG_ROOT"/"$SERVICE/"
-        for PROP in "$SERVICE"/*; do
+        pushd "$SERVICE"
+        for PROP in *; do
           if [ ! -d "$PROP" ] && [[ "$PROP" != "ENV" ]]; then
               mv "$PROP" "$PLUGIN_CONFIG_ROOT"/"$SERVICE/"
           fi
         done
+        popd
         if [ -d "$SERVICE"/backup ]; then
           pushd "$SERVICE"/backup
           for BACKUPPROP in *; do
