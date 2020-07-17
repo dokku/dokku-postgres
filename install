@@ -31,22 +31,28 @@ plugin-install() {
   mkdir -p "$PLUGIN_CONFIG_ROOT" || echo "Failed to create $PLUGIN_SERVICE config directory"
   chown dokku:dokku "$PLUGIN_CONFIG_ROOT"
 
-  for SERVICE in "$PLUGIN_DATA_ROOT"/*; do
+  pushd "$PLUGIN_DATA_ROOT"
+  for SERVICE in *; do
     if [ -d "$SERVICE" ]; then
-        for PROP in "$PLUGIN_DATA_ROOT"/"$SERVICE"/*; do
+        mkdir -p "$PLUGIN_CONFIG_ROOT"/"$SERVICE/"
+        for PROP in "$SERVICE"/*; do
           if [ ! -d "$PROP" ] && [[ "$PROP" != "ENV" ]]; then
-              mv "$PROP" "$PLUGIN_CONFIG_ROOT"/"$SERVICE"
+              mv "$PROP" "$PLUGIN_CONFIG_ROOT"/"$SERVICE/"
           fi
         done
         if [ -d "$SERVICE"/backup ]; then
-          for BACKUPPROP in "$PLUGIN_DATA_ROOT"/"$SERVICE"/backup/*; do
-                mv "$BACKUPPROP" "$PLUGIN_CONFIG_ROOT/$SERVICE/BACKUP_$BACKUPPROP"
+          pushd "$SERVICE"/backup
+          for BACKUPPROP in *; do
+                mv "$BACKUPPROP" "BACKUP_$BACKUPPROP"
+                mv "BACKUP_$BACKUPPROP" "$PLUGIN_CONFIG_ROOT/$SERVICE/"
           done
+          popd
         fi
-          chown dokku:dokku "$PLUGIN_CONFIG_ROOT"/"$SERVICE"/*
+          chown -R dokku:dokku "$PLUGIN_CONFIG_ROOT"/"$SERVICE"/*
           chmod 600 "$PLUGIN_CONFIG_ROOT"/"$SERVICE"/*
     fi
   done
+  popd
 
   rm -f "/etc/sudoers.d/dokku-${PLUGIN_COMMAND_PREFIX}*"
   _SUDOERS_FILE="/etc/sudoers.d/dokku-${PLUGIN_COMMAND_PREFIX}"
