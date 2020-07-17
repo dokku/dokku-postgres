@@ -31,6 +31,23 @@ plugin-install() {
   mkdir -p "$PLUGIN_CONFIG_ROOT" || echo "Failed to create $PLUGIN_SERVICE config directory"
   chown dokku:dokku "$PLUGIN_CONFIG_ROOT"
 
+  for SERVICE in "$PLUGIN_DATA_ROOT"/*; do
+    if [ -d "$SERVICE" ]; then
+        for PROP in "$PLUGIN_DATA_ROOT"/"$SERVICE"/*; do
+          if [ ! -d "$PROP" ] && [[ "$PROP" != "ENV" ]]; then
+              mv "$PROP" "$PLUGIN_CONFIG_ROOT"/"$SERVICE"
+          fi
+        done
+        if [ -d "$SERVICE"/backup ]; then
+          for BACKUPPROP in "$PLUGIN_DATA_ROOT"/"$SERVICE"/*; do
+                mv "$BACKUPPROP" "$PLUGIN_CONFIG_ROOT/$SERVICE/BACKUP_$BACKUPPROP"
+          done
+        fi
+          chown dokku:dokku "$PLUGIN_CONFIG_ROOT"/"$SERVICE"/*
+          chmod 600 "$PLUGIN_CONFIG_ROOT"/"$SERVICE"/*
+    fi
+  done
+
   rm -f "/etc/sudoers.d/dokku-${PLUGIN_COMMAND_PREFIX}*"
   _SUDOERS_FILE="/etc/sudoers.d/dokku-${PLUGIN_COMMAND_PREFIX}"
 
