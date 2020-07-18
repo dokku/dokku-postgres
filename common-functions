@@ -782,7 +782,7 @@ service_unlink() {
   fi
 
   [[ -z ${LINK[*]} ]] && dokku_log_fail "Not linked to app $APP"
-  config_unset "$APP" "${LINK[*]}"
+  config_unset "$APP" "${LINK[@]}"
 }
 
 service_version() {
