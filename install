@@ -50,6 +50,7 @@ plugin-install() {
           done
           popd
         fi
+          chown dokku:dokku "$PLUGIN_CONFIG_ROOT"/"$SERVICE"/
           chown -R dokku:dokku "$PLUGIN_CONFIG_ROOT"/"$SERVICE"/*
           chmod 600 "$PLUGIN_CONFIG_ROOT"/"$SERVICE"/*
     fi
