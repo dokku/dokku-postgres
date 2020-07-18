@@ -160,7 +160,7 @@ service_app_links() {
 
   pushd "$PLUGIN_DATA_ROOT" >/dev/null
   for SERVICE in *; do
-    ! fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS" || continue
+    fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS" || continue
     for LINKED_APP in $(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "LINKS"); do
       if [[ "$LINKED_APP" == "$APP" ]]; then
         echo "$SERVICE"
