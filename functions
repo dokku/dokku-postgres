@@ -97,7 +97,7 @@ service_export() {
   local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
-  local DATABASE_NAME="$(get_database_name "$SERVICE")"
+  local DATABASE_NAME="${2:-$(get_database_name "$SERVICE")}"
   local PASSWORD="$(service_password "$SERVICE")"
 
   [[ -n $SSH_TTY ]] && stty -opost
@@ -118,7 +118,7 @@ service_import() {
   if [[ -t 0 ]]; then
     dokku_log_fail "No data provided on stdin."
   fi
-  docker exec -i "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_restore -h localhost -cO --if-exists -d "$DATABASE_NAME" -U postgres -w
+  docker exec -i "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_restore -h localhost -cO --if-exists -C -d "$DATABASE_NAME" -U postgres -w
 }
 
 service_start() {
