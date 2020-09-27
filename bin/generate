@@ -5,12 +5,20 @@ import os
 import re
 
 
-def compile(service, version, variable, alias, image, scheme, ports, unimplemented, dokku_version):
+def compile(service, version, variable, alias, image, scheme, ports, sponsors, unimplemented, dokku_version):
+    prefix = "\n\n".join([
+        header(service),
+        description(service, image, version),
+    ])
+
+    if len(sponsors) > 0:
+        prefix += "\n\n"
+        prefix += sponsors_section(service, sponsors)
+
     return (
         "\n\n".join(
             [
-                header(service),
-                description(service, version),
+                prefix,
                 requirements_section(dokku_version),
                 installation_section(service, dokku_version),
                 commands_section(service, variable, alias, image, scheme, ports, unimplemented),
@@ -33,8 +41,26 @@ def header(service):
     )
 
 
-def description(service, version):
-    return f"Official {service} plugin for dokku. Currently defaults to installing [{service} {version}](https://hub.docker.com/_/{service}/)."
+def description(service, full_image, version):
+    base = "_"
+    image = full_image
+    if "/" in full_image:
+        base = "r/" + full_image.split("/")[0]
+        image = full_image.split("/")[1]
+
+    return f"Official {service} plugin for dokku. Currently defaults to installing [{full_image} {version}](https://hub.docker.com/{base}/{image}/)."
+
+
+def sponsors_section(service, sponsors):
+    if len(sponsors) == 0:
+        return ""
+
+    sponsor_data = ["## Sponsors", "", f"The {service} plugin was generously sponsored by the following:", ""]
+    sponsor_data.extend([f"- [{s}](https://github.com/{s})" for s in sponsors])
+
+    return "\n".join(
+        sponsor_data
+    )
 
 
 def requirements_section(dokku_version):
@@ -469,7 +495,14 @@ def main():
                 if match is not None:
                     unimplemented = [s.strip('"') for s in match.group(1).split(" ")]
 
-    text = compile(service, version, variable, alias, image, scheme, ports, unimplemented, "0.12.x+")
+    sponsors = []
+    with open("plugin.toml") as f:
+        for line in f.readlines():
+            if line.startswith("sponsors"):
+                sponsors = re.search("\[([\"\w\s,_-]+)\]", line).group(1)
+                sponsors = [s.strip("\"") for s in sponsors.split(",")]
+
+    text = compile(service, version, variable, alias, image, scheme, ports, sponsors, unimplemented, "0.12.x+")
 
     base_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     readme_file = os.path.join(base_path, "README.md")
