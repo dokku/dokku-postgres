@@ -10,6 +10,9 @@ service-export-cmd() {
   #E dokku $PLUGIN_COMMAND_PREFIX:export lolipop
   #E you can redirect this output to a file
   #E dokku $PLUGIN_COMMAND_PREFIX:export lolipop > lolipop.dump
+  #E Note that the export will result in a file containing the binary postgres
+  #E export data. You can convert it to plain text using pg_restore like this:
+  #E pg_restore exported_file.dump -f plain.sql.
   #A service, service to run command against
   declare desc="export a dump of the $PLUGIN_SERVICE service database"
   local cmd="$PLUGIN_COMMAND_PREFIX:export" argv=("$@")
