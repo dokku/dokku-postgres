@@ -1,6 +1,6 @@
 # dokku postgres [![Build Status](https://img.shields.io/circleci/project/github/dokku/dokku-postgres.svg?branch=master&style=flat-square "Build Status")](https://circleci.com/gh/dokku/dokku-postgres/tree/master) [![IRC Network](https://img.shields.io/badge/irc-freenode-blue.svg?style=flat-square "IRC Freenode")](https://webchat.freenode.net/?channels=dokku)
 
-Official postgres plugin for dokku. Currently defaults to installing [postgres 11.6](https://hub.docker.com/_/postgres/).
+Official postgres plugin for dokku. Currently defaults to installing [postgres 13.1](https://hub.docker.com/_/postgres/).
 
 ## Requirements
 
