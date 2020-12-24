@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+service-backup-s3class-cmd() {
+  #E set the s3 storage class to Standard Infrequent Access
+  #E dokku $PLUGIN_COMMAND_PREFIX:backup-s3class lolipop STANDARD_IA
+  #A service, service to run command against
+  #A storage-class, an aws S3 storage class
+  declare desc="sets the S3 storage class to be used for backups on the $PLUGIN_SERVICE service"
+  local cmd="$PLUGIN_COMMAND_PREFIX:backup-s3class" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
+  declare SERVICE="$1" STORAGE_CLASS="$2"
+  is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
+
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
+  [[ -z "$STORAGE_CLASS" ]] && dokku_log_fail "Please specify an aws S3 storage class"
+  [[ ! "$STORAGE_CLASS" =~ ^(STANDARD|REDUCED_REDUNDANCY|STANDARD_IA|ONEZONE_IA|INTELLIGENT_TIERING|GLACIER|DEEP_ARCHIVE)$ ]] && dokku_log_fail "$STORAGE_CLASS is not a valid S3 storage class. Read https://docs.aws.amazon.com/cli/latest/reference/s3/cp.html for more information."
+  service_backup_s3class "$SERVICE" "$STORAGE_CLASS"
+  echo "Set the storage class to $STORAGE_CLASS"
+}
+
+service-backup-s3class-cmd "$@"
