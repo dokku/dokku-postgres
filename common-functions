@@ -188,18 +188,18 @@ service_backup() {
     dokku_log_fail "Provide AWS credentials or use the --use-iam flag"
   fi
 
-  TMPDIR=$(mktemp -d --tmpdir)
-  trap 'rm -rf "$TMPDIR" > /dev/null' RETURN INT TERM EXIT
+  BACKUP_TMPDIR=$(mktemp -d --tmpdir)
+  trap 'rm -rf "$BACKUP_TMPDIR" > /dev/null' RETURN INT TERM EXIT
 
   docker inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"
   is_container_status "$ID" "Running" || dokku_log_fail "Service container is not running"
 
-  (service_export "$SERVICE" >"${TMPDIR}/export")
+  (service_export "$SERVICE" >"${BACKUP_TMPDIR}/export")
 
   # Build parameter list for s3backup tool
   BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e BUCKET_NAME=$BUCKET_NAME"
   BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e BACKUP_NAME=${PLUGIN_COMMAND_PREFIX}-${SERVICE}"
-  BACKUP_PARAMETERS="$BACKUP_PARAMETERS -v ${TMPDIR}:/backup"
+  BACKUP_PARAMETERS="$BACKUP_PARAMETERS -v ${BACKUP_TMPDIR}:/backup"
 
   if [[ -f "$SERVICE_BACKUP_ROOT/AWS_DEFAULT_REGION" ]]; then
     BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_DEFAULT_REGION=$(cat "$SERVICE_BACKUP_ROOT/AWS_DEFAULT_REGION")"
