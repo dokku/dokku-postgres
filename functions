@@ -5,6 +5,7 @@ set -eo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common-functions"
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$PLUGIN_AVAILABLE_PATH/config/functions"
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/property-functions"
 if [[ -f "$PLUGIN_AVAILABLE_PATH/docker-options/functions" ]]; then
   source "$PLUGIN_AVAILABLE_PATH/docker-options/functions"
 fi
@@ -26,7 +27,6 @@ service_create() {
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
   [[ ! -d "$PLUGIN_DATA_ROOT/$SERVICE" ]] || dokku_log_fail "$PLUGIN_SERVICE service $SERVICE already exists"
   SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  LINKS_FILE="$SERVICE_ROOT/LINKS"
 
   service_parse_args "${@:2}"
 
@@ -42,15 +42,13 @@ service_create() {
 
   mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
   mkdir -p "$SERVICE_ROOT/data" || dokku_log_fail "Unable to create service data directory"
-  touch "$LINKS_FILE"
 
   PASSWORD=$(openssl rand -hex 16)
   if [[ -n "$SERVICE_PASSWORD" ]]; then
     PASSWORD="$SERVICE_PASSWORD"
     dokku_log_warn "Specified password may not be as secure as the auto-generated password"
   fi
-  echo "$PASSWORD" >"$SERVICE_ROOT/PASSWORD"
-  chmod 640 "$SERVICE_ROOT/PASSWORD"
+  fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "PASSWORD" "$PASSWORD"
 
   [[ -n "$SERVICE_CUSTOM_ENV" ]] && POSTGRES_CUSTOM_ENV="$SERVICE_CUSTOM_ENV"
   if [[ -n $POSTGRES_CUSTOM_ENV ]]; then
@@ -73,7 +71,8 @@ service_create_container() {
   local PREVIOUS_ID
 
   ID=$(docker run --name "$SERVICE_NAME" -v "$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data" -e "POSTGRES_PASSWORD=$PASSWORD" --env-file="$SERVICE_ROOT/ENV" -d --restart always --label dokku=service --label dokku.service=postgres "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION")
-  echo "$ID" >"$SERVICE_ROOT/ID"
+  fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "ID" "$ID"
+
 
   dokku_log_verbose_quiet "Waiting for container to be ready"
   docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" "$PLUGIN_WAIT_IMAGE" -p "$PLUGIN_DATASTORE_WAIT_PORT" >/dev/null
@@ -129,9 +128,9 @@ service_start() {
   local ID=$(docker ps -aq --no-trunc --filter "status=running" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
   if [[ -n $ID ]]; then
     [[ -z $QUIET ]] && dokku_log_warn "Service is already started"
-    if [[ ! -f "$SERVICE_ROOT/ID" ]] || [[ "$(cat "$SERVICE_ROOT/ID")" != "$ID" ]]; then
+    if fn-plugin-property-exists "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "ID" || [[ "$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "ID")" != "$ID" ]]; then
       [[ -z $QUIET ]] && dokku_log_warn "Updating local container ID"
-      echo "$ID" >"$SERVICE_ROOT/ID"
+      fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "ID" "$ID"
     fi
     return 0
   fi

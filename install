@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/property-functions"
+
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 
@@ -25,8 +27,35 @@ plugin-install() {
   mkdir -p "$PLUGIN_DATA_ROOT" || echo "Failed to create $PLUGIN_SERVICE data directory"
   chown dokku:dokku "$PLUGIN_DATA_ROOT"
 
+  fn-plugin-property-setup "$PLUGIN_COMMAND_PREFIX"
   mkdir -p "$PLUGIN_CONFIG_ROOT" || echo "Failed to create $PLUGIN_SERVICE config directory"
   chown dokku:dokku "$PLUGIN_CONFIG_ROOT"
+
+  pushd "$PLUGIN_DATA_ROOT"
+  for SERVICE in *; do
+    if [ -d "$SERVICE" ]; then
+        mkdir -p "$PLUGIN_CONFIG_ROOT"/"$SERVICE/"
+        pushd "$SERVICE"
+        for PROP in *; do
+          if [ ! -d "$PROP" ] && [[ "$PROP" != "ENV" ]]; then
+              mv "$PROP" "$PLUGIN_CONFIG_ROOT"/"$SERVICE/"
+          fi
+        done
+        popd
+        if [ -d "$SERVICE"/backup ]; then
+          pushd "$SERVICE"/backup
+          for BACKUPPROP in *; do
+                mv "$BACKUPPROP" "BACKUP_$BACKUPPROP"
+                mv "BACKUP_$BACKUPPROP" "$PLUGIN_CONFIG_ROOT/$SERVICE/"
+          done
+          popd
+        fi
+          chown dokku:dokku "$PLUGIN_CONFIG_ROOT"/"$SERVICE"/
+          chown -R dokku:dokku "$PLUGIN_CONFIG_ROOT"/"$SERVICE"/*
+          chmod 600 "$PLUGIN_CONFIG_ROOT"/"$SERVICE"/*
+    fi
+  done
+  popd
 
   rm -f "/etc/sudoers.d/dokku-${PLUGIN_COMMAND_PREFIX}*"
   _SUDOERS_FILE="/etc/sudoers.d/dokku-${PLUGIN_COMMAND_PREFIX}"
