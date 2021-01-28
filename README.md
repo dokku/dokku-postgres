@@ -42,6 +42,7 @@ postgres:links <service>                           # list all apps linked to the
 postgres:list                                      # list all postgres services
 postgres:logs <service> [-t|--tail]                # print the most recent log(s) for this service
 postgres:promote <service> <app>                   # promote service <service> as DATABASE_URL in <app>
+postgres:reset <service> [-f|--force]              # delete all data in postgres service
 postgres:restart <service>                         # graceful shutdown and restart of the postgres service container
 postgres:start <service>                           # start a previously stopped postgres service
 postgres:stop <service>                            # stop a running postgres service

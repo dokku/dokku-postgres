@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+service-reset-cmd() {
+  #E delete all data in $PLUGIN_COMMAND_PREFIX service named lolipop
+  #E dokku $PLUGIN_COMMAND_PREFIX:reset lolipop
+  #A service, service to run command against
+  #F -f|--force, force delete without asking for confirmation
+  declare desc="delete all data in $PLUGIN_SERVICE service"
+  local cmd="$PLUGIN_COMMAND_PREFIX:reset" argv=("$@"); [[ ${argv[0]} == "$cmd" ]] && shift 1
+  declare SERVICE="$1" FORCE_FLAG="$2"
+
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a name for the service"
+  verify_service_name "$SERVICE"
+
+  local message="This command will delete all data in $SERVICE $PLUGIN_SERVICE service."
+  prompt_confirmation "$message" "$SERVICE" "$FORCE_FLAG"
+
+  service_reset "$SERVICE"
+}
+
+service-reset-cmd "$@"

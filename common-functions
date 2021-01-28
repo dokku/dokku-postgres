@@ -101,6 +101,26 @@ is_valid_service_name() {
   return 1
 }
 
+prompt_confirmation() {
+  declare desc="Prompts user to confirm destructive action"
+  declare MESSAGE="$1" SERVICE="$2" FORCE_FLAG="$3"
+
+  if [[ "$FORCE_FLAG" == "force" ]] || [[ "$FORCE_FLAG" == "-f" ]] || [[ "$FORCE_FLAG" == "--force" ]]; then
+    DOKKU_APPS_FORCE_DELETE=1
+  fi
+  if [[ -z "$DOKKU_APPS_FORCE_DELETE" ]]; then
+    dokku_log_warn "WARNING: Potentially Destructive Action"
+    dokku_log_warn "$MESSAGE"
+    dokku_log_warn "To proceed, type \"$SERVICE\""
+    echo ""
+
+    read -rp "> " service_name
+    if [[ "$service_name" != "$SERVICE" ]]; then
+      dokku_log_fail "Confirmation did not match $SERVICE. Aborted."
+    fi
+  fi
+}
+
 remove_from_links_file() {
   declare desc="Removes an app from the service link file"
   declare SERVICE="$1" APP="$2"
