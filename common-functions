@@ -466,6 +466,7 @@ service_link() {
   fi
   [[ -n "$SERVICE_QUERYSTRING" ]] && SERVICE_URL="${SERVICE_URL}?${SERVICE_QUERYSTRING}"
   config_set "$APP" "${ALIAS}_URL=$SERVICE_URL"
+  plugn trigger service-action link "$SERVICE" "$APP"
 }
 
 service_linked_apps() {
@@ -783,6 +784,7 @@ service_unlink() {
 
   [[ -z ${LINK[*]} ]] && dokku_log_fail "Not linked to app $APP"
   config_unset "$APP" "${LINK[*]}"
+  plugn trigger service-action unlink "$SERVICE" "$APP"
 }
 
 service_version() {
