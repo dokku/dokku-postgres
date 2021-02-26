@@ -474,12 +474,16 @@ def main():
     image = None
     alias = None
     unimplemented = []
+
+    with open("Dockerfile") as f:
+        for line in f.readlines():
+          if "FROM " in line:
+              image, version = line.split(" ")[1].split(":")
+              image = image.strip()
+              version = version.strip()
+
     with open("config") as f:
         for line in f.readlines():
-            if "IMAGE_VERSION=${" in line:
-                version = re.search('"(.+)"', line).group(1)
-            if "_IMAGE=${" in line:
-                image = re.search('"(.+)"', line).group(1)
             if "PLUGIN_COMMAND_PREFIX=" in line:
                 service = re.search('"(.+)"', line).group(1)
             if "PLUGIN_DEFAULT_ALIAS=" in line:
