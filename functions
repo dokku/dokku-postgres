@@ -40,6 +40,7 @@ service_create() {
     docker pull "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" || dokku_log_fail "$PLUGIN_SERVICE image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION pull failed"
   fi
 
+  plugn trigger service-action pre-create "$SERVICE"
   mkdir -p "$SERVICE_ROOT" || dokku_log_fail "Unable to create service directory"
   mkdir -p "$SERVICE_ROOT/data" || dokku_log_fail "Unable to create service data directory"
   touch "$LINKS_FILE"
@@ -60,7 +61,9 @@ service_create() {
   fi
 
   write_database_name "$SERVICE"
+  plugn trigger service-action post-create "$SERVICE"
   service_create_container "$SERVICE"
+  plugn trigger service-action post-create-complete "$SERVICE"
 }
 
 service_create_container() {

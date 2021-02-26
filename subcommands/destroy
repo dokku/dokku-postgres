@@ -41,6 +41,7 @@ service-destroy-cmd() {
   fi
 
   dokku_log_info2_quiet "Deleting $SERVICE"
+  plugn trigger service-action pre-delete "$SERVICE"
   service_backup_unschedule "$SERVICE"
   service_container_rm "$SERVICE"
 
@@ -48,6 +49,7 @@ service-destroy-cmd() {
   docker run --rm -v "$SERVICE_HOST_ROOT/data:/data" -v "$SERVICE_HOST_ROOT/$PLUGIN_CONFIG_SUFFIX:/config" "$PLUGIN_BUSYBOX_IMAGE" chmod 777 -R /config /data
   rm -rf "$SERVICE_ROOT"
 
+  plugn trigger service-action post-delete "$SERVICE"
   dokku_log_info2 "$PLUGIN_SERVICE container deleted: $SERVICE"
 }
 
