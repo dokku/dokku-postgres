@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-export POSTGRES_IMAGE=${POSTGRES_IMAGE:="$(awk -F '[ :]' '{print $2}' Dockerfile)"}
-export POSTGRES_IMAGE_VERSION=${POSTGRES_IMAGE_VERSION:="$(awk -F '[ :]' '{print $3}' Dockerfile)"}
+_DIR="$(dirname $0)"
+export POSTGRES_IMAGE=${POSTGRES_IMAGE:="$(awk -F '[ :]' '{print $2}' $_DIR/Dockerfile)"}
+export POSTGRES_IMAGE_VERSION=${POSTGRES_IMAGE_VERSION:="$(awk -F '[ :]' '{print $3}' $_DIR/Dockerfile)"}
 export POSTGRES_ROOT=${POSTGRES_ROOT:="$DOKKU_LIB_ROOT/services/postgres"}
 export POSTGRES_HOST_ROOT=${POSTGRES_HOST_ROOT:=$POSTGRES_ROOT}
 
