@@ -1,0 +1,70 @@
+---
+name: CI
+
+# yamllint disable-line rule:truthy
+on:
+  pull_request:
+    branches:
+      - '*'
+  push:
+    branches:
+      - '*'
+
+jobs:
+  unit-tests:
+    name: unit-tests
+    runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: true
+      matrix:
+        dokku-version:
+          - master
+    env:
+      DOKKU_VERSION: ${{ matrix.dokku-version }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.7.x'
+
+      - run: make setup
+
+      - run: sudo sysctl -w vm.max_map_count=262144
+
+      - run: |
+          make generate
+          if ! git diff --quiet README.md; then
+            echo "Please run `make generate`"
+            git status --short
+            git --no-pager diff README.md
+            exit 1
+          fi
+
+      - run: make test
+
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: tmp/test-results
+          path: test-results
+
+  publish-test-results:
+    name: publish-test-results
+    needs: unit-tests
+    runs-on: ubuntu-16.04
+    if: success() || failure()
+
+    steps:
+      - name: download test-results
+        uses: actions/download-artifact@v2
+        with:
+          path: test-results
+
+      - name: Publish Unit Test Results
+        uses: docker://ghcr.io/enricomi/publish-unit-test-result-action:v1.12
+        with:
+          check_name: Unit Test Results
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: test-results/**/*.xml
+          comment_on_pr: false
