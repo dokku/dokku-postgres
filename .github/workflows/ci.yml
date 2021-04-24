@@ -80,23 +80,3 @@ jobs:
         with:
           name: tmp/test-results
           path: test-results
-
-  publish-test-results:
-    name: publish-test-results
-    needs: unit-tests
-    runs-on: ubuntu-16.04
-    if: success() || failure()
-
-    steps:
-      - name: download test-results
-        uses: actions/download-artifact@v2
-        with:
-          path: test-results
-
-      - name: Publish Unit Test Results
-        uses: docker://ghcr.io/enricomi/publish-unit-test-result-action:v1.12
-        with:
-          check_name: Unit Test Results
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          files: test-results/**/*.xml
-          comment_on_pr: false
