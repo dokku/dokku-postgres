@@ -8,7 +8,7 @@ on:
       - '*'
   push:
     branches:
-      - '*'
+      - master
 
 jobs:
   unit-tests:
@@ -19,6 +19,7 @@ jobs:
       matrix:
         dokku-version:
           - master
+          - v0.19.0
     env:
       DOKKU_VERSION: ${{ matrix.dokku-version }}
 
