@@ -11,17 +11,48 @@ on:
       - master
 
 jobs:
-  unit-tests:
+  unit-tests-master:
     name: unit-tests
     runs-on: ubuntu-18.04
     strategy:
       fail-fast: true
-      matrix:
-        dokku-version:
-          - master
-          - v0.19.0
     env:
-      DOKKU_VERSION: ${{ matrix.dokku-version }}
+      DOKKU_VERSION: master
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.7.x'
+
+      - run: make setup
+
+      - run: sudo sysctl -w vm.max_map_count=262144
+
+      - run: |
+          make generate
+          if ! git diff --quiet README.md; then
+            echo "Please run `make generate`"
+            git status --short
+            git --no-pager diff README.md
+            exit 1
+          fi
+
+      - run: make test
+
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: tmp/test-results
+          path: test-results
+
+  unit-tests-0.19.0:
+    name: unit-tests-0.19.0
+    runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: true
+    env:
+      DOKKU_TAG: v0.19.0
 
     steps:
       - uses: actions/checkout@v2
