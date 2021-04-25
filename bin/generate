@@ -506,7 +506,7 @@ def main():
                 sponsors = re.search("\[([\"\w\s,_-]+)\]", line).group(1)
                 sponsors = [s.strip("\"") for s in sponsors.split(",")]
 
-    text = compile(service, version, variable, alias, image, scheme, ports, sponsors, unimplemented, "0.12.x+")
+    text = compile(service, version, variable, alias, image, scheme, ports, sponsors, unimplemented, "0.19.x+")
 
     base_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     readme_file = os.path.join(base_path, "README.md")

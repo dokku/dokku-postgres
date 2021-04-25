@@ -11,7 +11,7 @@ ifneq ($(shell bats --version >/dev/null 2>&1 ; echo $$?),0)
 	brew install bats-core
 endif
 else
-	git clone https://github.com/josegonzalez/bats-core.git /tmp/bats
+	git clone https://github.com/bats-core/bats-core.git /tmp/bats
 	cd /tmp/bats && sudo ./install.sh /usr/local
 	rm -rf /tmp/bats
 endif
@@ -63,7 +63,7 @@ unit-tests:
 	@echo running unit tests...
 	@mkdir -p tmp/test-results/bats
 	@cd tests && echo "executing tests: $(shell cd tests ; ls *.bats | xargs)"
-	cd tests && bats --formatter bats-format-junit -e -T -o ../tmp/test-results/bats *.bats
+	cd tests && bats --report-formatter junit --timing -o ../tmp/test-results/bats *.bats
 
 tmp/xunit-reader:
 	mkdir -p tmp
