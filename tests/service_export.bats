@@ -20,6 +20,9 @@ teardown() {
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:export) success with SSH_TTY" {
+  if [[ -n "$GITHUB_WORKFLOW" ]]; then
+    skip "No tty is available on Github Actions"
+  fi
   export SSH_TTY=`tty`
   run dokku "$PLUGIN_COMMAND_PREFIX:export" l
   echo "output: $output"
