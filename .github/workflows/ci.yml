@@ -21,6 +21,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-python@v2
         with:
           python-version: '3.7.x'
@@ -30,12 +33,18 @@ jobs:
       - run: sudo sysctl -w vm.max_map_count=262144
 
       - run: |
-          make generate
-          if ! git diff --quiet README.md; then
-            echo "Please run 'make generate'"
-            git status --short
-            git --no-pager diff README.md
-            exit 1
+          git fetch -q origin master
+          changed=$(git --no-pager diff --name-only $GITHUB_SHA..origin/master)
+          if [ $changed = "Dockerfile" ]; then
+            echo "Please run 'make generate' to update the image version in the README.md"
+          else
+            make generate
+            if ! git diff --quiet README.md; then
+              echo "Please run 'make generate'"
+              git status --short
+              git --no-pager diff README.md
+              exit 1
+            fi
           fi
 
       - run: make test
@@ -56,6 +65,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-python@v2
         with:
           python-version: '3.7.x'
@@ -65,12 +77,18 @@ jobs:
       - run: sudo sysctl -w vm.max_map_count=262144
 
       - run: |
-          make generate
-          if ! git diff --quiet README.md; then
-            echo "Please run `make generate`"
-            git status --short
-            git --no-pager diff README.md
-            exit 1
+          git fetch -q origin master
+          changed=$(git --no-pager diff --name-only $GITHUB_SHA..origin/master)
+          if [ $changed = "Dockerfile" ]; then
+            echo "Please run 'make generate' to update the image version in the README.md"
+          else
+            make generate
+            if ! git diff --quiet README.md; then
+              echo "Please run 'make generate'"
+              git status --short
+              git --no-pager diff README.md
+              exit 1
+            fi
           fi
 
       - run: make test
