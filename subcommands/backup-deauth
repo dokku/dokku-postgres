@@ -9,7 +9,7 @@ service-backup-deauth-cmd() {
   #E remove s3 authentication
   #E dokku $PLUGIN_COMMAND_PREFIX:backup-deauth lolipop
   #A service, service to run command against
-  declare desc="removes backup authentication for the $PLUGIN_SERVICE service"
+  declare desc="remove backup authentication for the $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-deauth" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"

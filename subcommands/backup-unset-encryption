@@ -9,7 +9,7 @@ service-backup-unset-encryption-cmd() {
   #E unset the GPG encryption passphrase for backups
   #E dokku $PLUGIN_COMMAND_PREFIX:backup-unset-encryption lolipop
   #A service, service to run command against
-  declare desc="unsets encryption for future backups of the $PLUGIN_SERVICE service"
+  declare desc="unset encryption for future backups of the $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-unset-encryption" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"
