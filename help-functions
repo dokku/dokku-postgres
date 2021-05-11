@@ -141,7 +141,7 @@ fn-help-contents-subcommand() {
 }
 
 fn-help-fancy-tput() {
-  declare desc="A wrapper around tput"
+  declare desc="a wrapper around tput"
 
   if [[ -n "$DOKKU_NO_COLOR" ]] || [[ "$TERM" == "unknown" ]] || [[ "$TERM" == "dumb" ]]; then
     return
@@ -151,7 +151,7 @@ fn-help-fancy-tput() {
 }
 
 fn-help-fancy-color() {
-  declare desc="A wrapper around colors"
+  declare desc="a wrapper around colors"
 
   if [[ -n "$DOKKU_NO_COLOR" ]] || [[ "$TERM" == "unknown" ]] || [[ "$TERM" == "dumb" ]]; then
     return
@@ -309,7 +309,7 @@ fn-help-subcommand-sanitize() {
 }
 
 _fn-help-apply-shell-expansion() {
-  declare desc="Expand environment variables for a shell command"
+  declare desc="expand environment variables for a shell command"
   declare data="$1"
   declare delimiter="__apply_shell_expansion_delimiter__"
   declare command="cat <<$delimiter"$'\n'"$data"$'\n'"$delimiter"

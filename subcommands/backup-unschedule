@@ -9,7 +9,7 @@ service-backup-unschedule-cmd() {
   #E remove the scheduled backup from cron
   #E dokku $PLUGIN_COMMAND_PREFIX:backup-unschedule lolipop
   #A service, service to run command against
-  declare desc="unschedules the backup of the $PLUGIN_SERVICE service"
+  declare desc="unschedule the backup of the $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-unschedule" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"
