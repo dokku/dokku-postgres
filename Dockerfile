@@ -1,1 +1,1 @@
-FROM postgres:11.6
+FROM postgres:13.3
