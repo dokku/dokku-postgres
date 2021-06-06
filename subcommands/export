@@ -15,11 +15,12 @@ service-export-cmd() {
   local cmd="$PLUGIN_COMMAND_PREFIX:export" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"
+  declare DATABASE_NAME="$2"
   is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
   verify_service_name "$SERVICE"
-  service_export "$SERVICE"
+  service_export "$SERVICE" "$DATABASE_NAME"
 }
 
 service-export-cmd "$@"
