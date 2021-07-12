@@ -192,18 +192,20 @@ dokku postgres:link lolipop playground
 The following environment variables will be set automatically by docker (not on the app itself, so they won’t be listed when calling dokku config):
 
 ```
-DOKKU_DATABASE_LOLIPOP_NAME=/lolipop/DATABASE
-DOKKU_DATABASE_LOLIPOP_PORT=tcp://172.17.0.1:5432
-DOKKU_DATABASE_LOLIPOP_PORT_5432_TCP=tcp://172.17.0.1:5432
-DOKKU_DATABASE_LOLIPOP_PORT_5432_TCP_PROTO=tcp
-DOKKU_DATABASE_LOLIPOP_PORT_5432_TCP_PORT=5432
-DOKKU_DATABASE_LOLIPOP_PORT_5432_TCP_ADDR=172.17.0.1
+DOKKU_POSTGRES_LOLIPOP_NAME=/lolipop/DATABASE
+DOKKU_POSTGRES_LOLIPOP_PORT=tcp://172.17.0.1:5432
+DOKKU_POSTGRES_LOLIPOP_PORT_5432_TCP=tcp://172.17.0.1:5432
+DOKKU_POSTGRES_LOLIPOP_PORT_5432_TCP_PROTO=tcp
+DOKKU_POSTGRES_LOLIPOP_PORT_5432_TCP_PORT=5432
+DOKKU_POSTGRES_LOLIPOP_PORT_5432_TCP_ADDR=172.17.0.1
 ```
+
+The username will be `postgres`.
 
 The following will be set on the linked application by default:
 
 ```
-DATABASE_URL=postgres://lolipop:SOME_PASSWORD@dokku-postgres-lolipop:5432/lolipop
+DATABASE_URL=postgres://postgres:SOME_PASSWORD@dokku-postgres-lolipop:5432/lolipop
 ```
 
 The host exposed here only works internally in docker containers. If you want your container to be reachable from outside, you should use the 'expose' subcommand. Another service can be linked to your app:
