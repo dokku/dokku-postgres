@@ -71,28 +71,15 @@ tmp/xunit-reader:
 	tar xf tmp/xunit-reader.tgz -C tmp
 	chmod +x tmp/xunit-reader
 
-tmp/xunit-to-github:
-	mkdir -p tmp
-	curl -o tmp/xunit-to-github.tgz -sL https://github.com/josegonzalez/go-xunit-to-github/releases/download/v$(XUNIT_TO_GITHUB_VERSION)/xunit-to-github_$(XUNIT_TO_GITHUB_VERSION)_$(SYSTEM_NAME)_$(HARDWARE).tgz
-	tar xf tmp/xunit-to-github.tgz -C tmp
-	chmod +x tmp/xunit-to-github
-
 setup:
 	bash tests/setup.sh
 	$(MAKE) ci-dependencies
 
 test: lint unit-tests
 
-report: tmp/xunit-reader tmp/xunit-to-github
+report: tmp/xunit-reader
 	tmp/xunit-reader -p 'tmp/test-results/bats/*.xml'
 	tmp/xunit-reader -p 'tmp/test-results/shellcheck/*.xml'
-ifdef TRAVIS_REPO_SLUG
-ifdef GITHUB_ACCESS_TOKEN
-ifneq ($(TRAVIS_PULL_REQUEST),false)
-	tmp/xunit-to-github --skip-ok --job-url "$(TRAVIS_JOB_WEB_URL)" --pull-request-id "$(TRAVIS_PULL_REQUEST)" --repository-slug "$(TRAVIS_REPO_SLUG)" --title "DOKKU_VERSION=$(DOKKU_VERSION)" tmp/test-results/bats tmp/test-results/shellcheck
-endif
-endif
-endif
 
 .PHONY: clean
 clean:

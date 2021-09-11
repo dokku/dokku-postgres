@@ -35,8 +35,8 @@ def header(service):
     return " ".join(
         [
             f"# dokku {service}",
-            f'[![Build Status](https://img.shields.io/circleci/project/github/dokku/dokku-{service}.svg?branch=master&style=flat-square "Build Status")](https://circleci.com/gh/dokku/dokku-{service}/tree/master)',
-            f'[![IRC Network](https://img.shields.io/badge/irc-freenode-blue.svg?style=flat-square "IRC Freenode")](https://webchat.freenode.net/?channels=dokku)',
+            f'[![Build Status](https://img.shields.io/github/workflow/status/dokku/dokku-{service}/CI/master?style=flat-square "Build Status")](https://github.com/dokku/dokku-{service}/actions/workflows/ci.yml?query=branch%3Amaster)',
+            f'[![IRC Network](https://img.shields.io/badge/irc-libera-blue.svg?style=flat-square "IRC Libera")](https://webchat.libera.chat/?channels=dokku)',
         ]
     )
 
@@ -511,7 +511,7 @@ def main():
     base_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     readme_file = os.path.join(base_path, "README.md")
     with open(readme_file, "w") as f:
-        f.write(text)
+        f.write(text + "\n")
 
 
 if __name__ == "__main__":
