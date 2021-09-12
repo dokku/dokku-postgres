@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+main() {
+  PLUGIN_NAME="$(source /tmp/.env && echo "$PLUGIN_NAME")"
+  cp "$1" "/var/lib/dokku/plugins/enabled/$PLUGIN_NAME/$1"
+}
+
+main "$@"

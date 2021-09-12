@@ -18,7 +18,7 @@ main() {
   # built in the Dockerfile
   PLUGIN_NAME="$(source /tmp/.env && echo "$PLUGIN_NAME")"
   PLUGIN_VARIABLE="$(source /tmp/.env && echo "$PLUGIN_VARIABLE")"
-  dokku config:set --global "${PLUGIN_VARIABLE}_HOST_ROOT=${SERVICE_HOST_ROOT}"
+  echo "export ${PLUGIN_VARIABLE}_HOST_ROOT=${SERVICE_HOST_ROOT}/$PLUGIN_NAME" > /etc/default/dokku
 }
 
 main "$@"

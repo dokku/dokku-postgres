@@ -12,6 +12,7 @@ RUN apt-get install --no-install-recommends -y build-essential && \
 ADD https://raw.githubusercontent.com/dokku/dokku/master/tests/dhparam.pem /mnt/dokku/etc/nginx/dhparam.pem
 
 COPY .devcontainer/20_init_plugin /etc/my_init.d/20_init_plugin
+COPY .devcontainer/bin/ /usr/local/bin/
 
 COPY . .
 
