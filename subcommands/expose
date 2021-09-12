@@ -8,9 +8,11 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 service-expose-cmd() {
   #E expose the service on the service's normal ports, allowing access to it from the public interface (0.0.0.0)
   #E dokku $PLUGIN_COMMAND_PREFIX:expose lolipop ${PLUGIN_DATASTORE_PORTS[@]}
+  #E expose the service on the service's normal ports, with the first on a specified ip adddress (127.0.0.1)
+  #E dokku $PLUGIN_COMMAND_PREFIX:expose lolipop 127.0.0.1:${PLUGIN_DATASTORE_PORTS[@]}
   #A service, service to run command against
   #A ports, a list of ports to run against
-  declare desc="expose a $PLUGIN_SERVICE service on custom port if provided (random port otherwise)"
+  declare desc="expose a $PLUGIN_SERVICE service on custom host:port if provided (random port on the 0.0.0.0 interface if otherwise unspecified)"
   local cmd="$PLUGIN_COMMAND_PREFIX:expose" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" PORTS_LIST=("${@:2}")

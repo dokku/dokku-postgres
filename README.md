@@ -33,7 +33,7 @@ postgres:destroy <service> [-f|--force]            # delete the postgres service
 postgres:enter <service>                           # enter or run a command in a running postgres service container
 postgres:exists <service>                          # check if the postgres service exists
 postgres:export <service>                          # export a dump of the postgres service database
-postgres:expose <service> <ports...>               # expose a postgres service on custom port if provided (random port otherwise)
+postgres:expose <service> <ports...>               # expose a postgres service on custom host:port if provided (random port on the 0.0.0.0 interface if otherwise unspecified)
 postgres:import <service>                          # import a dump into the postgres service database
 postgres:info <service> [--single-info-flag]       # print the service information
 postgres:link <service> <app> [--link-flags...]    # link the postgres service to the app
@@ -276,7 +276,7 @@ You may also run a command directly against the service. Filesystem changes will
 dokku postgres:enter lolipop touch /tmp/test
 ```
 
-### expose a postgres service on custom port if provided (random port otherwise)
+### expose a postgres service on custom host:port if provided (random port on the 0.0.0.0 interface if otherwise unspecified)
 
 ```shell
 # usage
@@ -287,6 +287,12 @@ Expose the service on the service's normal ports, allowing access to it from the
 
 ```shell
 dokku postgres:expose lolipop 5432
+```
+
+Expose the service on the service's normal ports, with the first on a specified ip adddress (127.0.0.1):
+
+```shell
+dokku postgres:expose lolipop 127.0.0.1:5432
 ```
 
 ### unexpose a previously exposed postgres service
