@@ -150,7 +150,11 @@ service_start() {
   elif service_image_exists "$SERVICE" && [[ -n "$PASSWORD" ]]; then
     service_create_container "$SERVICE"
   else
-    dokku_log_verbose_quiet "Neither container nor valid configuration exists for $SERVICE"
+    if ! service_image_exists "$SERVICE"; then
+      dokku_log_verbose_quiet "Missing image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION for $SERVICE"
+    else
+      dokku_log_verbose_quiet "Neither container nor valid configuration exists for $SERVICE"
+    fi
   fi
 }
 
