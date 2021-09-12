@@ -4,5 +4,11 @@
     "context": ".."
   },
   "runArgs": ["--init"],
-  "mounts": [ "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind" ]
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    "source=${localWorkspaceFolder}/tmp/data/,target=/var/lib/dokku/services/postgres/,type=bind"
+  ],
+  "containerEnv": {
+    "POSTGRES_HOST_ROOT": "${localWorkspaceFolder}/tmp/data"
+  }
 }
