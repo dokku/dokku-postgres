@@ -423,13 +423,13 @@ def command_data(command, service, variable, alias, image, scheme, ports):
 def process_sentence(sentence_lines):
     sentence_lines = " ".join(sentence_lines)
     sentences = ". ".join(
-        upperfirst(i.strip()) for i in sentence_lines.split(".")
+        upperfirst(i.strip()) for i in sentence_lines.split(". ")
     ).strip()
     if not sentences.endswith(".") and not sentences.endswith(":"):
         sentences += ":"
 
     text = []
-    for sentence in sentences.split("."):
+    for sentence in sentences.split(". "):
         parts = []
         for word in sentence.strip().split(" "):
             if word.isupper() and len(word) > 1:
@@ -444,7 +444,11 @@ def process_sentence(sentence_lines):
     text = ". ".join(text)
 
     # some cleanup
-    text = text.replace("(0. 0. 0. 0)", "(`0.0.0.0`)")
+    text = text.replace("(0.0.0.0)", "(`0.0.0.0`)")
+    text = text.replace("'", "`")
+    text = text.replace("`s", "'s")
+    text = text.replace("``", "`")
+    text = text.strip(" ")
 
     return text
 

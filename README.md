@@ -77,7 +77,7 @@ Create a postgres service named lolipop:
 dokku postgres:create lolipop
 ```
 
-You can also specify the image and image version to use for the service. It *must* be compatible with the postgres image. 
+You can also specify the image and image version to use for the service. It *must* be compatible with the postgres image.
 
 ```shell
 export DATABASE_IMAGE="postgres"
@@ -85,7 +85,7 @@ export DATABASE_IMAGE_VERSION="${PLUGIN_IMAGE_VERSION}"
 dokku postgres:create lolipop
 ```
 
-You can also specify custom environment variables to start the postgres service in semi-colon separated form. 
+You can also specify custom environment variables to start the postgres service in semi-colon separated form.
 
 ```shell
 export DATABASE_CUSTOM_ENV="USER=alpha;HOST=beta"
@@ -181,7 +181,7 @@ flags:
 - `-a|--alias "BLUE_DATABASE"`: an alternative alias to use for linking to an app via environment variable
 - `-q|--querystring "pool=5"`: ampersand delimited querystring arguments to append to the service link
 
-A postgres service can be linked to a container. This will use native docker links via the docker-options plugin. Here we link it to our 'playground' app. 
+A postgres service can be linked to a container. This will use native docker links via the docker-options plugin. Here we link it to our `playground` app.
 
 > NOTE: this will restart your app
 
@@ -206,13 +206,13 @@ The following will be set on the linked application by default:
 DATABASE_URL=postgres://lolipop:SOME_PASSWORD@dokku-postgres-lolipop:5432/lolipop
 ```
 
-The host exposed here only works internally in docker containers. If you want your container to be reachable from outside, you should use the 'expose' subcommand. Another service can be linked to your app:
+The host exposed here only works internally in docker containers. If you want your container to be reachable from outside, you should use the `expose` subcommand. Another service can be linked to your app:
 
 ```shell
 dokku postgres:link other_service playground
 ```
 
-It is possible to change the protocol for `DATABASE_URL` by setting the environment variable `POSTGRES_DATABASE_SCHEME` on the app. Doing so will after linking will cause the plugin to think the service is not linked, and we advise you to unlink before proceeding. 
+It is possible to change the protocol for `DATABASE_URL` by setting the environment variable `POSTGRES_DATABASE_SCHEME` on the app. Doing so will after linking will cause the plugin to think the service is not linked, and we advise you to unlink before proceeding.
 
 ```shell
 dokku config:set playground POSTGRES_DATABASE_SCHEME=postgres2
@@ -264,13 +264,13 @@ dokku postgres:connect lolipop
 dokku postgres:enter <service>
 ```
 
-A bash prompt can be opened against a running service. Filesystem changes will not be saved to disk. 
+A bash prompt can be opened against a running service. Filesystem changes will not be saved to disk.
 
 ```shell
 dokku postgres:enter lolipop
 ```
 
-You may also run a command directly against the service. Filesystem changes will not be saved to disk. 
+You may also run a command directly against the service. Filesystem changes will not be saved to disk.
 
 ```shell
 dokku postgres:enter lolipop touch /tmp/test
@@ -401,7 +401,7 @@ Service scripting can be executed using the following commands:
 dokku postgres:app-links <app>
 ```
 
-List all postgres services that are linked to the 'playground' app. 
+List all postgres services that are linked to the `playground` app.
 
 ```shell
 dokku postgres:app-links playground
@@ -435,7 +435,7 @@ dokku postgres:clone lolipop lolipop-2
 dokku postgres:exists <service>
 ```
 
-Here we check if the lolipop postgres service exists. 
+Here we check if the lolipop postgres service exists.
 
 ```shell
 dokku postgres:exists lolipop
@@ -448,7 +448,7 @@ dokku postgres:exists lolipop
 dokku postgres:linked <service> <app>
 ```
 
-Here we check if the lolipop postgres service is linked to the 'playground' app. 
+Here we check if the lolipop postgres service is linked to the `playground` app.
 
 ```shell
 dokku postgres:linked lolipop playground
@@ -461,7 +461,7 @@ dokku postgres:linked lolipop playground
 dokku postgres:links <service>
 ```
 
-List all apps linked to the 'lolipop' postgres service. 
+List all apps linked to the `lolipop` postgres service.
 
 ```shell
 dokku postgres:links lolipop
@@ -566,10 +566,16 @@ flags:
 
 - `-u|--use-iam`: use the IAM profile associated with the current server
 
-Backup the 'lolipop' service to the 'my-s3-bucket' bucket on ``AWS`:`
+Backup the `lolipop` service to the `my-s3-bucket` bucket on `AWS`:`
 
 ```shell
 dokku postgres:backup lolipop my-s3-bucket --use-iam
+```
+
+Restore a backup file (assuming it was extracted via `tar -xf backup.tgz`):
+
+```shell
+dokku postgres:import lolipop < backup-folder/export
 ```
 
 ### sets encryption for all future backups of postgres service
