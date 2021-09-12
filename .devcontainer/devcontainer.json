@@ -3,12 +3,14 @@
     "dockerfile": "Dockerfile",
     "context": ".."
   },
-  "runArgs": ["--init"],
+  "containerEnv": {
+    "SERVICE_HOST_ROOT": "${localWorkspaceFolder}/tmp/data"
+  },
+  "initializeCommand": ["mkdir", "-p", "tmp/data"],
   "mounts": [
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
-    "source=${localWorkspaceFolder}/tmp/data/,target=/var/lib/dokku/services/postgres/,type=bind"
+    "source=${localWorkspaceFolder}/tmp/data/,target=/var/lib/dokku/services/,type=bind"
   ],
-  "containerEnv": {
-    "POSTGRES_HOST_ROOT": "${localWorkspaceFolder}/tmp/data"
-  }
+  "overrideCommand": false,
+  "runArgs": ["--init"]
 }
