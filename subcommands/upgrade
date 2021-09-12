@@ -6,6 +6,29 @@ source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 source "$PLUGIN_AVAILABLE_PATH/ps/functions"
 
+get_simple_version() {
+  # 9.2.4 => 9.2
+  # 9.2 => 9.2
+  # 11.2 => 11
+  # 11 => 11
+  local version=$1
+  IFS=. read -r -a arr <<< "${version%-*}"
+
+  if [ "${arr[0]}" -lt 10  ]; then
+    echo "${arr[0]}.${arr[1]}"
+  else
+    echo "${arr[0]}"
+  fi
+
+}
+
+docker_image_exists() {
+  local image=$1
+  local tag=$2
+  curl --silent -f -lLS "https://hub.docker.com/v2/repositories/$image/tags/$tag" &>/dev/null
+}
+
+
 service-upgrade-cmd() {
   #E you can upgrade an existing service to a new image or image-version
   #E dokku $PLUGIN_COMMAND_PREFIX:upgrade lolipop
@@ -36,7 +59,12 @@ service-upgrade-cmd() {
     return
   fi
 
-  dokku_log_info2 "Upgrading $SERVICE to $NEW_PLUGIN_IMAGE_TAG"
+  local OLD_IMAGE_TAG
+  local OLD_IMAGE_VERSION
+  OLD_IMAGE_TAG="$(service_version "$SERVICE")"
+  OLD_IMAGE_VERSION=${OLD_IMAGE_TAG#*:}
+
+  dokku_log_info2 "Upgrading $SERVICE from $OLD_IMAGE_TAG to $NEW_PLUGIN_IMAGE_TAG"
   if [[ "$SERVICE_RESTART_APPS" == "true" ]]; then
     dokku_log_info2 "Stopping all linked services"
     for app in $(service_linked_apps "$SERVICE"); do
@@ -47,6 +75,30 @@ service-upgrade-cmd() {
 
   dokku_log_info2 "Stopping $SERVICE"
   service_container_rm "$SERVICE"
+
+  # Migrate
+  local old_version
+  local new_version
+  local data_dir="$PLUGIN_DATA_ROOT/$SERVICE/data"
+  local data_old="$PLUGIN_DATA_ROOT/$SERVICE/data_old"
+  old_version=$(get_simple_version "$OLD_IMAGE_VERSION")
+  new_version=$(get_simple_version "$PLUGIN_IMAGE_VERSION")
+
+  if docker_image_exists tianon/postgres-upgrade "$old_version-to-$new_version"; then
+
+    dokku_log_info2 "Migrating $SERVICE from $old_version to $new_version"
+
+    mv "$data_dir" "$data_old"
+
+    docker run --rm \
+      -v "$data_old:/var/lib/postgresql/${old_version}/data" \
+      -v "$data_dir:/var/lib/postgresql/${new_version}/data" \
+      tianon/postgres-upgrade:"${old_version}-to-${new_version}"
+
+    docker run --rm -v "$data_old:/data" busybox:1.30.1-uclibc chmod 777 -R /data
+    rm -rf "$data_old"
+  fi
+
   service_start "$SERVICE" "${@:2}"
 
   if [[ "$SERVICE_RESTART_APPS" == "true" ]]; then
