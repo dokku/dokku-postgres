@@ -23,7 +23,7 @@ pushd "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")" >/dev/null
 source "config"
 popd >/dev/null
 sudo rm -rf "$DOKKU_PLUGINS_ROOT/$PLUGIN_COMMAND_PREFIX"
-sudo mkdir -p "$DOKKU_PLUGINS_ROOT/$PLUGIN_COMMAND_PREFIX" "$DOKKU_PLUGINS_ROOT/$PLUGIN_COMMAND_PREFIX/subcommands" "$DOKKU_PLUGINS_ROOT/$PLUGIN_COMMAND_PREFIX/scripts"
+sudo mkdir -p "$DOKKU_PLUGINS_ROOT/$PLUGIN_COMMAND_PREFIX" "$DOKKU_PLUGINS_ROOT/$PLUGIN_COMMAND_PREFIX/subcommands" "$DOKKU_PLUGINS_ROOT/$PLUGIN_COMMAND_PREFIX/scripts" "$DOKKU_PLUGINS_ROOT/$PLUGIN_COMMAND_PREFIX/templates"
 sudo find ./ -maxdepth 1 -type f -exec cp '{}' "$DOKKU_PLUGINS_ROOT/$PLUGIN_COMMAND_PREFIX" \;
 [[ -d "./scripts" ]] && sudo find ./scripts -maxdepth 1 -type f -exec cp '{}' "$DOKKU_PLUGINS_ROOT/$PLUGIN_COMMAND_PREFIX/scripts" \;
 [[ -d "./subcommands" ]] && sudo find ./subcommands -maxdepth 1 -type f -exec cp '{}' "$DOKKU_PLUGINS_ROOT/$PLUGIN_COMMAND_PREFIX/subcommands" \;
