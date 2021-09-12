@@ -68,6 +68,7 @@ flags:
 - `-C|--custom-env "USER=alpha;HOST=beta"`: semi-colon delimited environment variables to start the service with
 - `-i|--image IMAGE`: the image name to start the service with
 - `-I|--image-version IMAGE_VERSION`: the image version to start the service with
+- `-m|--memory MEMORY`: container memory limit (default: unlimited)
 - `-p|--password PASSWORD`: override the user-level service password
 - `-r|--root-password PASSWORD`: override the root-level service password
 
@@ -425,6 +426,7 @@ flags:
 - `-C|--custom-env "USER=alpha;HOST=beta"`: semi-colon delimited environment variables to start the service with
 - `-i|--image IMAGE`: the image name to start the service with
 - `-I|--image-version IMAGE_VERSION`: the image version to start the service with
+- `-m|--memory MEMORY`: container memory limit (default: unlimited)
 - `-p|--password PASSWORD`: override the user-level service password
 - `-r|--root-password PASSWORD`: override the root-level service password
 
