@@ -509,11 +509,9 @@ def main():
     with open("config") as f:
         for line in f.readlines():
             if f"{variable}_CONFIG_OPTIONS" in line:
-                print(variable)
                 match = re.search('"(.+)"', line)
                 if match is not None:
                     options = match.group(1)
-                    print(options)
 
     sponsors = []
     with open("plugin.toml") as f:
