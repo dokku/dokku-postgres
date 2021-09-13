@@ -8,6 +8,7 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 service-enter-cmd() {
   #E a bash prompt can be opened against a running service.
   #E filesystem changes will not be saved to disk.
+  #E > NOTE: disconnecting from ssh while running this command may leave zombie processes due to moby/moby#9098
   #E dokku $PLUGIN_COMMAND_PREFIX:enter lollipop
   #E you may also run a command directly against the service.
   #E filesystem changes will not be saved to disk.
