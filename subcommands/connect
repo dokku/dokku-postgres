@@ -7,7 +7,7 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-connect-cmd() {
   #E connect to the service via the $PLUGIN_COMMAND_PREFIX connection tool
-  #E dokku $PLUGIN_COMMAND_PREFIX:connect lolipop
+  #E dokku $PLUGIN_COMMAND_PREFIX:connect lollipop
   #A service, service to run command against
   declare desc="connect to the service via the $PLUGIN_COMMAND_PREFIX connection tool"
   local cmd="$PLUGIN_COMMAND_PREFIX:connect" argv=("$@")

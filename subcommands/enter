@@ -8,10 +8,10 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 service-enter-cmd() {
   #E a bash prompt can be opened against a running service.
   #E filesystem changes will not be saved to disk.
-  #E dokku $PLUGIN_COMMAND_PREFIX:enter lolipop
+  #E dokku $PLUGIN_COMMAND_PREFIX:enter lollipop
   #E you may also run a command directly against the service.
   #E filesystem changes will not be saved to disk.
-  #E dokku $PLUGIN_COMMAND_PREFIX:enter lolipop touch /tmp/test
+  #E dokku $PLUGIN_COMMAND_PREFIX:enter lollipop touch /tmp/test
   #A service, service to run command against
   declare desc="enter or run a command in a running $PLUGIN_SERVICE service container"
   local cmd="$PLUGIN_COMMAND_PREFIX:enter" argv=("$@")

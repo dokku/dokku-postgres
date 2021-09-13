@@ -7,7 +7,7 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-clone-cmd() {
   #E you can clone an existing service to a new one
-  #E dokku $PLUGIN_COMMAND_PREFIX:clone lolipop lolipop-2
+  #E dokku $PLUGIN_COMMAND_PREFIX:clone lollipop lollipop-2
   #A service, service to run command against
   #A new-service, name of new service
   #F -c|--config-options "--args --go=here", extra arguments to pass to the container create command

@@ -6,8 +6,8 @@ source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-links-cmd() {
-  #E list all apps linked to the 'lolipop' $PLUGIN_COMMAND_PREFIX service.
-  #E dokku $PLUGIN_COMMAND_PREFIX:links lolipop
+  #E list all apps linked to the 'lollipop' $PLUGIN_COMMAND_PREFIX service.
+  #E dokku $PLUGIN_COMMAND_PREFIX:links lollipop
   #A service, service to run command against
   declare desc="list all apps linked to the $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:links" argv=("$@")

@@ -10,20 +10,20 @@ service-link-cmd() {
   #E this will use native docker links via the docker-options plugin.
   #E here we link it to our 'playground' app.
   #E > NOTE: this will restart your app
-  #E dokku $PLUGIN_COMMAND_PREFIX:link lolipop playground
+  #E dokku $PLUGIN_COMMAND_PREFIX:link lollipop playground
   #E the following environment variables will be set automatically by docker
   #E (not on the app itself, so they won’t be listed when calling dokku config):
   #E
-  #E     DOKKU_${PLUGIN_VARIABLE}_LOLIPOP_NAME=/lolipop/DATABASE
-  #E     DOKKU_${PLUGIN_VARIABLE}_LOLIPOP_PORT=tcp://172.17.0.1:${PLUGIN_DATASTORE_PORTS[0]}
-  #E     DOKKU_${PLUGIN_VARIABLE}_LOLIPOP_PORT_${PLUGIN_DATASTORE_PORTS[0]}_TCP=tcp://172.17.0.1:${PLUGIN_DATASTORE_PORTS[0]}
-  #E     DOKKU_${PLUGIN_VARIABLE}_LOLIPOP_PORT_${PLUGIN_DATASTORE_PORTS[0]}_TCP_PROTO=tcp
-  #E     DOKKU_${PLUGIN_VARIABLE}_LOLIPOP_PORT_${PLUGIN_DATASTORE_PORTS[0]}_TCP_PORT=${PLUGIN_DATASTORE_PORTS[0]}
-  #E     DOKKU_${PLUGIN_VARIABLE}_LOLIPOP_PORT_${PLUGIN_DATASTORE_PORTS[0]}_TCP_ADDR=172.17.0.1
+  #E     DOKKU_${PLUGIN_VARIABLE}_LOLLIPOP_NAME=/lollipop/DATABASE
+  #E     DOKKU_${PLUGIN_VARIABLE}_LOLLIPOP_PORT=tcp://172.17.0.1:${PLUGIN_DATASTORE_PORTS[0]}
+  #E     DOKKU_${PLUGIN_VARIABLE}_LOLLIPOP_PORT_${PLUGIN_DATASTORE_PORTS[0]}_TCP=tcp://172.17.0.1:${PLUGIN_DATASTORE_PORTS[0]}
+  #E     DOKKU_${PLUGIN_VARIABLE}_LOLLIPOP_PORT_${PLUGIN_DATASTORE_PORTS[0]}_TCP_PROTO=tcp
+  #E     DOKKU_${PLUGIN_VARIABLE}_LOLLIPOP_PORT_${PLUGIN_DATASTORE_PORTS[0]}_TCP_PORT=${PLUGIN_DATASTORE_PORTS[0]}
+  #E     DOKKU_${PLUGIN_VARIABLE}_LOLLIPOP_PORT_${PLUGIN_DATASTORE_PORTS[0]}_TCP_ADDR=172.17.0.1
   #E
   #E the following will be set on the linked application by default:
   #E
-  #E     ${PLUGIN_DEFAULT_ALIAS}_URL=${PLUGIN_SCHEME}://lolipop:SOME_PASSWORD@dokku-${PLUGIN_COMMAND_PREFIX}-lolipop:${PLUGIN_DATASTORE_PORTS[0]}/lolipop
+  #E     ${PLUGIN_DEFAULT_ALIAS}_URL=${PLUGIN_SCHEME}://lollipop:SOME_PASSWORD@dokku-${PLUGIN_COMMAND_PREFIX}-lollipop:${PLUGIN_DATASTORE_PORTS[0]}/lollipop
   #E
   #E the host exposed here only works internally in docker containers.
   #E if you want your container to be reachable from outside, you should
@@ -34,10 +34,10 @@ service-link-cmd() {
   #E after linking will cause the plugin to think the service is not
   #E linked, and we advise you to unlink before proceeding.
   #E dokku config:set playground ${PLUGIN_VARIABLE}_DATABASE_SCHEME=${PLUGIN_SCHEME}2
-  #E dokku $PLUGIN_COMMAND_PREFIX:link lolipop playground
+  #E dokku $PLUGIN_COMMAND_PREFIX:link lollipop playground
   #E this will cause ${PLUGIN_DEFAULT_ALIAS}_URL to be set as:
   #E
-  #E     ${PLUGIN_SCHEME}2://lolipop:SOME_PASSWORD@dokku-${PLUGIN_COMMAND_PREFIX}-lolipop:${PLUGIN_DATASTORE_PORTS[0]}/lolipop
+  #E     ${PLUGIN_SCHEME}2://lollipop:SOME_PASSWORD@dokku-${PLUGIN_COMMAND_PREFIX}-lollipop:${PLUGIN_DATASTORE_PORTS[0]}/lollipop
   #A service, service to run command against
   #A app, app to run command against
   #F -a|--alias "BLUE_DATABASE", an alternative alias to use for linking to an app via environment variable

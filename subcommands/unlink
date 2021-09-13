@@ -8,7 +8,7 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 service-unlink-cmd() {
   #E you can unlink a $PLUGIN_COMMAND_PREFIX service
   #E > NOTE: this will restart your app and unset related environment variables
-  #E dokku $PLUGIN_COMMAND_PREFIX:unlink lolipop playground
+  #E dokku $PLUGIN_COMMAND_PREFIX:unlink lollipop playground
   #A service, service to run command against
   #A app, app to run command against
   declare desc="unlink the $PLUGIN_SERVICE service from the app"

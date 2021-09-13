@@ -20,7 +20,7 @@ service-promote-cmd() {
   #E
   #E     ${PLUGIN_DEFAULT_ALIAS}_URL=${PLUGIN_SCHEME}://other_service:ANOTHER_PASSWORD@dokku-${PLUGIN_COMMAND_PREFIX}-other-service:${PLUGIN_DATASTORE_PORTS[0]}/other_service
   #E     DOKKU_${PLUGIN_DEFAULT_ALIAS}_BLUE_URL=${PLUGIN_SCHEME}://other_service:ANOTHER_PASSWORD@dokku-${PLUGIN_COMMAND_PREFIX}-other-service:${PLUGIN_DATASTORE_PORTS[0]}/other_service
-  #E     DOKKU_${PLUGIN_DEFAULT_ALIAS}_SILVER_URL=${PLUGIN_SCHEME}://lolipop:SOME_PASSWORD@dokku-${PLUGIN_COMMAND_PREFIX}-lolipop:${PLUGIN_DATASTORE_PORTS[0]}/lolipop
+  #E     DOKKU_${PLUGIN_DEFAULT_ALIAS}_SILVER_URL=${PLUGIN_SCHEME}://lollipop:SOME_PASSWORD@dokku-${PLUGIN_COMMAND_PREFIX}-lollipop:${PLUGIN_DATASTORE_PORTS[0]}/lollipop
   #A service, service to run command against
   #A app, app to run command against
   declare desc="promote service <service> as ${PLUGIN_DEFAULT_ALIAS}_URL in <app>"

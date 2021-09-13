@@ -7,7 +7,7 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-destroy-cmd() {
   #E destroy the service, it's data, and the running container
-  #E dokku $PLUGIN_COMMAND_PREFIX:destroy lolipop
+  #E dokku $PLUGIN_COMMAND_PREFIX:destroy lollipop
   #A service, service to run command against
   #F -f|--force, force destroy without asking for confirmation
   declare desc="delete the $PLUGIN_SERVICE service/data/container if there are no links left"

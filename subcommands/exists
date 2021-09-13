@@ -6,8 +6,8 @@ source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-exists-cmd() {
-  #E here we check if the lolipop $PLUGIN_COMMAND_PREFIX service exists.
-  #E dokku $PLUGIN_COMMAND_PREFIX:exists lolipop
+  #E here we check if the lollipop $PLUGIN_COMMAND_PREFIX service exists.
+  #E dokku $PLUGIN_COMMAND_PREFIX:exists lollipop
   #A service, service to run command against
   declare desc="check if the $PLUGIN_SERVICE service exists"
   local cmd="$PLUGIN_COMMAND_PREFIX:exists" argv=("$@")

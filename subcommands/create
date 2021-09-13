@@ -6,17 +6,17 @@ source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-create-cmd() {
-  #E create a $PLUGIN_COMMAND_PREFIX service named lolipop
-  #E dokku $PLUGIN_COMMAND_PREFIX:create lolipop
+  #E create a $PLUGIN_COMMAND_PREFIX service named lollipop
+  #E dokku $PLUGIN_COMMAND_PREFIX:create lollipop
   #E you can also specify the image and image version to use for the service.
   #E it *must* be compatible with the ${PLUGIN_IMAGE} image.
   #E export ${PLUGIN_VARIABLE}_IMAGE="${PLUGIN_IMAGE}"
   #E export ${PLUGIN_VARIABLE}_IMAGE_VERSION="${PLUGIN_IMAGE_VERSION}"
-  #E dokku $PLUGIN_COMMAND_PREFIX:create lolipop
+  #E dokku $PLUGIN_COMMAND_PREFIX:create lollipop
   #E you can also specify custom environment variables to start
   #E the ${PLUGIN_COMMAND_PREFIX} service in semi-colon separated form.
   #E export ${PLUGIN_VARIABLE}_CUSTOM_ENV="USER=alpha;HOST=beta"
-  #E dokku $PLUGIN_COMMAND_PREFIX:create lolipop
+  #E dokku $PLUGIN_COMMAND_PREFIX:create lollipop
   #A service, service to run command against
   #F -c|--config-options "--args --go=here", extra arguments to pass to the container create command
   #F -C|--custom-env "USER=alpha;HOST=beta", semi-colon delimited environment variables to start the service with

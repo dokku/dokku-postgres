@@ -7,9 +7,9 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-logs-cmd() {
   #E you can tail logs for a particular service:
-  #E dokku $PLUGIN_COMMAND_PREFIX:logs lolipop
+  #E dokku $PLUGIN_COMMAND_PREFIX:logs lollipop
   #E by default, logs will not be tailed, but you can do this with the --tail flag:
-  #E dokku $PLUGIN_COMMAND_PREFIX:logs lolipop --tail
+  #E dokku $PLUGIN_COMMAND_PREFIX:logs lollipop --tail
   #A service, service to run command against
   #F -t|--tail, do not stop when end of the logs are reached and wait for additional output
   declare desc="print the most recent log(s) for this service"

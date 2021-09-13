@@ -6,10 +6,10 @@ source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-backup-cmd() {
-  #E backup the 'lolipop' service to the 'my-s3-bucket' bucket on AWS
-  #E dokku $PLUGIN_COMMAND_PREFIX:backup lolipop my-s3-bucket --use-iam
+  #E backup the 'lollipop' service to the 'my-s3-bucket' bucket on AWS
+  #E dokku $PLUGIN_COMMAND_PREFIX:backup lollipop my-s3-bucket --use-iam
   #E restore a backup file (assuming it was extracted via 'tar -xf backup.tgz')
-  #E dokku $PLUGIN_COMMAND_PREFIX:import lolipop < backup-folder/export
+  #E dokku $PLUGIN_COMMAND_PREFIX:import lollipop < backup-folder/export
   #F -u|--use-iam, use the IAM profile associated with the current server
   #A service, service to run command against
   #A bucket-name, name of the s3 bucket to upload backups to

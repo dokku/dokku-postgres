@@ -6,8 +6,8 @@ source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-linked-cmd() {
-  #E here we check if the lolipop $PLUGIN_COMMAND_PREFIX service is linked to the 'playground' app.
-  #E dokku $PLUGIN_COMMAND_PREFIX:linked lolipop playground
+  #E here we check if the lollipop $PLUGIN_COMMAND_PREFIX service is linked to the 'playground' app.
+  #E dokku $PLUGIN_COMMAND_PREFIX:linked lollipop playground
   #A service, service to run command against
   #A app, app to run command against
   declare desc="check if the $PLUGIN_SERVICE service is linked to an app"

@@ -7,7 +7,7 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-backup-unschedule-cmd() {
   #E remove the scheduled backup from cron
-  #E dokku $PLUGIN_COMMAND_PREFIX:backup-unschedule lolipop
+  #E dokku $PLUGIN_COMMAND_PREFIX:backup-unschedule lollipop
   #A service, service to run command against
   declare desc="unschedule the backup of the $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-unschedule" argv=("$@")

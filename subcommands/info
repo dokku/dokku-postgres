@@ -7,18 +7,18 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-info-cmd() {
   #E get connection information as follows:
-  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop
   #E you can also retrieve a specific piece of service info via flags:
-  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --config-dir
-  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --data-dir
-  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --dsn
-  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --exposed-ports
-  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --id
-  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --internal-ip
-  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --links
-  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --service-root
-  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --status
-  #E dokku $PLUGIN_COMMAND_PREFIX:info lolipop --version
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --config-dir
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --data-dir
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --dsn
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --exposed-ports
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --id
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --internal-ip
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --links
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --service-root
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --status
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --version
   #A service, service to run command against
   #F --config-dir, show the service configuration directory
   #F --data-dir, show the service data directory

@@ -7,7 +7,7 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-unexpose-cmd() {
   #E unexpose the service, removing access to it from the public interface (0.0.0.0)
-  #E dokku $PLUGIN_COMMAND_PREFIX:unexpose lolipop
+  #E dokku $PLUGIN_COMMAND_PREFIX:unexpose lollipop
   #A service, service to run command against
   declare desc="unexpose a previously exposed $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:unexpose" argv=("$@")

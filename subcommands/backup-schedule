@@ -8,9 +8,9 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 service-backup-schedule-cmd() {
   #E schedule a backup
   #E > 'schedule' is a crontab expression, eg. "0 3 * * *" for each day at 3am
-  #E dokku $PLUGIN_COMMAND_PREFIX:backup-schedule lolipop "0 3 * * *" my-s3-bucket
+  #E dokku $PLUGIN_COMMAND_PREFIX:backup-schedule lollipop "0 3 * * *" my-s3-bucket
   #E schedule a backup and authenticate via iam
-  #E dokku $PLUGIN_COMMAND_PREFIX:backup-schedule lolipop "0 3 * * *" my-s3-bucket --use-iam
+  #E dokku $PLUGIN_COMMAND_PREFIX:backup-schedule lollipop "0 3 * * *" my-s3-bucket --use-iam
   #F -u|--use-iam, use the IAM profile associated with the current server
   #A service, service to run command against
   #A schedule, a cron schedule to run backups on

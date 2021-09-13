@@ -7,7 +7,7 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-stop-cmd() {
   #E stop the service and the running container
-  #E dokku $PLUGIN_COMMAND_PREFIX:stop lolipop
+  #E dokku $PLUGIN_COMMAND_PREFIX:stop lollipop
   #A service, service to run command against
   declare desc="stop a running $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:stop" argv=("$@")

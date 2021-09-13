@@ -7,7 +7,7 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-start-cmd() {
   #E start the service
-  #E dokku $PLUGIN_COMMAND_PREFIX:start lolipop
+  #E dokku $PLUGIN_COMMAND_PREFIX:start lollipop
   #A service, service to run command against
   declare desc="start a previously stopped $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:start" argv=("$@")
