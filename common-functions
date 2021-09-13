@@ -251,6 +251,14 @@ service_commit_config() {
   if [[ -n "$SERVICE_SHM_SIZE" ]]; then
     echo "$SERVICE_SHM_SIZE" >"$SERVICE_ROOT/SHM_SIZE"
   fi
+
+  if [[ -n "$PLUGIN_IMAGE" ]]; then
+    echo "$PLUGIN_IMAGE" >"$SERVICE_ROOT/IMAGE"
+  fi
+
+  if [[ -n "$PLUGIN_IMAGE_VERSION" ]]; then
+    echo "$PLUGIN_IMAGE_VERSION" >"$SERVICE_ROOT/IMAGE_VERSION"
+  fi
 }
 
 service_backup_auth() {
@@ -396,7 +404,13 @@ service_exposed_ports() {
 
 service_image_exists() {
   declare desc="check if the current image exists"
-  local IMAGE="$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
+  declare SERVICE="$1"
+  local plugin_image="$PLUGIN_IMAGE"
+  local plugin_image_version="$PLUGIN_IMAGE_VERSION"
+
+  [[ -f "$SERVICE_ROOT/IMAGE" ]] && plugin_image="$(cat "$SERVICE_ROOT/IMAGE")"
+  [[ -f "$SERVICE_ROOT/IMAGE_VERSION" ]] && plugin_image_version="$(cat "$SERVICE_ROOT/IMAGE_VERSION")"
+  local IMAGE="$plugin_image:$plugin_image_version"
 
   if [[ "$(docker images -q "$IMAGE" 2>/dev/null)" == "" ]]; then
     return 1

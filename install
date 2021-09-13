@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common-functions"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 
@@ -46,6 +47,15 @@ EOL
   local SERVICES=$(ls "$PLUGIN_DATA_ROOT" 2>/dev/null)
   for SERVICE in $SERVICES; do
     local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+
+    if [[ ! -f "$SERVICE_ROOT/IMAGE" ]] || [[ ! -f "$SERVICE_ROOT/IMAGE_VERSION" ]]; then
+      local image="$(service_version "$SERVICE")"
+      if [[ "$image" == *":"* ]]; then
+        echo "${image%:*}" > "$SERVICE_ROOT/IMAGE"
+        echo "${image##*:}" > "$SERVICE_ROOT/IMAGE_VERSION"
+      fi
+    fi
+
     if [[ -f "$SERVICE_ROOT/${PLUGIN_VARIABLE}_CONFIG_OPTIONS" ]]; then
       mv "$SERVICE_ROOT/${PLUGIN_VARIABLE}_CONFIG_OPTIONS" "$SERVICE_ROOT/CONFIG_OPTIONS"
     fi

@@ -83,6 +83,9 @@ service_create_container() {
     SHM_SIZE="--shm-size=${SERVICE_SHM_SIZE}"
   fi
 
+  [[ -f "$SERVICE_ROOT/IMAGE" ]] && PLUGIN_IMAGE="$(cat "$SERVICE_ROOT/IMAGE")"
+  [[ -f "$SERVICE_ROOT/IMAGE_VERSION" ]] && PLUGIN_IMAGE_VERSION="$(cat "$SERVICE_ROOT/IMAGE_VERSION")"
+
   # shellcheck disable=SC2086
   ID=$(docker run --name "$SERVICE_NAME" $MEMORY_LIMIT $SHM_SIZE -v "$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data" -e "POSTGRES_PASSWORD=$PASSWORD" --env-file="$SERVICE_ROOT/ENV" -d --restart always --label dokku=service --label dokku.service=postgres "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" $CONFIG_OPTIONS)
   echo "$ID" >"$SERVICE_ROOT/ID"
@@ -160,6 +163,8 @@ service_start() {
     service_create_container "$SERVICE"
   else
     if ! service_image_exists "$SERVICE"; then
+      [[ -f "$SERVICE_ROOT/IMAGE" ]] && PLUGIN_IMAGE="$(cat "$SERVICE_ROOT/IMAGE")"
+      [[ -f "$SERVICE_ROOT/IMAGE_VERSION" ]] && PLUGIN_IMAGE_VERSION="$(cat "$SERVICE_ROOT/IMAGE_VERSION")"
       dokku_log_verbose_quiet "Missing image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION for $SERVICE"
     else
       dokku_log_verbose_quiet "Neither container nor valid configuration exists for $SERVICE"
