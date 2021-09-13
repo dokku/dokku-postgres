@@ -10,12 +10,12 @@ service-create-cmd() {
   #E dokku $PLUGIN_COMMAND_PREFIX:create lolipop
   #E you can also specify the image and image version to use for the service.
   #E it *must* be compatible with the ${PLUGIN_IMAGE} image.
-  #E export ${PLUGIN_DEFAULT_ALIAS}_IMAGE="${PLUGIN_IMAGE}"
-  #E export ${PLUGIN_DEFAULT_ALIAS}_IMAGE_VERSION="${PLUGIN_IMAGE_VERSION}"
+  #E export ${PLUGIN_VARIABLE}_IMAGE="${PLUGIN_IMAGE}"
+  #E export ${PLUGIN_VARIABLE}_IMAGE_VERSION="${PLUGIN_IMAGE_VERSION}"
   #E dokku $PLUGIN_COMMAND_PREFIX:create lolipop
   #E you can also specify custom environment variables to start
   #E the ${PLUGIN_COMMAND_PREFIX} service in semi-colon separated form.
-  #E export ${PLUGIN_DEFAULT_ALIAS}_CUSTOM_ENV="USER=alpha;HOST=beta"
+  #E export ${PLUGIN_VARIABLE}_CUSTOM_ENV="USER=alpha;HOST=beta"
   #E dokku $PLUGIN_COMMAND_PREFIX:create lolipop
   #A service, service to run command against
   #F -c|--config-options "--args --go=here", extra arguments to pass to the container create command
