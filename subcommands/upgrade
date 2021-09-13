@@ -10,6 +10,7 @@ service-upgrade-cmd() {
   #E you can upgrade an existing service to a new image or image-version
   #E dokku $PLUGIN_COMMAND_PREFIX:upgrade lolipop
   #A service, service to run command against
+  #F -c|--config-options "--args --go=here", extra arguments to pass to the container create command
   #F -C|--custom-env "USER=alpha;HOST=beta", semi-colon delimited environment variables to start the service with
   #F -i|--image IMAGE, the image name to start the service with
   #F -I|--image-version IMAGE_VERSION, the image version to start the service with
@@ -35,6 +36,8 @@ service-upgrade-cmd() {
     dokku_log_info1 "Service $SERVICE already running $NEW_PLUGIN_IMAGE_TAG"
     return
   fi
+
+  service_commit_config "$SERVICE"
 
   dokku_log_info2 "Upgrading $SERVICE to $NEW_PLUGIN_IMAGE_TAG"
   if [[ "$SERVICE_RESTART_APPS" == "true" ]]; then

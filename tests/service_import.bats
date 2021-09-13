@@ -24,6 +24,9 @@ teardown() {
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:import) error when data is not provided" {
+  if [[ -n "$GITHUB_WORKFLOW" ]]; then
+    skip "No tty is available on Github Actions"
+  fi
   run dokku "$PLUGIN_COMMAND_PREFIX:import" l
   assert_contains "${lines[*]}" "No data provided on stdin"
   assert_failure

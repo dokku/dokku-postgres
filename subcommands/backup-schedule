@@ -15,7 +15,7 @@ service-backup-schedule-cmd() {
   #A service, service to run command against
   #A schedule, a cron schedule to run backups on
   #A bucket-name, name of the s3 bucket to upload backups to
-  declare desc="schedules a backup of the $PLUGIN_SERVICE service"
+  declare desc="schedule a backup of the $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-schedule" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" SCHEDULE="$2" BUCKET_NAME="$3" USE_IAM_OPTIONAL_FLAG="$4"

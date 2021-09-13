@@ -8,10 +8,12 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 service-backup-cmd() {
   #E backup the 'lolipop' service to the 'my-s3-bucket' bucket on AWS
   #E dokku $PLUGIN_COMMAND_PREFIX:backup lolipop my-s3-bucket --use-iam
+  #E restore a backup file (assuming it was extracted via 'tar -xf backup.tgz')
+  #E dokku $PLUGIN_COMMAND_PREFIX:import lolipop < backup-folder/export
   #F -u|--use-iam, use the IAM profile associated with the current server
   #A service, service to run command against
   #A bucket-name, name of the s3 bucket to upload backups to
-  declare desc="creates a backup of the $PLUGIN_SERVICE service to an existing s3 bucket"
+  declare desc="create a backup of the $PLUGIN_SERVICE service to an existing s3 bucket"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" BUCKET_NAME="$2" USE_IAM_OPTIONAL_FLAG="$3"
