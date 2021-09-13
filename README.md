@@ -558,6 +558,12 @@ You can redirect this output to a file:
 dokku postgres:export lollipop > data.dump
 ```
 
+Note that the export will result in a file containing the binary postgres export data. It can be converted to plain text using `pg_restore` as follows
+
+```shell
+pg_restore data.dump -f plain.sql.
+```
+
 ### Backups
 
 Datastore backups are supported via AWS S3 and S3 compatible services like [minio](https://github.com/minio/minio).
