@@ -119,7 +119,7 @@ def usage_section(service, variable, alias, image, scheme, ports, options, unimp
     return "\n\n".join(
         [
             "## Usage",
-            f"Help for any commands can be displayed by specifying the command as an argument to {service}:help. Please consult the `{service}:help` command for any undocumented commands.",
+            f"Help for any commands can be displayed by specifying the command as an argument to {service}:help. Plugin help output in conjunction with any files in the `docs/` folder is used to generate the plugin documentation. Please consult the `{service}:help` command for any undocumented commands.",
             usage_intro(service, variable, alias, image, scheme, ports, options, unimplemented),
             usage_lifecycle(service, variable, alias, image, scheme, ports, options, unimplemented),
             usage_automation(service, variable, alias, image, scheme, ports, options, unimplemented),
@@ -307,6 +307,12 @@ def command_help(command, service, variable, alias, image, scheme, ports, option
     if len(data["examples"]) > 0:
         content.append("")
         content.append(data["examples"])
+
+    doc_file = os.path.join("docs", f"{command}.md")
+    if os.path.isfile(doc_file):
+        content.append("")
+        with open(doc_file) as f:
+            content.append(f.read())
 
     return "\n" + "\n".join(content)
 
