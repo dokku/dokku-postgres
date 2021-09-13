@@ -10,7 +10,7 @@ service-backup-set-encryption-cmd() {
   #E dokku $PLUGIN_COMMAND_PREFIX:backup-set-encryption lolipop
   #A service, service to run command against
   #A passphrase, a GPG-compatible passphrase
-  declare desc="sets encryption for all future backups of $PLUGIN_SERVICE service"
+  declare desc="set encryption for all future backups of $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-set-encryption" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" PASSPHRASE="$2"
