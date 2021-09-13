@@ -816,7 +816,7 @@ service_unlink() {
 
   [[ -z ${LINK[*]} ]] && dokku_log_fail "Not linked to app $APP"
   plugn trigger service-action post-unlink "$SERVICE" "$APP"
-  config_unset "$APP" "${LINK[*]}"
+  config_unset "$APP" "${LINK[@]}"
   plugn trigger service-action post-unlink-complete "$SERVICE" "$APP"
 }
 
