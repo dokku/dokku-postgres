@@ -25,6 +25,7 @@ service-create-cmd() {
   #F -m|--memory MEMORY, container memory limit (default: unlimited)
   #F -p|--password PASSWORD, override the user-level service password
   #F -r|--root-password PASSWORD, override the root-level service password
+  #F -s|--shm-size SHM_SIZE, override shared memory size for $PLUGIN_COMMAND_PREFIX docker container
   declare desc="create a $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:create" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1

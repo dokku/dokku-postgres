@@ -72,6 +72,7 @@ flags:
 - `-m|--memory MEMORY`: container memory limit (default: unlimited)
 - `-p|--password PASSWORD`: override the user-level service password
 - `-r|--root-password PASSWORD`: override the root-level service password
+- `-s|--shm-size SHM_SIZE`: override shared memory size for postgres docker container
 
 Create a postgres service named lolipop:
 
@@ -392,6 +393,7 @@ flags:
 - `-i|--image IMAGE`: the image name to start the service with
 - `-I|--image-version IMAGE_VERSION`: the image version to start the service with
 - `-R|--restart-apps "true"`: whether to force an app restart
+- `-s|--shm-size SHM_SIZE`: override shared memory size for postgres docker container
 
 You can upgrade an existing service to a new image or image-version:
 
@@ -432,6 +434,7 @@ flags:
 - `-m|--memory MEMORY`: container memory limit (default: unlimited)
 - `-p|--password PASSWORD`: override the user-level service password
 - `-r|--root-password PASSWORD`: override the root-level service password
+- `-s|--shm-size SHM_SIZE`: override shared memory size for postgres docker container
 
 You can clone an existing service to a new one:
 

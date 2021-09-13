@@ -247,6 +247,10 @@ service_commit_config() {
   if [[ -n "$SERVICE_MEMORY" ]]; then
     echo "$SERVICE_MEMORY" >"$SERVICE_ROOT/SERVICE_MEMORY"
   fi
+
+  if [[ -n "$SERVICE_SHM_SIZE" ]]; then
+    echo "$SERVICE_SHM_SIZE" >"$SERVICE_ROOT/SHM_SIZE"
+  fi
 }
 
 service_backup_auth() {
@@ -578,13 +582,14 @@ service_parse_args() {
       "--querystring") set -- "$@" "-q" ;;
       "--restart-apps") set -- "$@" "-R" ;;
       "--root-password") set -- "$@" "-r" ;;
+      "--shm-size") set -- "$@" "-s" ;;
       "--user") set -- "$@" "-u" ;;
       *) set -- "$@" "$arg" ;;
     esac
   done
 
   OPTIND=1
-  while getopts "a:c:C:d:i:I:m:p:q:R:r:u:" opt; do
+  while getopts "a:c:C:d:i:I:m:p:q:R:r:s:u:" opt; do
     case "$opt" in
       a)
         SERVICE_ALIAS="${OPTARG^^}"
@@ -619,6 +624,9 @@ service_parse_args() {
         ;;
       r)
         export SERVICE_ROOT_PASSWORD=$OPTARG
+        ;;
+      s)
+        export SERVICE_SHM_SIZE=$OPTARG
         ;;
       u)
         export SERVICE_USER=$OPTARG

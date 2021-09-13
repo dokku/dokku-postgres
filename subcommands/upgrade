@@ -15,6 +15,7 @@ service-upgrade-cmd() {
   #F -i|--image IMAGE, the image name to start the service with
   #F -I|--image-version IMAGE_VERSION, the image version to start the service with
   #F -R|--restart-apps "true", whether to force an app restart
+  #F -s|--shm-size SHM_SIZE, override shared memory size for $PLUGIN_COMMAND_PREFIX docker container
   declare desc="upgrade service <service> to the specified versions"
   local cmd="$PLUGIN_COMMAND_PREFIX:upgrade" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
