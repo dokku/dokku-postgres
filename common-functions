@@ -4,6 +4,18 @@ set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_AVAILABLE_PATH/config/functions"
 
+add_to_links_file() {
+  declare desc="add an app to the service link file"
+  declare SERVICE="$1" APP="$2"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local LINKS_FILE="$SERVICE_ROOT/LINKS"
+
+  touch "$LINKS_FILE"
+  sed -i.bak "/^$APP\$/d" "$LINKS_FILE" && rm "$LINKS_FILE.bak"
+  echo "$APP" >>"$LINKS_FILE"
+  sort "$LINKS_FILE" -u -o "$LINKS_FILE"
+}
+
 docker_ports_options() {
   declare desc="export a list of exposed ports"
   declare PORTS=("$@")
@@ -59,6 +71,15 @@ get_url_from_config() {
   declare desc="retrieve a given _URL from a list of configuration variables"
   declare EXISTING_CONFIG="$1" CONFIG_VAR="$2"
   echo "$EXISTING_CONFIG" | grep "$CONFIG_VAR" | sed "s/$CONFIG_VAR:\s*//" | xargs
+}
+
+in_links_file() {
+  declare desc="check if a service LINKS file contains an app"
+  declare SERVICE="$1" APP="$2"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local LINKS_FILE="$SERVICE_ROOT/LINKS"
+
+  grep -qE "^$APP\$" "$LINKS_FILE"
 }
 
 is_container_status() {
@@ -501,9 +522,7 @@ service_link() {
 
   [[ -n $LINK ]] && dokku_log_fail "Already linked as $LINK"
   plugn trigger service-action pre-link "$SERVICE" "$APP"
-  touch "$LINKS_FILE"
-  echo "$APP" >>"$LINKS_FILE"
-  sort "$LINKS_FILE" -u -o "$LINKS_FILE"
+  add_to_links_file "$SERVICE" "$APP"
 
   if declare -f -F add_passed_docker_option >/dev/null; then
     # shellcheck disable=SC2034

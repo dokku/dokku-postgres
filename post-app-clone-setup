@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common-functions"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/functions"
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+
+plugin-post-app-clone-setup() {
+  declare OLD_APP_NAME="$1" NEW_APP_NAME="$2"
+
+  local SERVICES=$(ls "$PLUGIN_DATA_ROOT" 2>/dev/null)
+  for SERVICE in $SERVICES; do
+    if in_links_file "$SERVICE" "$OLD_APP_NAME"; then
+      add_to_links_file "$SERVICE" "$NEW_APP_NAME"
+    fi
+  done
+}
+
+plugin-post-app-clone-setup "$@"
