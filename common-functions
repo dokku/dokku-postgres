@@ -221,6 +221,34 @@ service_backup() {
   docker run --rm $BACKUP_PARAMETERS "$PLUGIN_S3BACKUP_IMAGE"
 }
 
+service_commit_config() {
+  declare SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local CONFIG_VARIABLE="${PLUGIN_VARIABLE}_CONFIG_OPTIONS"
+  local ENV_VARIABLE="${PLUGIN_VARIABLE}_CUSTOM_ENV"
+
+
+  custom_env="${!ENV_VARIABLE}"
+  [[ -n "$SERVICE_CUSTOM_ENV" ]] && custom_env="$SERVICE_CUSTOM_ENV"
+  if [[ -n $custom_env ]]; then
+    echo "$custom_env" | tr ';' "\n" >"$SERVICE_ROOT/ENV"
+  else
+    echo "" >"$SERVICE_ROOT/ENV"
+  fi
+
+  config_options="${!CONFIG_VARIABLE}"
+  [[ -n "$PLUGIN_CONFIG_OPTIONS" ]] && config_options="$PLUGIN_CONFIG_OPTIONS"
+  if [[ -n "$config_options" ]]; then
+    echo "$config_options" >"$SERVICE_ROOT/CONFIG_OPTIONS"
+  else
+    echo "" >"$SERVICE_ROOT/CONFIG_OPTIONS"
+  fi
+
+  if [[ -n "$SERVICE_MEMORY" ]]; then
+    echo "$SERVICE_MEMORY" >"$SERVICE_ROOT/SERVICE_MEMORY"
+  fi
+}
+
 service_backup_auth() {
   declare desc="Sets up authentication"
   declare SERVICE="$1" AWS_ACCESS_KEY_ID="$2" AWS_SECRET_ACCESS_KEY="$3" AWS_DEFAULT_REGION="$4" AWS_SIGNATURE_VERSION="$5" ENDPOINT_URL="$6"
@@ -384,6 +412,7 @@ service_info() {
 
   local flag_map=(
     "--config-dir: ${SERVICE_ROOT}/${PLUGIN_CONFIG_SUFFIX}"
+    "--config-options: $(cat "$SERVICE_ROOT/CONFIG_OPTIONS")"
     "--data-dir: ${SERVICE_ROOT}/data"
     "--dsn: ${SERVICE_URL}"
     "--exposed-ports: $(service_exposed_ports "$SERVICE")"

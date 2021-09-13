@@ -42,6 +42,14 @@ plugin-install() {
 EOL
 
   chmod 0440 "$_SUDOERS_FILE"
+
+  local SERVICES=$(ls "$PLUGIN_DATA_ROOT" 2>/dev/null)
+  for SERVICE in $SERVICES; do
+    local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+    if [[ -f "$SERVICE_ROOT/${PLUGIN_VARIABLE}_CONFIG_OPTIONS" ]]; then
+      mv "$SERVICE_ROOT/${PLUGIN_VARIABLE}_CONFIG_OPTIONS" "$SERVICE_ROOT/CONFIG_OPTIONS"
+    fi
+  done
 }
 
 plugin-install "$@"

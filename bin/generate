@@ -5,7 +5,7 @@ import os
 import re
 
 
-def compile(service, version, variable, alias, image, scheme, ports, sponsors, unimplemented, dokku_version):
+def compile(service, version, variable, alias, image, scheme, ports, sponsors, options, unimplemented, dokku_version):
     prefix = "\n\n".join([
         header(service),
         description(service, image, version),
@@ -22,7 +22,7 @@ def compile(service, version, variable, alias, image, scheme, ports, sponsors, u
                 requirements_section(dokku_version),
                 installation_section(service, dokku_version),
                 commands_section(service, variable, alias, image, scheme, ports, unimplemented),
-                usage_section(service, variable, alias, image, scheme, ports, unimplemented),
+                usage_section(service, variable, alias, image, scheme, ports, options, unimplemented),
             ]
         )
         .replace("\n\n\n\n\n", "\n")
@@ -115,31 +115,31 @@ def commands_section(service, variable, alias, image, scheme, ports, unimplement
     return "\n".join(content)
 
 
-def usage_section(service, variable, alias, image, scheme, ports, unimplemented):
+def usage_section(service, variable, alias, image, scheme, ports, options, unimplemented):
     return "\n\n".join(
         [
             "## Usage",
             f"Help for any commands can be displayed by specifying the command as an argument to {service}:help. Please consult the `{service}:help` command for any undocumented commands.",
-            usage_intro(service, variable, alias, image, scheme, ports, unimplemented),
-            usage_lifecycle(service, variable, alias, image, scheme, ports, unimplemented),
-            usage_automation(service, variable, alias, image, scheme, ports, unimplemented),
-            usage_data_management(service, variable, alias, image, scheme, ports, unimplemented),
-            usage_backup(service, variable, alias, image, scheme, ports, unimplemented),
-            usage_docker_pull(service, variable, alias, image, scheme, ports, unimplemented),
+            usage_intro(service, variable, alias, image, scheme, ports, options, unimplemented),
+            usage_lifecycle(service, variable, alias, image, scheme, ports, options, unimplemented),
+            usage_automation(service, variable, alias, image, scheme, ports, options, unimplemented),
+            usage_data_management(service, variable, alias, image, scheme, ports, options, unimplemented),
+            usage_backup(service, variable, alias, image, scheme, ports, options, unimplemented),
+            usage_docker_pull(service, variable, alias, image, scheme, ports, options, unimplemented),
         ]
     )
 
 
-def usage_intro(service, variable, alias, image, scheme, ports, unimplemented):
+def usage_intro(service, variable, alias, image, scheme, ports, options, unimplemented):
     commands = ["create", "info", "list", "logs", "link", "unlink"]
     content = ["### Basic Usage"]
 
     return fetch_commands_content(
-        service, variable, alias, image, scheme, ports, unimplemented, commands, content
+        service, variable, alias, image, scheme, ports, options, unimplemented, commands, content
     )
 
 
-def usage_lifecycle(service, variable, alias, image, scheme, ports, unimplemented):
+def usage_lifecycle(service, variable, alias, image, scheme, ports, options, unimplemented):
     commands = [
         "connect",
         "enter",
@@ -159,11 +159,11 @@ def usage_lifecycle(service, variable, alias, image, scheme, ports, unimplemente
     ]
 
     return fetch_commands_content(
-        service, variable, alias, image, scheme, ports, unimplemented, commands, content
+        service, variable, alias, image, scheme, ports, options, unimplemented, commands, content
     )
 
 
-def usage_automation(service, variable, alias, image, scheme, ports, unimplemented):
+def usage_automation(service, variable, alias, image, scheme, ports, options, unimplemented):
     commands = ["app-links", "clone", "exists", "linked", "links"]
     content = [
         "### Service Automation",
@@ -173,11 +173,11 @@ def usage_automation(service, variable, alias, image, scheme, ports, unimplement
     ]
 
     return fetch_commands_content(
-        service, variable, alias, image, scheme, ports, unimplemented, commands, content
+        service, variable, alias, image, scheme, ports, options, unimplemented, commands, content
     )
 
 
-def usage_data_management(service, variable, alias, image, scheme, ports, unimplemented):
+def usage_data_management(service, variable, alias, image, scheme, ports, options, unimplemented):
     commands = ["import", "export"]
     content = [
         "### Data Management",
@@ -187,11 +187,11 @@ def usage_data_management(service, variable, alias, image, scheme, ports, unimpl
     ]
 
     return fetch_commands_content(
-        service, variable, alias, image, scheme, ports, unimplemented, commands, content
+        service, variable, alias, image, scheme, ports, options, unimplemented, commands, content
     )
 
 
-def usage_backup(service, variable, alias, image, scheme, ports, unimplemented):
+def usage_backup(service, variable, alias, image, scheme, ports, options, unimplemented):
     commands = [
         "backup-auth",
         "backup-deauth",
@@ -214,11 +214,11 @@ def usage_backup(service, variable, alias, image, scheme, ports, unimplemented):
     ]
 
     return fetch_commands_content(
-        service, variable, alias, image, scheme, ports, unimplemented, commands, content
+        service, variable, alias, image, scheme, ports, options, unimplemented, commands, content
     )
 
 
-def usage_docker_pull(service, variable, alias, image, scheme, ports, unimplemented):
+def usage_docker_pull(service, variable, alias, image, scheme, ports, options, unimplemented):
     service_prefix = service.upper()
     return "\n".join(
         [
@@ -232,11 +232,11 @@ def usage_docker_pull(service, variable, alias, image, scheme, ports, unimplemen
 
 
 def fetch_commands_content(
-    service, variable, alias, image, scheme, ports, unimplemented, commands, content
+    service, variable, alias, image, scheme, ports, options, unimplemented, commands, content
 ):
     i = 0
     for command in commands:
-        output = command_help(command, service, variable, alias, image, scheme, ports, unimplemented)
+        output = command_help(command, service, variable, alias, image, scheme, ports, options, unimplemented)
         if output == "":
             continue
         content.append(output)
@@ -274,7 +274,7 @@ def parse_args(line):
     return " ".join(arguments)
 
 
-def command_help(command, service, variable, alias, image, scheme, ports, unimplemented):
+def command_help(command, service, variable, alias, image, scheme, ports, options, unimplemented):
     if command in unimplemented:
         return ""
 
@@ -300,6 +300,8 @@ def command_help(command, service, variable, alias, image, scheme, ports, unimpl
         content.append("flags:")
         content.append("")
     for flag in data["flags"]:
+        if "--config-options" in flag and options != "":
+            flag = f"{flag} (default: `{options}`)"
         content.append(f"- {flag}")
 
     if len(data["examples"]) > 0:
@@ -477,6 +479,7 @@ def main():
     variable = None
     image = None
     alias = None
+    options = None
     unimplemented = []
 
     with open("Dockerfile") as f:
@@ -503,6 +506,15 @@ def main():
                 if match is not None:
                     unimplemented = [s.strip('"') for s in match.group(1).split(" ")]
 
+    with open("config") as f:
+        for line in f.readlines():
+            if f"{variable}_CONFIG_OPTIONS" in line:
+                print(variable)
+                match = re.search('"(.+)"', line)
+                if match is not None:
+                    options = match.group(1)
+                    print(options)
+
     sponsors = []
     with open("plugin.toml") as f:
         for line in f.readlines():
@@ -510,7 +522,7 @@ def main():
                 sponsors = re.search("\[([\"\w\s,_-]+)\]", line).group(1)
                 sponsors = [s.strip("\"") for s in sponsors.split(",")]
 
-    text = compile(service, version, variable, alias, image, scheme, ports, sponsors, unimplemented, "0.19.x+")
+    text = compile(service, version, variable, alias, image, scheme, ports, sponsors, options, unimplemented, "0.19.x+")
 
     base_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     readme_file = os.path.join(base_path, "README.md")

@@ -10,6 +10,7 @@ service-clone-cmd() {
   #E dokku $PLUGIN_COMMAND_PREFIX:clone lolipop lolipop-2
   #A service, service to run command against
   #A new-service, name of new service
+  #F -c|--config-options "--args --go=here", extra arguments to pass to the container create command
   #F -C|--custom-env "USER=alpha;HOST=beta", semi-colon delimited environment variables to start the service with
   #F -i|--image IMAGE, the image name to start the service with
   #F -I|--image-version IMAGE_VERSION, the image version to start the service with

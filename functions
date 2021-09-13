@@ -53,17 +53,7 @@ service_create() {
   echo "$PASSWORD" >"$SERVICE_ROOT/PASSWORD"
   chmod 640 "$SERVICE_ROOT/PASSWORD"
 
-  [[ -n "$SERVICE_CUSTOM_ENV" ]] && POSTGRES_CUSTOM_ENV="$SERVICE_CUSTOM_ENV"
-  if [[ -n $POSTGRES_CUSTOM_ENV ]]; then
-    echo "$POSTGRES_CUSTOM_ENV" | tr ';' "\n" >"$SERVICE_ROOT/ENV"
-  else
-    echo "" >"$SERVICE_ROOT/ENV"
-  fi
-
-  if [[ -n "$SERVICE_MEMORY" ]]; then
-    echo "$SERVICE_MEMORY" >"$SERVICE_ROOT/SERVICE_MEMORY"
-  fi
-
+  service_commit_config "$SERVICE"
   write_database_name "$SERVICE"
   plugn trigger service-action post-create "$SERVICE"
   service_create_container "$SERVICE"
@@ -79,13 +69,17 @@ service_create_container() {
   local DATABASE_NAME="$(get_database_name "$SERVICE")"
   local PREVIOUS_ID
 
+  if [[ -f "$SERVICE_ROOT/CONFIG_OPTIONS" ]]; then
+    export CONFIG_OPTIONS="$(cat "$SERVICE_ROOT/CONFIG_OPTIONS")"
+  fi
+
   [[ -f "$SERVICE_ROOT/SERVICE_MEMORY" ]] && SERVICE_MEMORY="$(cat "$SERVICE_ROOT/SERVICE_MEMORY")"
   if [[ -n "$SERVICE_MEMORY" ]]; then
     MEMORY_LIMIT="--memory=${SERVICE_MEMORY}m"
   fi
 
   # shellcheck disable=SC2086
-  ID=$(docker run --name "$SERVICE_NAME" $MEMORY_LIMIT -v "$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data" -e "POSTGRES_PASSWORD=$PASSWORD" --env-file="$SERVICE_ROOT/ENV" -d --restart always --label dokku=service --label dokku.service=postgres "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION")
+  ID=$(docker run --name "$SERVICE_NAME" $MEMORY_LIMIT -v "$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data" -e "POSTGRES_PASSWORD=$PASSWORD" --env-file="$SERVICE_ROOT/ENV" -d --restart always --label dokku=service --label dokku.service=postgres "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" $CONFIG_OPTIONS)
   echo "$ID" >"$SERVICE_ROOT/ID"
 
   dokku_log_verbose_quiet "Waiting for container to be ready"
