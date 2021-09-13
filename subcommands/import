@@ -7,7 +7,7 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-import-cmd() {
   #E import a datastore dump
-  #E dokku $PLUGIN_COMMAND_PREFIX:import lollipop < database.dump
+  #E dokku $PLUGIN_COMMAND_PREFIX:import lollipop < data.dump
   #A service, service to run command against
   declare desc="import a dump into the $PLUGIN_SERVICE service database"
   local cmd="$PLUGIN_COMMAND_PREFIX:import" argv=("$@")

@@ -9,7 +9,7 @@ service-export-cmd() {
   #E by default, datastore output is exported to stdout
   #E dokku $PLUGIN_COMMAND_PREFIX:export lollipop
   #E you can redirect this output to a file
-  #E dokku $PLUGIN_COMMAND_PREFIX:export lollipop > lollipop.dump
+  #E dokku $PLUGIN_COMMAND_PREFIX:export lollipop > data.dump
   #A service, service to run command against
   declare desc="export a dump of the $PLUGIN_SERVICE service database"
   local cmd="$PLUGIN_COMMAND_PREFIX:export" argv=("$@")

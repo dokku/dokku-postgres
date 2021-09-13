@@ -536,7 +536,7 @@ dokku postgres:import <service>
 Import a datastore dump:
 
 ```shell
-dokku postgres:import lollipop < database.dump
+dokku postgres:import lollipop < data.dump
 ```
 
 ### export a dump of the postgres service database
@@ -555,7 +555,7 @@ dokku postgres:export lollipop
 You can redirect this output to a file:
 
 ```shell
-dokku postgres:export lollipop > lollipop.dump
+dokku postgres:export lollipop > data.dump
 ```
 
 ### Backups
