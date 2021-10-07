@@ -11,6 +11,7 @@ service-clone-cmd() {
   #A service, service to run command against
   #A new-service, name of new service
   #F -c|--config-options "--args --go=here", extra arguments to pass to the container create command
+  #F -c|--createdb-options "--locale=C", extra arguments to pass to the `createdb` command inside the container
   #F -C|--custom-env "USER=alpha;HOST=beta", semi-colon delimited environment variables to start the service with
   #F -i|--image IMAGE, the image name to start the service with
   #F -I|--image-version IMAGE_VERSION, the image version to start the service with

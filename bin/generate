@@ -302,6 +302,8 @@ def command_help(command, service, variable, alias, image, scheme, ports, option
     for flag in data["flags"]:
         if "--config-options" in flag and options != "":
             flag = f"{flag} (default: `{options}`)"
+        if "--createdb-options" in flag and options != "":
+            flag = f"{flag} (default: `-E=UTF8`)"
         content.append(f"- {flag}")
 
     if len(data["examples"]) > 0:

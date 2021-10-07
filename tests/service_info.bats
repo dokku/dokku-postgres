@@ -41,6 +41,9 @@ teardown() {
   run dokku "$PLUGIN_COMMAND_PREFIX:info" l --config-dir
   assert_success
 
+  run dokku "$PLUGIN_COMMAND_PREFIX:info" l --createdb-options
+  assert_success
+
   run dokku "$PLUGIN_COMMAND_PREFIX:info" l --data-dir
   assert_success
 
