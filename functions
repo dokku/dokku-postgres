@@ -73,6 +73,10 @@ service_create_container() {
     export CONFIG_OPTIONS="$(cat "$SERVICE_ROOT/CONFIG_OPTIONS")"
   fi
 
+  if [[ -f "$SERVICE_ROOT/CREATEDB_OPTIONS" ]]; then
+    export CREATEDB_OPTIONS="$(cat "$SERVICE_ROOT/CREATEDB_OPTIONS")"
+  fi
+
   [[ -f "$SERVICE_ROOT/SERVICE_MEMORY" ]] && SERVICE_MEMORY="$(cat "$SERVICE_ROOT/SERVICE_MEMORY")"
   if [[ -n "$SERVICE_MEMORY" ]]; then
     MEMORY_LIMIT="--memory=${SERVICE_MEMORY}m"
@@ -94,7 +98,7 @@ service_create_container() {
   docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" "$PLUGIN_WAIT_IMAGE" -p "$PLUGIN_DATASTORE_WAIT_PORT" >/dev/null
 
   dokku_log_verbose_quiet "Creating container database"
-  docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2>/dev/null || dokku_log_verbose_quiet 'Already exists'
+  docker exec "$SERVICE_NAME" su - postgres -c "createdb -E=UTF8 $CREATEDB_OPTIONS $DATABASE_NAME" 2>/dev/null || dokku_log_verbose_quiet 'Already exists'
 
   dokku_log_verbose_quiet "Securing connection to database"
   service_stop "$SERVICE" >/dev/null

@@ -265,6 +265,10 @@ service_commit_config() {
     echo "" >"$SERVICE_ROOT/CONFIG_OPTIONS"
   fi
 
+  if [[ -n "$CREATEDB_OPTIONS" ]]; then
+    echo "$CREATEDB_OPTIONS" >"$SERVICE_ROOT/CREATEDB_OPTIONS"
+  fi
+
   if [[ -n "$SERVICE_MEMORY" ]]; then
     echo "$SERVICE_MEMORY" >"$SERVICE_ROOT/SERVICE_MEMORY"
   fi
@@ -452,6 +456,7 @@ service_info() {
   local flag_map=(
     "--config-dir: ${SERVICE_ROOT}/${PLUGIN_CONFIG_SUFFIX}"
     "--config-options: $(cat "$SERVICE_ROOT/CONFIG_OPTIONS")"
+    "--createdb-options: ${CREATEDB_OPTIONS}"
     "--data-dir: ${SERVICE_ROOT}/data"
     "--dsn: ${SERVICE_URL}"
     "--exposed-ports: $(service_exposed_ports "$SERVICE")"
@@ -606,6 +611,7 @@ service_parse_args() {
     case "$arg" in
       "--alias") set -- "$@" "-a" ;;
       "--config-options") set -- "$@" "-c" ;;
+      "--createdb-options") set -- "$@" "-o" ;;
       "--custom-env") set -- "$@" "-C" ;;
       "--database") set -- "$@" "-d" ;;
       "--image-version") set -- "$@" "-I" ;;
@@ -622,7 +628,7 @@ service_parse_args() {
   done
 
   OPTIND=1
-  while getopts "a:c:C:d:i:I:m:p:q:R:r:s:u:" opt; do
+  while getopts "a:c:o:C:d:i:I:m:p:q:R:r:s:u:" opt; do
     case "$opt" in
       a)
         SERVICE_ALIAS="${OPTARG^^}"
@@ -630,6 +636,9 @@ service_parse_args() {
         ;;
       c)
         export PLUGIN_CONFIG_OPTIONS=$OPTARG
+        ;;
+      o)
+        export CREATEDB_OPTIONS=$OPTARG
         ;;
       C)
         export SERVICE_CUSTOM_ENV=$OPTARG
