@@ -463,7 +463,7 @@ service_info() {
     "--version: $(service_version "$SERVICE")"
   )
   if [[ -z "$INFO_FLAG" ]]; then
-    dokku_log_info2 "$SERVICE $PLUGIN_COMMAND_PREFIX service information"
+    dokku_log_info2_quiet "$SERVICE $PLUGIN_COMMAND_PREFIX service information"
     for flag in "${flag_map[@]}"; do
       key="$(echo "${flag#--}" | cut -f1 -d' ' | tr - ' ')"
       dokku_log_verbose "$(printf "%-20s %-25s" "${key^}" "${flag#*: }")"
