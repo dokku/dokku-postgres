@@ -202,6 +202,9 @@ fn-help-subcommand-args() {
     elif [[ "$arg" == *_LIST ]]; then
       arg=${arg%_*}
       args+=" <${arg//_/-}...>"
+    elif [[ "$arg" == *_OPTIONAL ]]; then
+      argName="${arg/_OPTIONAL/}"
+      args+=" [<${argName//_/-}>]"
     else
       args+=" <${arg//_/-}>"
     fi

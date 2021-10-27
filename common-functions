@@ -578,14 +578,14 @@ service_list() {
 
 service_logs() {
   declare desc="display logs for a service"
-  declare SERVICE="$1" TAIL_FLAG="$2"
+  declare SERVICE="$1" TAIL_FLAG="$2" TAIL_COUNT="$3"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local ID=$(cat "$SERVICE_ROOT/ID")
   local RE_INTEGER='^[0-9]+$'
 
-  DOKKU_LOGS_ARGS="--tail 100"
+  DOKKU_LOGS_ARGS="--tail $TAIL_COUNT"
   if [[ "$TAIL_FLAG" == "-t" ]] || [[ "$TAIL_FLAG" == "--tail" ]]; then
-    DOKKU_LOGS_ARGS="--follow"
+    DOKKU_LOGS_ARGS+=" --follow"
   fi
 
   docker inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"

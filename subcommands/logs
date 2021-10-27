@@ -10,16 +10,18 @@ service-logs-cmd() {
   #E dokku $PLUGIN_COMMAND_PREFIX:logs lollipop
   #E by default, logs will not be tailed, but you can do this with the --tail flag:
   #E dokku $PLUGIN_COMMAND_PREFIX:logs lollipop --tail
+  #E the default tail setting is to show all logs, but an initial count can also be specified
+  #E dokku $PLUGIN_COMMAND_PREFIX:logs lollipop --tail 5
   #A service, service to run command against
-  #F -t|--tail, do not stop when end of the logs are reached and wait for additional output
+  #F -t|--tail [<tail-num>], do not stop when end of the logs are reached and wait for additional output
   declare desc="print the most recent log(s) for this service"
   local cmd="$PLUGIN_COMMAND_PREFIX:logs" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1" TAIL_FLAG="$2"
+  declare SERVICE="$1" TAIL_FLAG="$2" TAIL_NUM_OPTIONAL="${3:-all}"
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
   verify_service_name "$SERVICE"
-  service_logs "$SERVICE" "$TAIL_FLAG"
+  service_logs "$SERVICE" "$TAIL_FLAG" "$TAIL_NUM_OPTIONAL"
 }
 
 service-logs-cmd "$@"

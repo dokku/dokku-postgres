@@ -40,7 +40,7 @@ postgres:link <service> <app> [--link-flags...]    # link the postgres service t
 postgres:linked <service> <app>                    # check if the postgres service is linked to an app
 postgres:links <service>                           # list all apps linked to the postgres service
 postgres:list                                      # list all postgres services
-postgres:logs <service> [-t|--tail]                # print the most recent log(s) for this service
+postgres:logs <service> [-t|--tail] <tail-num-optional> # print the most recent log(s) for this service
 postgres:promote <service> <app>                   # promote service <service> as DATABASE_URL in <app>
 postgres:restart <service>                         # graceful shutdown and restart of the postgres service container
 postgres:start <service>                           # start a previously stopped postgres service
@@ -159,12 +159,12 @@ dokku postgres:list
 
 ```shell
 # usage
-dokku postgres:logs <service> [-t|--tail]
+dokku postgres:logs <service> [-t|--tail] <tail-num-optional>
 ```
 
 flags:
 
-- `-t|--tail`: do not stop when end of the logs are reached and wait for additional output
+- `-t|--tail [<tail-num>]`: do not stop when end of the logs are reached and wait for additional output
 
 You can tail logs for a particular service:
 
@@ -176,6 +176,12 @@ By default, logs will not be tailed, but you can do this with the --tail flag:
 
 ```shell
 dokku postgres:logs lollipop --tail
+```
+
+The default tail setting is to show all logs, but an initial count can also be specified:
+
+```shell
+dokku postgres:logs lollipop --tail 5
 ```
 
 ### link the postgres service to the app
