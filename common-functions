@@ -533,7 +533,11 @@ service_link() {
   fi
   [[ -n "$SERVICE_QUERYSTRING" ]] && SERVICE_URL="${SERVICE_URL}?${SERVICE_QUERYSTRING}"
   plugn trigger service-action post-link "$SERVICE" "$APP"
-  config_set "$APP" "${ALIAS}_URL=$SERVICE_URL"
+  if [[ "$DOKKU_GLOBAL_FLAGS" == *"--no-restart"* ]]; then
+    config_set --no-restart "$APP" "${ALIAS}_URL=$SERVICE_URL"
+  else
+    config_set "$APP" "${ALIAS}_URL=$SERVICE_URL"
+  fi
   plugn trigger service-action post-link-complete "$SERVICE" "$APP"
 }
 
@@ -857,7 +861,11 @@ service_unlink() {
 
   [[ -z ${LINK[*]} ]] && dokku_log_fail "Not linked to app $APP"
   plugn trigger service-action post-unlink "$SERVICE" "$APP"
-  config_unset "$APP" "${LINK[@]}"
+  if [[ "$DOKKU_GLOBAL_FLAGS" == *"--no-restart"* ]]; then
+    config_unset --no-restart "$APP" "${LINK[@]}"
+  else
+    config_unset "$APP" "${LINK[@]}"
+  fi
   plugn trigger service-action post-unlink-complete "$SERVICE" "$APP"
 }
 
