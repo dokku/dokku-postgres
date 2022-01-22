@@ -24,10 +24,10 @@ plugin-install() {
   pull-docker-image "$PLUGIN_WAIT_IMAGE"
 
   mkdir -p "$PLUGIN_DATA_ROOT" || echo "Failed to create $PLUGIN_SERVICE data directory"
-  chown dokku:dokku "$PLUGIN_DATA_ROOT"
+  chown "${DOKKU_SYSTEM_USER}:${DOKKU_SYSTEM_GROUP}" "$PLUGIN_DATA_ROOT"
 
   mkdir -p "$PLUGIN_CONFIG_ROOT" || echo "Failed to create $PLUGIN_SERVICE config directory"
-  chown dokku:dokku "$PLUGIN_CONFIG_ROOT"
+  chown "${DOKKU_SYSTEM_USER}:${DOKKU_SYSTEM_GROUP}" "$PLUGIN_CONFIG_ROOT"
 
   rm -f "/etc/sudoers.d/dokku-${PLUGIN_COMMAND_PREFIX}*"
   _SUDOERS_FILE="/etc/sudoers.d/dokku-${PLUGIN_COMMAND_PREFIX}"
@@ -53,11 +53,13 @@ EOL
       if [[ "$image" == *":"* ]]; then
         echo "${image%:*}" > "$SERVICE_ROOT/IMAGE"
         echo "${image##*:}" > "$SERVICE_ROOT/IMAGE_VERSION"
+        chown "${DOKKU_SYSTEM_USER}:${DOKKU_SYSTEM_GROUP}" "$SERVICE_ROOT/IMAGE" "$SERVICE_ROOT/IMAGE_VERSION"
       fi
     fi
 
     if [[ -f "$SERVICE_ROOT/${PLUGIN_VARIABLE}_CONFIG_OPTIONS" ]]; then
       mv "$SERVICE_ROOT/${PLUGIN_VARIABLE}_CONFIG_OPTIONS" "$SERVICE_ROOT/CONFIG_OPTIONS"
+      chown "${DOKKU_SYSTEM_USER}:${DOKKU_SYSTEM_GROUP}" "$SERVICE_ROOT/CONFIG_OPTIONS"
     fi
   done
 }
