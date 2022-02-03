@@ -53,9 +53,10 @@ EOL
       if [[ "$image" == *":"* ]]; then
         echo "${image%:*}" > "$SERVICE_ROOT/IMAGE"
         echo "${image##*:}" > "$SERVICE_ROOT/IMAGE_VERSION"
-        chown "${DOKKU_SYSTEM_USER}:${DOKKU_SYSTEM_GROUP}" "$SERVICE_ROOT/IMAGE" "$SERVICE_ROOT/IMAGE_VERSION"
       fi
     fi
+
+    chown "${DOKKU_SYSTEM_USER}:${DOKKU_SYSTEM_GROUP}" "$SERVICE_ROOT/IMAGE" "$SERVICE_ROOT/IMAGE_VERSION"
 
     if [[ -f "$SERVICE_ROOT/${PLUGIN_VARIABLE}_CONFIG_OPTIONS" ]]; then
       mv "$SERVICE_ROOT/${PLUGIN_VARIABLE}_CONFIG_OPTIONS" "$SERVICE_ROOT/CONFIG_OPTIONS"
