@@ -411,6 +411,14 @@ service_enter() {
   docker exec $DOKKU_RUN_OPTS $ID $EXEC_CMD "${@:-/bin/bash}"
 }
 
+service_exists() {
+  declare desc="returns 0 or 1 depending on whether service exists or not"
+  declare SERVICE="$1"
+  [[ -z "$SERVICE" ]] && return 1
+  [[ -d "$PLUGIN_DATA_ROOT/$SERVICE" ]] && return 0
+  return 1
+}
+
 service_exposed_ports() {
   declare desc="list exposed ports for a service"
   declare SERVICE="$1"

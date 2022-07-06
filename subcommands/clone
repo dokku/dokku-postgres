@@ -27,6 +27,9 @@ service-clone-cmd() {
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
   [[ -z "$NEW_SERVICE" ]] && dokku_log_fail "Please specify a name for the new service"
   verify_service_name "$SERVICE"
+  if service_exists "$NEW_SERVICE"; then
+    dokku_log_fail "Invalid service name $NEW_SERVICE. Verify the service name is not already in use."
+  fi
 
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local ID="$(cat "$SERVICE_ROOT/ID")"
