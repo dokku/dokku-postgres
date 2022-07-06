@@ -20,6 +20,7 @@ service-enter-cmd() {
   declare SERVICE="$1"
 
   dokku_log_info1_quiet "Filesystem changes may not persist after container restarts"
+  verify_service_name "$SERVICE"
   service_enter "$SERVICE" "${@:2}"
 }
 
