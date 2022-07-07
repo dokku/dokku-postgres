@@ -1,21 +1,13 @@
 #!/usr/bin/env bash
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
-source "$PLUGIN_BASE_PATH/common/functions"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/functions"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 
-PLUGIN_BASE_PATH="$PLUGIN_PATH"
-if [[ -n $DOKKU_API_VERSION ]]; then
-  PLUGIN_BASE_PATH="$PLUGIN_ENABLED_PATH"
-fi
-source "$PLUGIN_BASE_PATH/common/functions"
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/functions"
-
 APP="$1"
-pushd "$PLUGIN_DATA_ROOT" >/dev/null
-for SERVICE in *; do
+for SERVICE in $(fn-services-list false); do
+  [[ -n "$SERVICE" ]] || continue
   dokku_log_verbose_quiet "Unlinking from $SERVICE"
   remove_from_links_file "$(basename "$SERVICE")" "$APP"
 done
-popd >/dev/null 2>&1 || pushd "/tmp" >/dev/null
-exit 0

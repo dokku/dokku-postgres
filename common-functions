@@ -16,6 +16,64 @@ add_to_links_file() {
   sort "$LINKS_FILE" -u -o "$LINKS_FILE"
 }
 
+auth_service_filter() {
+  declare desc="calls user-service plugin trigger"
+  declare SERVICES=("$@")
+  local user_auth_count
+
+  if [[ "${#SERVICES[@]}" -eq 0 ]]; then
+    return
+  fi
+
+  user_auth_count="$(find "$PLUGIN_PATH"/enabled/*/user-auth-service 2>/dev/null | wc -l)"
+
+  # no plugin trigger exists
+  if [[ $user_auth_count == 0 ]]; then
+    # echo out all the services since there is no plugin trigger
+    for SERVICE in "${SERVICES[@]}"; do
+      [[ -n "$SERVICE" ]] && echo "$SERVICE"
+    done
+    return 0
+  fi
+
+  # this plugin trigger exists in the core `20_events` plugin
+  if [[ "$user_auth_count" == 1 ]] && [[ -f "$PLUGIN_PATH"/enabled/20_events/user-auth-service ]]; then
+  # echo out all the services since there is no valid plugin trigger
+    for SERVICE in "${SERVICES[@]}"; do
+      [[ -n "$SERVICE" ]] && echo "$SERVICE"
+    done
+    return 0
+  fi
+
+  export SSH_USER=${SSH_USER:=$USER}
+  export SSH_NAME=${NAME:="default"}
+  # the output of this trigger should be all the services a user has access to
+  plugn trigger user-auth-service "$SSH_USER" "$SSH_NAME" "${SERVICES[@]}"
+}
+
+fn-services-list() {
+  declare desc="prints a filtered list of all local apps"
+  declare FILTER="$1"
+  local detected_services filtered_services services
+
+  local detected_services=("$(ls "$PLUGIN_DATA_ROOT" 2>/dev/null)")
+  if [[ "$FILTER" == "false" ]]; then
+    for service in "${detected_services[@]}"; do
+      if [[ -n "$service" ]]; then 
+        echo "$service"
+      fi
+    done
+    return
+  fi
+
+  filtered_services="$(auth_service_filter "${detected_services[@]}" 2>/dev/null)"
+  for service in "$filtered_services"; do
+    if [[ -n "$service" ]]; then 
+      echo "$service"
+    fi
+  done
+}
+
 docker_ports_options() {
   declare desc="export a list of exposed ports"
   declare PORTS=("$@")
@@ -180,7 +238,8 @@ service_app_links() {
   local SERVICE LINKED_APP
 
   pushd "$PLUGIN_DATA_ROOT" >/dev/null
-  for SERVICE in *; do
+  for SERVICE in $(fn-services-list); do
+    [[ -n "$SERVICE" ]] || continue
     [[ -f "$SERVICE/LINKS" ]] || continue
     for LINKED_APP in $(<"$SERVICE/LINKS"); do
       if [[ "$LINKED_APP" == "$APP" ]]; then
@@ -575,16 +634,16 @@ service_links() {
 
 service_list() {
   declare desc="list all services and their status"
-  local SERVICES=$(ls "$PLUGIN_DATA_ROOT" 2>/dev/null)
 
-  if [[ -z $SERVICES ]]; then
+  services=("$(fn-services-list true)")
+  if [[ "${#services[@]}" -eq 0 ]] || [[ -z "$services" ]]; then
     dokku_log_warn "There are no $PLUGIN_SERVICE services"
     return
   fi
 
   dokku_log_info2_quiet "$PLUGIN_SERVICE services"
-  for SERVICE in $SERVICES; do
-    echo "$SERVICE"
+  for service in "${services[@]}"; do
+    echo "$service"
   done
 }
 
@@ -895,9 +954,21 @@ update_plugin_scheme_for_app() {
 
 verify_service_name() {
   declare desc="verify that a service exists"
-  declare SERVICE="$1"
-  [[ -z "$SERVICE" ]] && dokku_log_fail "(verify_service_name) SERVICE must not be null"
-  [[ ! -d "$PLUGIN_DATA_ROOT/$SERVICE" ]] && dokku_log_fail "$PLUGIN_SERVICE service $SERVICE does not exist"
+  declare SERVICE="$@"
+
+  if [[ -z "$SERVICE" ]]; then
+    dokku_log_fail "SERVICE must not be empty"
+  fi
+
+  if [[ ! -d "$PLUGIN_DATA_ROOT/$SERVICE" ]]; then
+    dokku_log_fail "$PLUGIN_SERVICE service $SERVICE does not exist"
+  fi
+
+  SERVICE="$(auth_service_filter "$SERVICE")"
+  if [[ -z "$SERVICE" ]]; then
+    dokku_log_fail "$PLUGIN_SERVICE service $SERVICE does not exist"
+  fi
+
   return 0
 }
 

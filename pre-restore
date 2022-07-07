@@ -7,18 +7,18 @@ set -eo pipefail
 
 plugin-pre-restore() {
   declare SCHEDULER="$1" APP="$2"
+  local status
 
   if [[ "$SCHEDULER" != "docker-local" ]]; then
     return
   fi
 
-  local SERVICES=$(ls "$PLUGIN_DATA_ROOT" 2>/dev/null)
-  for SERVICE in $SERVICES; do
+  for SERVICE in $(fn-services-list false); do
     if ! in_links_file "$SERVICE" "$APP"; then
       continue
     fi
 
-    local status="$(service_status "$SERVICE")"
+    status="$(service_status "$SERVICE")"
     if [[ "$status" == "running" ]]; then
       continue
     fi

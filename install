@@ -44,8 +44,7 @@ EOL
 
   chmod 0440 "$_SUDOERS_FILE"
 
-  local SERVICES=$(ls "$PLUGIN_DATA_ROOT" 2>/dev/null)
-  for SERVICE in $SERVICES; do
+  for SERVICE in $(fn-services-list false); do
     local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
 
     if [[ ! -f "$SERVICE_ROOT/IMAGE" ]] || [[ ! -f "$SERVICE_ROOT/IMAGE_VERSION" ]]; then

@@ -8,8 +8,7 @@ set -eo pipefail
 plugin-post-app-rename-setup() {
   declare OLD_APP_NAME="$1" NEW_APP_NAME="$2"
 
-  local SERVICES=$(ls "$PLUGIN_DATA_ROOT" 2>/dev/null)
-  for SERVICE in $SERVICES; do
+  for SERVICE in $(fn-services-list false); do
     if in_links_file "$SERVICE" "$OLD_APP_NAME"; then
       add_to_links_file "$SERVICE" "$NEW_APP_NAME"
     fi
