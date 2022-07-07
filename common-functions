@@ -235,13 +235,15 @@ service_alternative_alias() {
 service_app_links() {
   declare desc="output all service links for a given app"
   declare APP="$1"
-  local SERVICE LINKED_APP
+  local LINKED_APP SERVICE SERVICE_ROOT
 
   pushd "$PLUGIN_DATA_ROOT" >/dev/null
   for SERVICE in $(fn-services-list); do
     [[ -n "$SERVICE" ]] || continue
-    [[ -f "$SERVICE/LINKS" ]] || continue
-    for LINKED_APP in $(<"$SERVICE/LINKS"); do
+
+    SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+    [[ -f "$SERVICE_ROOT/LINKS" ]] || continue
+    for LINKED_APP in $(<"$SERVICE_ROOT/LINKS"); do
       if [[ "$LINKED_APP" == "$APP" ]]; then
         echo "$SERVICE"
       fi
