@@ -590,7 +590,7 @@ service_link() {
   fi
 
   [[ -n $LINK ]] && dokku_log_fail "Already linked as $LINK"
-  plugn trigger service-action pre-link "$SERVICE" "$APP"
+  plugn trigger service-action pre-link "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "$APP"
   add_to_links_file "$SERVICE" "$APP"
 
   if declare -f -F add_passed_docker_option >/dev/null; then
@@ -601,13 +601,13 @@ service_link() {
     dokku docker-options:add "$APP" build,deploy,run "--link $SERVICE_NAME:$SERVICE_DNS_HOSTNAME"
   fi
   [[ -n "$SERVICE_QUERYSTRING" ]] && SERVICE_URL="${SERVICE_URL}?${SERVICE_QUERYSTRING}"
-  plugn trigger service-action post-link "$SERVICE" "$APP"
+  plugn trigger service-action post-link "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "$APP"
   if [[ "$DOKKU_GLOBAL_FLAGS" == *"--no-restart"* ]]; then
     config_set --no-restart "$APP" "${ALIAS}_URL=$SERVICE_URL"
   else
     config_set "$APP" "${ALIAS}_URL=$SERVICE_URL"
   fi
-  plugn trigger service-action post-link-complete "$SERVICE" "$APP"
+  plugn trigger service-action post-link-complete "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "$APP"
 }
 
 service_linked_apps() {
@@ -917,7 +917,7 @@ service_unlink() {
   local SERVICE_DNS_HOSTNAME=$(service_dns_hostname "$SERVICE")
   local LINK=($(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL" | cut -d: -f1)) || true
 
-  plugn trigger service-action pre-unlink "$SERVICE" "$APP"
+  plugn trigger service-action pre-unlink "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "$APP"
   remove_from_links_file "$SERVICE" "$APP"
 
   if declare -f -F add_passed_docker_option >/dev/null; then
@@ -929,13 +929,13 @@ service_unlink() {
   fi
 
   [[ -z ${LINK[*]} ]] && dokku_log_fail "Not linked to app $APP"
-  plugn trigger service-action post-unlink "$SERVICE" "$APP"
+  plugn trigger service-action post-unlink "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "$APP"
   if [[ "$DOKKU_GLOBAL_FLAGS" == *"--no-restart"* ]]; then
     config_unset --no-restart "$APP" "${LINK[@]}"
   else
     config_unset "$APP" "${LINK[@]}"
   fi
-  plugn trigger service-action post-unlink-complete "$SERVICE" "$APP"
+  plugn trigger service-action post-unlink-complete "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "$APP"
 }
 
 service_version() {
