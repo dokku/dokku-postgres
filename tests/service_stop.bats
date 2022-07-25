@@ -23,4 +23,3 @@ teardown() {
   run dokku "$PLUGIN_COMMAND_PREFIX:stop" l
   assert_success
 }
-

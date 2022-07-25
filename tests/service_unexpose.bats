@@ -25,4 +25,3 @@ teardown() {
   [[ ! -f $PLUGIN_DATA_ROOT/PORT ]]
   assert_contains "${lines[*]}" "Service l unexposed"
 }
-

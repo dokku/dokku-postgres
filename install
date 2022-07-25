@@ -50,8 +50,8 @@ EOL
     if [[ ! -f "$SERVICE_ROOT/IMAGE" ]] || [[ ! -f "$SERVICE_ROOT/IMAGE_VERSION" ]]; then
       local image="$(service_version "$SERVICE")"
       if [[ "$image" == *":"* ]]; then
-        echo "${image%:*}" > "$SERVICE_ROOT/IMAGE"
-        echo "${image##*:}" > "$SERVICE_ROOT/IMAGE_VERSION"
+        echo "${image%:*}" >"$SERVICE_ROOT/IMAGE"
+        echo "${image##*:}" >"$SERVICE_ROOT/IMAGE_VERSION"
       fi
     fi
 

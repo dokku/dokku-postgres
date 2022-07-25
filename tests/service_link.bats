@@ -13,7 +13,6 @@ teardown() {
   dokku --force apps:destroy my-app
 }
 
-
 @test "($PLUGIN_COMMAND_PREFIX:link) error when there are no arguments" {
   run dokku "$PLUGIN_COMMAND_PREFIX:link"
   echo "output: $output"

@@ -34,7 +34,7 @@ teardown() {
 
 @test "($PLUGIN_COMMAND_PREFIX:import) success" {
   skip "The fake dump is hard to work with in tests"
-  run dokku "$PLUGIN_COMMAND_PREFIX:import" l < "/tmp/fake.dump"
+  run dokku "$PLUGIN_COMMAND_PREFIX:import" l <"/tmp/fake.dump"
   echo "output: $output"
   echo "status: $status"
   assert_success

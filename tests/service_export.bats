@@ -23,7 +23,7 @@ teardown() {
   if [[ -n "$GITHUB_WORKFLOW" ]]; then
     skip "No tty is available on Github Actions"
   fi
-  export SSH_TTY=`tty`
+  export SSH_TTY=$(tty)
   run dokku "$PLUGIN_COMMAND_PREFIX:export" l
   echo "output: $output"
   echo "status: $status"
