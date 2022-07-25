@@ -19,8 +19,8 @@ service-enter-cmd() {
   [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"
 
-  dokku_log_info1_quiet "Filesystem changes may not persist after container restarts"
   verify_service_name "$SERVICE"
+  dokku_log_info1_quiet "Filesystem changes may not persist after container restarts"
   service_enter "$SERVICE" "${@:2}"
 }
 

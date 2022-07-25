@@ -38,7 +38,7 @@ auth_service_filter() {
 
   # this plugin trigger exists in the core `20_events` plugin
   if [[ "$user_auth_count" == 1 ]] && [[ -f "$PLUGIN_PATH"/enabled/20_events/user-auth-service ]]; then
-  # echo out all the services since there is no valid plugin trigger
+    # echo out all the services since there is no valid plugin trigger
     for SERVICE in "${SERVICES[@]}"; do
       [[ -n "$SERVICE" ]] && echo "$SERVICE"
     done
@@ -48,27 +48,36 @@ auth_service_filter() {
   export SSH_USER=${SSH_USER:=$USER}
   export SSH_NAME=${NAME:="default"}
   # the output of this trigger should be all the services a user has access to
-  plugn trigger user-auth-service "$SSH_USER" "$SSH_NAME" "${SERVICES[@]}"
+  plugn trigger user-auth-service "$SSH_USER" "$SSH_NAME" "$PLUGIN_COMMAND_PREFIX" "${SERVICES[@]}"
 }
 
 fn-services-list() {
   declare desc="prints a filtered list of all local apps"
   declare FILTER="$1"
-  local detected_services filtered_services services
+  local services=()
 
-  local detected_services=("$(ls "$PLUGIN_DATA_ROOT" 2>/dev/null)")
+  pushd "$PLUGIN_DATA_ROOT" >/dev/null
+  for f in *; do
+    [[ -d $f ]] || continue
+    services+=("$f")
+  done
+  popd &>/dev/null || pushd "/tmp" >/dev/null
+
+  if [[ "${#services[@]}" -eq 0 ]]; then
+    return
+  fi
+
   if [[ "$FILTER" == "false" ]]; then
-    for service in "${detected_services[@]}"; do
-      if [[ -n "$service" ]]; then 
+    for service in "${services[@]}"; do
+      if [[ -n "$service" ]]; then
         echo "$service"
       fi
     done
     return
   fi
 
-  filtered_services="$(auth_service_filter "${detected_services[@]}" 2>/dev/null)"
-  for service in "$filtered_services"; do
-    if [[ -n "$service" ]]; then 
+  for service in $(auth_service_filter "${services[@]}" 2>/dev/null); do
+    if [[ -n "$service" ]]; then
       echo "$service"
     fi
   done
@@ -94,7 +103,7 @@ get_database_name() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
 
   if [[ ! -f "$SERVICE_ROOT/DATABASE_NAME" ]]; then
-    echo "$SERVICE" > "$SERVICE_ROOT/DATABASE_NAME"
+    echo "$SERVICE" >"$SERVICE_ROOT/DATABASE_NAME"
   fi
 
   cat "$SERVICE_ROOT/DATABASE_NAME"
@@ -237,8 +246,7 @@ service_app_links() {
   declare APP="$1"
   local LINKED_APP SERVICE SERVICE_ROOT
 
-  pushd "$PLUGIN_DATA_ROOT" >/dev/null
-  for SERVICE in $(fn-services-list); do
+  for SERVICE in $(fn-services-list true); do
     [[ -n "$SERVICE" ]] || continue
 
     SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
@@ -308,7 +316,6 @@ service_commit_config() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local CONFIG_VARIABLE="${PLUGIN_VARIABLE}_CONFIG_OPTIONS"
   local ENV_VARIABLE="${PLUGIN_VARIABLE}_CUSTOM_ENV"
-
 
   custom_env="${!ENV_VARIABLE}"
   [[ -n "$SERVICE_CUSTOM_ENV" ]] && custom_env="$SERVICE_CUSTOM_ENV"
@@ -637,7 +644,7 @@ service_links() {
 service_list() {
   declare desc="list all services and their status"
 
-  services=("$(fn-services-list true)")
+  mapfile -t services < <(fn-services-list true)
   if [[ "${#services[@]}" -eq 0 ]] || [[ -z "$services" ]]; then
     dokku_log_warn "There are no $PLUGIN_SERVICE services"
     return
@@ -645,7 +652,7 @@ service_list() {
 
   dokku_log_info2_quiet "$PLUGIN_SERVICE services"
   for service in "${services[@]}"; do
-    echo "$service"
+    echo "${service}"
   done
 }
 
@@ -981,5 +988,5 @@ write_database_name() {
 
   # some datastores do not like special characters in database names
   # so we need to normalize them out
-  echo "$SERVICE" | tr .- _ > "$SERVICE_ROOT/DATABASE_NAME"
+  echo "$SERVICE" | tr .- _ >"$SERVICE_ROOT/DATABASE_NAME"
 }
