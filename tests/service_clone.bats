@@ -30,7 +30,7 @@ teardown() {
 @test "($PLUGIN_COMMAND_PREFIX:clone) error when new service already exists" {
   dokku "$PLUGIN_COMMAND_PREFIX:create" new_service
   run dokku "$PLUGIN_COMMAND_PREFIX:clone" l new_service
-  assert_contains "${lines[*]}" "service new_service already exists"
+  assert_contains "${lines[*]}" "Invalid service name new_service"
   assert_failure
 
   dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" new_service
