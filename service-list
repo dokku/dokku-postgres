@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common-functions"
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+
+plugin-service-list() {
+  declare desc="allows listing all services for use by other dokku plugins"
+  declare SERVICE_TYPE="$1"
+
+  if [[ -n "$SERVICE_TYPE" ]] && [[ "$SERVICE_TYPE" != "$PLUGIN_COMMAND_PREFIX" ]]; then
+    return
+  fi
+
+  for service in $(fn-services-list false); do
+    echo "$PLUGIN_COMMAND_PREFIX:$service"
+  done
+}
+
+plugin-service-list "$@"
