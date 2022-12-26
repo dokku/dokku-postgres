@@ -148,6 +148,7 @@ def usage_lifecycle(service, variable, alias, image, scheme, ports, options, uni
         "promote",
         "start",
         "stop",
+        "pause",
         "restart",
         "upgrade",
     ]

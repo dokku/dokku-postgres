@@ -41,6 +41,7 @@ postgres:linked <service> <app>                    # check if the postgres servi
 postgres:links <service>                           # list all apps linked to the postgres service
 postgres:list                                      # list all postgres services
 postgres:logs <service> [-t|--tail] <tail-num-optional> # print the most recent log(s) for this service
+postgres:pause <service>                           # pause a running postgres service
 postgres:promote <service> <app>                   # promote service <service> as DATABASE_URL in <app>
 postgres:restart <service>                         # graceful shutdown and restart of the postgres service container
 postgres:start <service>                           # start a previously stopped postgres service
@@ -376,10 +377,23 @@ dokku postgres:start lollipop
 dokku postgres:stop <service>
 ```
 
-Stop the service and the running container:
+Stop the service and removes the running container:
 
 ```shell
 dokku postgres:stop lollipop
+```
+
+### pause a running postgres service
+
+```shell
+# usage
+dokku postgres:pause <service>
+```
+
+Pause the running container for the service:
+
+```shell
+dokku postgres:pause lollipop
 ```
 
 ### graceful shutdown and restart of the postgres service container

@@ -443,7 +443,7 @@ service_container_rm() {
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local ID
 
-  service_stop "$SERVICE"
+  service_pause "$SERVICE"
   ID=$(docker ps -aq --no-trunc --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
   # this may be 'true' in tests...
   if [[ -z "$ID" ]] || [[ "$ID" == "true" ]]; then
@@ -896,19 +896,19 @@ service_status() {
   echo "missing" && return 0
 }
 
-service_stop() {
-  declare desc="stop a running service"
+service_pause() {
+  declare desc="pause a running service"
   declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local ID=$(docker ps -aq --no-trunc --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
-  [[ -z $ID ]] && dokku_log_warn "Service is already stopped" && return 0
+  [[ -z $ID ]] && dokku_log_warn "Service is already paused" && return 0
 
   if [[ -n $ID ]]; then
-    dokku_log_info2_quiet "Stopping container"
+    dokku_log_info2_quiet "Pausing container"
     docker stop "$SERVICE_NAME" >/dev/null
     service_port_pause "$SERVICE"
-    dokku_log_verbose_quiet "Container stopped"
+    dokku_log_verbose_quiet "Container paused"
   else
     dokku_log_verbose_quiet "No container exists for $SERVICE"
   fi
