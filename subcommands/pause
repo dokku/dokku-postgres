@@ -5,18 +5,18 @@ set -eo pipefail
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
-service-stop-cmd() {
-  #E stop the service and removes the running container
-  #E dokku $PLUGIN_COMMAND_PREFIX:stop lollipop
+service-pause-cmd() {
+  #E pause the running container for the service
+  #E dokku $PLUGIN_COMMAND_PREFIX:pause lollipop
   #A service, service to run command against
-  declare desc="stop a running $PLUGIN_SERVICE service"
-  local cmd="$PLUGIN_COMMAND_PREFIX:stop" argv=("$@")
+  declare desc="pause a running $PLUGIN_SERVICE service"
+  local cmd="$PLUGIN_COMMAND_PREFIX:pause" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
   verify_service_name "$SERVICE"
-  service_container_rm "$SERVICE"
+  service_pause "$SERVICE"
 }
 
-service-stop-cmd "$@"
+service-pause-cmd "$@"

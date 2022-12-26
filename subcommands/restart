@@ -16,7 +16,7 @@ service-restart-cmd() {
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
   verify_service_name "$SERVICE"
-  service_stop "$SERVICE"
+  service_pause "$SERVICE"
   service_start "$SERVICE"
   dokku_log_info1 "Please call dokku ps:restart on all linked apps"
 }
