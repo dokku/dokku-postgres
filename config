@@ -3,7 +3,8 @@ _DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export POSTGRES_IMAGE=${POSTGRES_IMAGE:="$(awk -F '[ :]' '{print $2}' "${_DIR}/Dockerfile")"}
 export POSTGRES_IMAGE_VERSION=${POSTGRES_IMAGE_VERSION:="$(awk -F '[ :]' '{print $3}' "${_DIR}/Dockerfile")"}
 export POSTGRES_ROOT=${POSTGRES_ROOT:="$DOKKU_LIB_ROOT/services/postgres"}
-export POSTGRES_HOST_ROOT=${POSTGRES_HOST_ROOT:=$POSTGRES_ROOT}
+export DOKKU_LIB_HOST_ROOT=${DOKKU_LIB_HOST_ROOT:=$DOKKU_LIB_ROOT}
+export POSTGRES_HOST_ROOT=${POSTGRES_HOST_ROOT:="$DOKKU_LIB_HOST_ROOT/services/postgres"}
 
 export PLUGIN_UNIMPLEMENTED_SUBCOMMANDS=()
 export PLUGIN_COMMAND_PREFIX="postgres"
