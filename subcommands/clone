@@ -43,7 +43,13 @@ service-clone-cmd() {
   dokku_log_info2 "Cloning $SERVICE to $NEW_SERVICE @ $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
   service_create "$NEW_SERVICE" "${@:3}"
   dokku_log_info1 "Copying data from $SERVICE to $NEW_SERVICE"
-  service_export "$SERVICE" | service_import "$NEW_SERVICE" >/dev/null 2>&1 || true
+  for DATABASE_NAME in $(docker exec dokku.postgres.td1 psql -qtA -U postgres -c "SELECT datname FROM pg_catalog.pg_database;"); do
+    if [[ $DATABASE_NAME == "postgres" || $DATABASE_NAME == "template0" ]]; then
+      continue
+    fi
+    service_export "$SERVICE" "$DATABASE_NAME" | service_import "$NEW_SERVICE" "$DATABASE_NAME">/dev/null 2>&1 || true
+
+  done
   dokku_log_info2 "Done"
 }
 
