@@ -28,17 +28,7 @@ service-upgrade-cmd() {
 
   service_parse_args "${@:2}"
 
-  if ! service_image_exists "$SERVICE"; then
-    dokku_log_fail "Unable to proceed with upgrade, image ${PLUGIN_IMAGE}:${PLUGIN_IMAGE_VERSION} does not exist"
-  fi
-
-  local NEW_PLUGIN_IMAGE_TAG="$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
-  if [[ "$(service_version "$SERVICE")" == "$NEW_PLUGIN_IMAGE_TAG" ]]; then
-    dokku_log_info1 "Service $SERVICE already running $NEW_PLUGIN_IMAGE_TAG"
-    return
-  fi
-
-  if ! service_image_exists "$SERVICE"; then
+  if ! service_image_exists "$SERVICE" "$PLUGIN_IMAGE" "$PLUGIN_IMAGE_VERSION"; then
     if [[ "$PLUGIN_DISABLE_PULL" == "true" ]]; then
       dokku_log_warn "${PLUGIN_DISABLE_PULL_VARIABLE} environment variable detected. Not running pull command." 1>&2
       dokku_log_warn "   docker image pull ${IMAGE}" 1>&2
@@ -46,6 +36,12 @@ service-upgrade-cmd() {
       exit 1
     fi
     "$DOCKER_BIN" image pull "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" || dokku_log_fail "$PLUGIN_SERVICE image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION pull failed"
+  fi
+
+  local NEW_PLUGIN_IMAGE_TAG="$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
+  if [[ "$(service_version "$SERVICE")" == "$NEW_PLUGIN_IMAGE_TAG" ]]; then
+    dokku_log_info1 "Service $SERVICE already running $NEW_PLUGIN_IMAGE_TAG"
+    return
   fi
 
   service_commit_config "$SERVICE"

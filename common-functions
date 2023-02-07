@@ -501,12 +501,18 @@ service_exposed_ports() {
 
 service_image_exists() {
   declare desc="check if the current image exists"
-  declare SERVICE="$1"
+  declare SERVICE="$1" PLUGIN_IMAGE="${2:-$PLUGIN_IMAGE}" PLUGIN_IMAGE_VERSION="${3:-$PLUGIN_IMAGE_VERSION}"
   local plugin_image="$PLUGIN_IMAGE"
   local plugin_image_version="$PLUGIN_IMAGE_VERSION"
 
-  [[ -f "$SERVICE_ROOT/IMAGE" ]] && plugin_image="$(cat "$SERVICE_ROOT/IMAGE")"
-  [[ -f "$SERVICE_ROOT/IMAGE_VERSION" ]] && plugin_image_version="$(cat "$SERVICE_ROOT/IMAGE_VERSION")"
+  if [[ -z "$PLUGIN_IMAGE" ]] && [[ -f "$SERVICE_ROOT/IMAGE" ]]; then
+    plugin_image="$(cat "$SERVICE_ROOT/IMAGE")"
+  fi
+
+  if [[ -z "$PLUGIN_IMAGE_VERSION" ]] && [[ -f "$SERVICE_ROOT/IMAGE_VERSION" ]]; then
+    plugin_image_version="$(cat "$SERVICE_ROOT/IMAGE_VERSION")"
+  fi
+
   local IMAGE="$plugin_image:$plugin_image_version"
 
   if [[ "$("$DOCKER_BIN" image ls -q "$IMAGE" 2>/dev/null)" == "" ]]; then
