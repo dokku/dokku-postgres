@@ -115,7 +115,22 @@ service_create_container() {
 
   # shellcheck disable=SC2086
   "$DOCKER_BIN" container create "${DOCKER_ARGS[@]}" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" $CONFIG_OPTIONS >/dev/null
+
+  if [[ -n "$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "post-create-network")" ]]; then
+    dokku_log_verbose_quiet "Connecting to networks after container create"
+    while read -r line || [[ -n "$line" ]]; do
+      dokku_log_verbose_quiet "- $line"
+      "$DOCKER_BIN" network connect --alias "$SERVICE_NAME" "$line" "$SERVICE_NAME"
+    done < <(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "post-create-network")
+  fi
   "$DOCKER_BIN" container start "$(cat "$SERVICE_ROOT/ID")" >/dev/null
+  if [[ -n "$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "post-start-network")" ]]; then
+    dokku_log_verbose_quiet "Connecting to networks after container start"
+    while read -r line || [[ -n "$line" ]]; do
+      dokku_log_verbose_quiet "- $line"
+      "$DOCKER_BIN" network connect --alias "$SERVICE_NAME" "$line" "$SERVICE_NAME"
+    done < <(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "post-start-network")
+  fi
 
   dokku_log_verbose_quiet "Waiting for container to be ready"
   "$DOCKER_BIN" container run "${LINK_CONTAINER_DOCKER_ARGS[@]}" "$PLUGIN_WAIT_IMAGE" -c "$SERVICE_NAME:$PLUGIN_DATASTORE_WAIT_PORT" >/dev/null
