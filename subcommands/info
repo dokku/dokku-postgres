@@ -15,7 +15,10 @@ service-info-cmd() {
   #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --exposed-ports
   #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --id
   #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --internal-ip
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --initial-network
   #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --links
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --post-create-network
+  #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --post-start-network
   #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --service-root
   #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --status
   #E dokku $PLUGIN_COMMAND_PREFIX:info lollipop --version
@@ -26,7 +29,10 @@ service-info-cmd() {
   #F --exposed-ports, show service exposed ports
   #F --id, show the service container id
   #F --internal-ip, show the service internal ip
+  #F --initial-network, show the initial network being connected to
   #F --links, show the service app links
+  #F --post-create-network, show the networks to attach to after service container creation
+  #F --post-start-network, show the networks to attach to after service container start
   #F --service-root, show the service root directory
   #F --status, show the service running status
   #F --version, show the service image version
