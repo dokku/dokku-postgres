@@ -13,7 +13,7 @@ on:
 jobs:
   unit-tests-master:
     name: unit-tests
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: true
     env:
@@ -57,7 +57,7 @@ jobs:
 
   unit-tests-0_19_0:
     name: unit-tests-0.19.0
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: true
     env:
