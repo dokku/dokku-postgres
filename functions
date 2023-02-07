@@ -3,7 +3,8 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common-functions"
-source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
+source "$PLUGIN_BASE_PATH/common/functions"
+source "$PLUGIN_BASE_PATH/common/property-functions"
 source "$PLUGIN_AVAILABLE_PATH/config/functions"
 if [[ -f "$PLUGIN_AVAILABLE_PATH/docker-options/functions" ]]; then
   source "$PLUGIN_AVAILABLE_PATH/docker-options/functions"
@@ -73,21 +74,38 @@ service_create_container() {
     export CONFIG_OPTIONS="$(cat "$SERVICE_ROOT/CONFIG_OPTIONS")"
   fi
 
+  declare -a DOCKER_ARGS
+  DOCKER_ARGS=()
+  DOCKER_ARGS+=("--detach")
+  DOCKER_ARGS+=("--env-file=$SERVICE_ROOT/ENV")
+  DOCKER_ARGS+=("--env=POSTGRES_PASSWORD=$PASSWORD")
+  DOCKER_ARGS+=("--hostname=$SERVICE")
+  DOCKER_ARGS+=("--label=dokku.service=$PLUGIN_COMMAND_PREFIX")
+  DOCKER_ARGS+=("--label=dokku=service")
+  DOCKER_ARGS+=("--name=$SERVICE_NAME")
+  DOCKER_ARGS+=("--restart=always")
+  DOCKER_ARGS+=("--volume=$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data")
+
   [[ -f "$SERVICE_ROOT/SERVICE_MEMORY" ]] && SERVICE_MEMORY="$(cat "$SERVICE_ROOT/SERVICE_MEMORY")"
   if [[ -n "$SERVICE_MEMORY" ]]; then
-    MEMORY_LIMIT="--memory=${SERVICE_MEMORY}m"
+    DOCKER_ARGS+=("--memory=${SERVICE_MEMORY}m")
   fi
 
   [[ -f "$SERVICE_ROOT/SHM_SIZE" ]] && SERVICE_SHM_SIZE="$(cat "$SERVICE_ROOT/SHM_SIZE")"
   if [[ -n "$SERVICE_SHM_SIZE" ]]; then
-    SHM_SIZE="--shm-size=${SERVICE_SHM_SIZE}"
+    DOCKER_ARGS+=("--shm-size=${SERVICE_SHM_SIZE}")
   fi
 
   [[ -f "$SERVICE_ROOT/IMAGE" ]] && PLUGIN_IMAGE="$(cat "$SERVICE_ROOT/IMAGE")"
   [[ -f "$SERVICE_ROOT/IMAGE_VERSION" ]] && PLUGIN_IMAGE_VERSION="$(cat "$SERVICE_ROOT/IMAGE_VERSION")"
 
+  local network="$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "initial-network")"
+  if [[ -n "$network" ]]; then
+    DOCKER_ARGS+=("--network=${network}")
+  fi
+
   # shellcheck disable=SC2086
-  ID=$("$DOCKER_BIN" container run --name "$SERVICE_NAME" $MEMORY_LIMIT $SHM_SIZE -v "$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data" -e "POSTGRES_PASSWORD=$PASSWORD" --env-file="$SERVICE_ROOT/ENV" -d --restart always --label dokku=service --label dokku.service=postgres "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" $CONFIG_OPTIONS)
+  ID=$("$DOCKER_BIN" container run "${DOCKER_ARGS[@]}" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" $CONFIG_OPTIONS)
   echo "$ID" >"$SERVICE_ROOT/ID"
 
   dokku_log_verbose_quiet "Waiting for container to be ready"

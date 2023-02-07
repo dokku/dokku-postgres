@@ -131,7 +131,7 @@ def usage_section(service, variable, alias, image, scheme, ports, options, unimp
 
 
 def usage_intro(service, variable, alias, image, scheme, ports, options, unimplemented):
-    commands = ["create", "info", "list", "logs", "link", "unlink"]
+    commands = ["create", "info", "list", "logs", "link", "unlink", "set"]
     content = ["### Basic Usage"]
 
     return fetch_commands_content(

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 [[ " help $PLUGIN_COMMAND_PREFIX:help $PLUGIN_COMMAND_PREFIX $PLUGIN_COMMAND_PREFIX:default " == *" $1 "* ]] || [[ "$1" == "$PLUGIN_COMMAND_PREFIX:"* ]] || exit "$DOKKU_NOT_IMPLEMENTED_EXIT"
-source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
+source "$PLUGIN_BASE_PATH/common/functions"
+
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 

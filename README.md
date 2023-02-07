@@ -44,6 +44,7 @@ postgres:logs <service> [-t|--tail] <tail-num-optional> # print the most recent 
 postgres:pause <service>                           # pause a running postgres service
 postgres:promote <service> <app>                   # promote service <service> as DATABASE_URL in <app>
 postgres:restart <service>                         # graceful shutdown and restart of the postgres service container
+postgres:set <service> <key> <value>               # set or clear a property for a service
 postgres:start <service>                           # start a previously stopped postgres service
 postgres:stop <service>                            # stop a running postgres service
 postgres:unexpose <service>                        # unexpose a previously exposed postgres service
@@ -254,6 +255,25 @@ You can unlink a postgres service:
 
 ```shell
 dokku postgres:unlink lollipop playground
+```
+
+### set or clear a property for a service
+
+```shell
+# usage
+dokku postgres:set <service> <key> <value>
+```
+
+Set the network to attach after the service container is started:
+
+```shell
+dokku postgres:set lollipop post-create-network custom-network
+```
+
+Unset the post-create-network value:
+
+```shell
+dokku postgres:set lollipop post-create-network
 ```
 
 ### Service Lifecycle
