@@ -94,7 +94,7 @@ docker_ports_options() {
 get_container_ip() {
   declare desc="retrieve the ip address of a container"
   declare CONTAINER_ID="$1"
-  docker inspect --format '{{ .NetworkSettings.IPAddress }}' "$CONTAINER_ID" 2>/dev/null
+  docker container inspect --format '{{ .NetworkSettings.IPAddress }}' "$CONTAINER_ID" 2>/dev/null
 }
 
 get_database_name() {
@@ -153,7 +153,7 @@ is_container_status() {
   declare desc="return 0 or 1 depending upon whether a given container has a certain status"
   declare CID="$1" STATUS="$2"
   local TEMPLATE="{{.State.$STATUS}}"
-  local CONTAINER_STATUS=$(docker inspect -f "$TEMPLATE" "$CID" 2>/dev/null || true)
+  local CONTAINER_STATUS=$(docker container inspect -f "$TEMPLATE" "$CID" 2>/dev/null || true)
 
   if [[ "$CONTAINER_STATUS" == "true" ]]; then
     return 0
@@ -208,7 +208,7 @@ retry-docker-command() {
   local i=0 success=false
   until [ $i -ge 100 ]; do
     set +e
-    suppress_output docker exec "$ID" sh -c "$COMMAND"
+    suppress_output docker container exec "$ID" sh -c "$COMMAND"
     exit_code=$?
     set -e
     if [[ "$exit_code" == 0 ]]; then
@@ -281,7 +281,7 @@ service_backup() {
   BACKUP_TMPDIR=$(mktemp -d --tmpdir)
   trap 'rm -rf "$BACKUP_TMPDIR" > /dev/null' RETURN INT TERM EXIT
 
-  docker inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"
+  docker container inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"
   is_container_status "$ID" "Running" || dokku_log_fail "Service container is not running"
 
   (service_export "$SERVICE" >"${BACKUP_TMPDIR}/export")
@@ -308,7 +308,7 @@ service_backup() {
   fi
 
   # shellcheck disable=SC2086
-  docker run --rm $BACKUP_PARAMETERS "$PLUGIN_S3BACKUP_IMAGE"
+  docker container run --rm $BACKUP_PARAMETERS "$PLUGIN_S3BACKUP_IMAGE"
 }
 
 service_commit_config() {
@@ -444,15 +444,15 @@ service_container_rm() {
   local ID
 
   service_pause "$SERVICE"
-  ID=$(docker ps -aq --no-trunc --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
+  ID=$(docker container ps -aq --no-trunc --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
   # this may be 'true' in tests...
   if [[ -z "$ID" ]] || [[ "$ID" == "true" ]]; then
     return 0
   fi
 
   dokku_log_verbose_quiet "Removing container"
-  docker update --restart=no "$SERVICE_NAME" >/dev/null 2>&1
-  if ! docker rm "$SERVICE_NAME" >/dev/null 2>&1; then
+  docker container update --restart=no "$SERVICE_NAME" >/dev/null 2>&1
+  if ! docker container rm "$SERVICE_NAME" >/dev/null 2>&1; then
     dokku_log_fail "Unable to remove container for service $SERVICE"
   fi
 }
@@ -470,13 +470,13 @@ service_enter() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local ID="$(cat "$SERVICE_ROOT/ID")"
 
-  docker inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"
+  docker container inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"
   is_container_status "$ID" "Running" || dokku_log_fail "Service container is not running"
 
   local EXEC_CMD=""
   has_tty && local DOKKU_RUN_OPTS+=" -i -t"
   # shellcheck disable=SC2086
-  docker exec $DOKKU_RUN_OPTS $ID $EXEC_CMD "${@:-/bin/bash}"
+  docker container exec $DOKKU_RUN_OPTS $ID $EXEC_CMD "${@:-/bin/bash}"
 }
 
 service_exists() {
@@ -509,7 +509,7 @@ service_image_exists() {
   [[ -f "$SERVICE_ROOT/IMAGE_VERSION" ]] && plugin_image_version="$(cat "$SERVICE_ROOT/IMAGE_VERSION")"
   local IMAGE="$plugin_image:$plugin_image_version"
 
-  if [[ "$(docker images -q "$IMAGE" 2>/dev/null)" == "" ]]; then
+  if [[ "$(docker image ls -q "$IMAGE" 2>/dev/null)" == "" ]]; then
     return 1
   fi
 
@@ -668,11 +668,11 @@ service_logs() {
     DOKKU_LOGS_ARGS+=" --follow"
   fi
 
-  docker inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"
+  docker container inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"
   is_container_status "$ID" "Running" || dokku_log_warn "Service logs may not be output as service is not running"
 
   # shellcheck disable=SC2086
-  docker logs $DOKKU_LOGS_ARGS "$ID" 2>&1
+  docker container logs $DOKKU_LOGS_ARGS "$ID" 2>&1
 }
 
 service_parse_args() {
@@ -790,7 +790,7 @@ service_port_pause() {
   fi
 
   local GREP_NAME="^/${EXPOSED_NAME}$"
-  local CONTAINER_NAME="$(docker ps -f name="$GREP_NAME" --format "{{.Names}}")"
+  local CONTAINER_NAME="$(docker container ps -f name="$GREP_NAME" --format "{{.Names}}")"
   if [[ -z "$CONTAINER_NAME" ]]; then
     if [[ "$LOG_FAIL" == "true" ]]; then
       dokku_log_info1 "Service $SERVICE unexposed"
@@ -799,8 +799,8 @@ service_port_pause() {
     return
   fi
 
-  docker stop "$EXPOSED_NAME" >/dev/null 2>&1 || true
-  docker rm "$EXPOSED_NAME" >/dev/null 2>&1 || true
+  docker container stop "$EXPOSED_NAME" >/dev/null 2>&1 || true
+  docker container rm "$EXPOSED_NAME" >/dev/null 2>&1 || true
   if [[ "$LOG_FAIL" == "true" ]]; then
     dokku_log_info1 "Service $SERVICE unexposed"
   fi
@@ -840,7 +840,7 @@ service_port_unpause() {
   echo "${PORTS[@]}" >"$PORT_FILE"
 
   # shellcheck disable=SC2046
-  docker run -d --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" --name "$EXPOSED_NAME" $(docker_ports_options "${PORTS[@]}") --restart always --label dokku=ambassador --label "dokku.ambassador=$PLUGIN_COMMAND_PREFIX" "$PLUGIN_AMBASSADOR_IMAGE" >/dev/null
+  docker container run -d --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" --name "$EXPOSED_NAME" $(docker_ports_options "${PORTS[@]}") --restart always --label dokku=ambassador --label "dokku.ambassador=$PLUGIN_COMMAND_PREFIX" "$PLUGIN_AMBASSADOR_IMAGE" >/dev/null
   if [[ "$LOG_FAIL" == "true" ]]; then
     dokku_log_info1 "Service $SERVICE exposed on port(s) [container->host]: $(service_exposed_ports "$SERVICE")"
   fi
@@ -891,7 +891,7 @@ service_status() {
   local ID="$(cat "$SERVICE_ROOT/ID")"
   local CONTAINER_STATUS
 
-  CONTAINER_STATUS=$(docker inspect -f "{{.State.Status}}" "$ID" 2>/dev/null || true)
+  CONTAINER_STATUS=$(docker container inspect -f "{{.State.Status}}" "$ID" 2>/dev/null || true)
   [[ -n "$CONTAINER_STATUS" ]] && echo "$CONTAINER_STATUS" && return 0
   echo "missing" && return 0
 }
@@ -901,12 +901,12 @@ service_pause() {
   declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
-  local ID=$(docker ps -aq --no-trunc --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
+  local ID=$(docker container ps -aq --no-trunc --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
   [[ -z $ID ]] && dokku_log_warn "Service is already paused" && return 0
 
   if [[ -n $ID ]]; then
     dokku_log_info2_quiet "Pausing container"
-    docker stop "$SERVICE_NAME" >/dev/null
+    docker container stop "$SERVICE_NAME" >/dev/null
     service_port_pause "$SERVICE"
     dokku_log_verbose_quiet "Container paused"
   else
@@ -949,7 +949,7 @@ service_version() {
   declare desc="display the running version for an image"
   declare SERVICE="$1"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
-  docker inspect -f '{{.Config.Image}}' "$SERVICE_NAME" 2>/dev/null || true
+  docker container inspect -f '{{.Config.Image}}' "$SERVICE_NAME" 2>/dev/null || true
 }
 
 update_plugin_scheme_for_app() {
