@@ -12,8 +12,8 @@ plugin-install() {
       echo " !        docker image pull ${IMAGE}" 1>&2
       return
     fi
-    if [[ "$(docker image ls -q "${IMAGE}" 2>/dev/null)" == "" ]]; then
-      docker image pull "${IMAGE}"
+    if [[ "$("$DOCKER_BIN" image ls -q "${IMAGE}" 2>/dev/null)" == "" ]]; then
+      "$DOCKER_BIN" image pull "${IMAGE}"
     fi
   }
 

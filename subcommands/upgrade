@@ -45,7 +45,7 @@ service-upgrade-cmd() {
       dokku_log_warn "$PLUGIN_SERVICE service $SERVICE upgrade failed"
       exit 1
     fi
-    docker image pull "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" || dokku_log_fail "$PLUGIN_SERVICE image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION pull failed"
+    "$DOCKER_BIN" image pull "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" || dokku_log_fail "$PLUGIN_SERVICE image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION pull failed"
   fi
 
   service_commit_config "$SERVICE"
