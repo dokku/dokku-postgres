@@ -9,6 +9,8 @@ source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/common-functi
 service-set-cmd() {
   #E set the network to attach after the service container is started
   #E dokku $PLUGIN_COMMAND_PREFIX:set lollipop post-create-network custom-network
+  #E set multiple networks
+  #E dokku $PLUGIN_COMMAND_PREFIX:set lollipop post-create-network custom-network,other-network
   #E unset the post-create-network value
   #E dokku $PLUGIN_COMMAND_PREFIX:set lollipop post-create-network
   #A service, service to run command against
