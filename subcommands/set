@@ -18,13 +18,13 @@ service-set-cmd() {
   local cmd="$PLUGIN_COMMAND_PREFIX:set" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" KEY="$2" VALUE="$3"
-  local VALID_KEYS=("post-create-network" "post-start-network" "initial-network")
+  local VALID_KEYS=("initial-network" "post-create-network" "post-start-network")
   verify_service_name "$SERVICE"
 
   [[ -z "$KEY" ]] && dokku_log_fail "No key specified"
 
   if ! fn-in-array "$KEY" "${VALID_KEYS[@]}"; then
-    dokku_log_fail "Invalid key specified, valid keys include: network"
+    dokku_log_fail "Invalid key specified, valid keys include: initial-network, post-create-network, post-start-network"
   fi
 
   if [[ -n "$VALUE" ]]; then
