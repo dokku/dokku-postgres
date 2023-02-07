@@ -96,7 +96,7 @@ export POSTGRES_CUSTOM_ENV="USER=alpha;HOST=beta"
 dokku postgres:create lollipop
 ```
 
-Official Postgres docker images does not include postgis extension (amongst others). The following example creates a new postgres service using `postgis/postgis:13-3.1` image, which includes the `postgis` extension.
+Official Postgres "$DOCKER_BIN" image ls does not include postgis extension (amongst others). The following example creates a new postgres service using `postgis/postgis:13-3.1` image, which includes the `postgis` extension.
 
 ```shell
 dokku postgres:create postgis-database --image "postgis/postgis" --image-version "13-3.1"
@@ -736,8 +736,8 @@ Remove the scheduled backup from cron:
 dokku postgres:backup-unschedule lollipop
 ```
 
-### Disabling `docker pull` calls
+### Disabling `docker image pull` calls
 
-If you wish to disable the `docker pull` calls that the plugin triggers, you may set the `POSTGRES_DISABLE_PULL` environment variable to `true`. Once disabled, you will need to pull the service image you wish to deploy as shown in the `stderr` output.
+If you wish to disable the `docker image pull` calls that the plugin triggers, you may set the `POSTGRES_DISABLE_PULL` environment variable to `true`. Once disabled, you will need to pull the service image you wish to deploy as shown in the `stderr` output.
 
-Please ensure the proper images are in place when `docker pull` is disabled.
+Please ensure the proper images are in place when `docker image pull` is disabled.
