@@ -4,6 +4,7 @@ set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_BASE_PATH/common/functions"
 source "$PLUGIN_BASE_PATH/common/property-functions"
+source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/common-functions"
 
 service-set-cmd() {
   #E set the network to attach after the service container is started
@@ -28,13 +29,15 @@ service-set-cmd() {
 
   if [[ -n "$VALUE" ]]; then
     dokku_log_info2_quiet "Setting ${KEY} to ${VALUE}"
-    fn-plugin-property-write "PLUGIN_COMMAND_PREFIX" "$SERVICE" "$KEY" "$VALUE"
+    fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "$KEY" "$VALUE"
   else
     dokku_log_info2_quiet "Unsetting ${KEY}"
     if [[ "$KEY" == "rev-env-var" ]]; then
-      fn-plugin-property-write "PLUGIN_COMMAND_PREFIX" "$SERVICE" "$KEY" "$VALUE"
+      fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "$KEY" "$VALUE"
     else
-      fn-plugin-property-delete "PLUGIN_COMMAND_PREFIX" "$SERVICE" "$KEY"
+      fn-plugin-property-delete "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "$KEY"
     fi
   fi
 }
+
+service-set-cmd "$@"
