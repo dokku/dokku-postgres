@@ -86,6 +86,12 @@ service_create_container() {
   DOCKER_ARGS+=("--restart=always")
   DOCKER_ARGS+=("--volume=$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data")
 
+  declare -a LINK_CONTAINER_DOCKER_ARGS
+  LINK_CONTAINER_DOCKER_ARGS=()
+  LINK_CONTAINER_DOCKER_ARGS+=("--rm")
+  LINK_CONTAINER_DOCKER_ARGS+=("--link")
+  LINK_CONTAINER_DOCKER_ARGS+=("$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX")
+
   [[ -f "$SERVICE_ROOT/SERVICE_MEMORY" ]] && SERVICE_MEMORY="$(cat "$SERVICE_ROOT/SERVICE_MEMORY")"
   if [[ -n "$SERVICE_MEMORY" ]]; then
     DOCKER_ARGS+=("--memory=${SERVICE_MEMORY}m")
@@ -102,6 +108,8 @@ service_create_container() {
   local network="$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "initial-network")"
   if [[ -n "$network" ]]; then
     DOCKER_ARGS+=("--network=${network}")
+    DOCKER_ARGS+=("--network-alias=$SERVICE_NAME")
+    LINK_CONTAINER_DOCKER_ARGS+=("--network=${network}")
   fi
 
   # shellcheck disable=SC2086
@@ -109,7 +117,7 @@ service_create_container() {
   echo "$ID" >"$SERVICE_ROOT/ID"
 
   dokku_log_verbose_quiet "Waiting for container to be ready"
-  "$DOCKER_BIN" container run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" "$PLUGIN_WAIT_IMAGE" -p "$PLUGIN_DATASTORE_WAIT_PORT" >/dev/null
+  "$DOCKER_BIN" container run "${LINK_CONTAINER_DOCKER_ARGS[@]}" "$PLUGIN_WAIT_IMAGE" -c "$SERVICE_NAME:$PLUGIN_DATASTORE_WAIT_PORT" >/dev/null
 
   dokku_log_verbose_quiet "Creating container database"
   "$DOCKER_BIN" container exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2>/dev/null || dokku_log_verbose_quiet 'Already exists'
@@ -118,8 +126,7 @@ service_create_container() {
   service_pause "$SERVICE" >/dev/null
   "$DOCKER_BIN" container run --rm -i -v "$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" bash -s <"$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/enable_ssl.sh" &>/dev/null
 
-  PREVIOUS_ID=$("$DOCKER_BIN" container ps -aq --no-trunc --filter "status=exited" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
-  "$DOCKER_BIN" container start "$PREVIOUS_ID" >/dev/null
+  "$DOCKER_BIN" container start "$ID" >/dev/null
   service_port_unpause "$SERVICE"
 
   dokku_log_info2 "$PLUGIN_SERVICE container created: $SERVICE"
