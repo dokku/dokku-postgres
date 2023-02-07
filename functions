@@ -74,9 +74,10 @@ service_create_container() {
     export CONFIG_OPTIONS="$(cat "$SERVICE_ROOT/CONFIG_OPTIONS")"
   fi
 
+  rm -f "$SERVICE_ROOT/ID"
   declare -a DOCKER_ARGS
   DOCKER_ARGS=()
-  DOCKER_ARGS+=("--detach")
+  DOCKER_ARGS+=("--cidfile=$SERVICE_ROOT/ID")
   DOCKER_ARGS+=("--env-file=$SERVICE_ROOT/ENV")
   DOCKER_ARGS+=("--env=POSTGRES_PASSWORD=$PASSWORD")
   DOCKER_ARGS+=("--hostname=$SERVICE")
@@ -113,8 +114,8 @@ service_create_container() {
   fi
 
   # shellcheck disable=SC2086
-  ID=$("$DOCKER_BIN" container run "${DOCKER_ARGS[@]}" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" $CONFIG_OPTIONS)
-  echo "$ID" >"$SERVICE_ROOT/ID"
+  "$DOCKER_BIN" container create "${DOCKER_ARGS[@]}" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" $CONFIG_OPTIONS >/dev/null
+  "$DOCKER_BIN" container start "$(cat "$SERVICE_ROOT/ID")" >/dev/null
 
   dokku_log_verbose_quiet "Waiting for container to be ready"
   "$DOCKER_BIN" container run "${LINK_CONTAINER_DOCKER_ARGS[@]}" "$PLUGIN_WAIT_IMAGE" -c "$SERVICE_NAME:$PLUGIN_DATASTORE_WAIT_PORT" >/dev/null
@@ -126,7 +127,7 @@ service_create_container() {
   service_pause "$SERVICE" >/dev/null
   "$DOCKER_BIN" container run --rm -i -v "$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" bash -s <"$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/enable_ssl.sh" &>/dev/null
 
-  "$DOCKER_BIN" container start "$ID" >/dev/null
+  "$DOCKER_BIN" container start "$(cat "$SERVICE_ROOT/ID")" >/dev/null
   service_port_unpause "$SERVICE"
 
   dokku_log_info2 "$PLUGIN_SERVICE container created: $SERVICE"
