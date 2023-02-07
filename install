@@ -9,11 +9,11 @@ plugin-install() {
     declare IMAGE="$1"
     if [[ "$PLUGIN_DISABLE_PULL" == "true" ]]; then
       echo " !     ${PLUGIN_DISABLE_PULL_VARIABLE} environment variable detected. Not running pull command." 1>&2
-      echo " !        docker pull ${IMAGE}" 1>&2
+      echo " !        docker image pull ${IMAGE}" 1>&2
       return
     fi
-    if [[ "$(docker images -q "${IMAGE}" 2>/dev/null)" == "" ]]; then
-      docker pull "${IMAGE}"
+    if [[ "$(docker image ls -q "${IMAGE}" 2>/dev/null)" == "" ]]; then
+      docker image pull "${IMAGE}"
     fi
   }
 
