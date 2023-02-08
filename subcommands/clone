@@ -15,8 +15,11 @@ service-clone-cmd() {
   #F -i|--image IMAGE, the image name to start the service with
   #F -I|--image-version IMAGE_VERSION, the image version to start the service with
   #F -m|--memory MEMORY, container memory limit in megabytes (default: unlimited)
+  #F -N|--initial-network INITIAL_NETWORK, the initial network to attach the service to
   #F -p|--password PASSWORD, override the user-level service password
+  #F -P|--post-create-network NETWORKS, a comman-separated list of networks to attach the service container to after service creation
   #F -r|--root-password PASSWORD, override the root-level service password
+  #F -S|--post-start-network NETWORKS, a comman-separated list of networks to attach the service container to after service start
   #F -s|--shm-size SHM_SIZE, override shared memory size for $PLUGIN_COMMAND_PREFIX docker container
   declare desc="create container <new-name> then copy data from <name> into <new-name>"
   local cmd="$PLUGIN_COMMAND_PREFIX:clone" argv=("$@")
