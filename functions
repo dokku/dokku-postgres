@@ -106,10 +106,11 @@ service_create_container() {
   [[ -f "$SERVICE_ROOT/IMAGE" ]] && PLUGIN_IMAGE="$(cat "$SERVICE_ROOT/IMAGE")"
   [[ -f "$SERVICE_ROOT/IMAGE_VERSION" ]] && PLUGIN_IMAGE_VERSION="$(cat "$SERVICE_ROOT/IMAGE_VERSION")"
 
+  local network_alias="$(get_database_name "$SERVICE").$PLUGIN_COMMAND_PREFIX"
   local network="$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "initial-network")"
   if [[ -n "$network" ]]; then
     DOCKER_ARGS+=("--network=${network}")
-    DOCKER_ARGS+=("--network-alias=$SERVICE_NAME")
+    DOCKER_ARGS+=("--network-alias=${network_alias}")
     LINK_CONTAINER_DOCKER_ARGS+=("--network=${network}")
   fi
 
@@ -133,7 +134,7 @@ service_create_container() {
   fi
 
   dokku_log_verbose_quiet "Waiting for container to be ready"
-  if ! suppress_output "$DOCKER_BIN" container run "${LINK_CONTAINER_DOCKER_ARGS[@]}" "$PLUGIN_WAIT_IMAGE" -c "$SERVICE_NAME:$PLUGIN_DATASTORE_WAIT_PORT"; then
+  if ! suppress_output "$DOCKER_BIN" container run "${LINK_CONTAINER_DOCKER_ARGS[@]}" "$PLUGIN_WAIT_IMAGE" -c "$network_alias:$PLUGIN_DATASTORE_WAIT_PORT"; then
     dokku_log_info2_quiet "Start of $SERVICE container output"
     dokku_container_log_verbose_quiet "$SERVICE_NAME"
     dokku_log_info2_quiet "End of $SERVICE container output"
