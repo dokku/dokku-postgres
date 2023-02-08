@@ -109,7 +109,7 @@ service_create_container() {
   local network_alias="$SERVICE_NAME"
   local network="$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "initial-network")"
   if [[ -n "$network" ]]; then
-    network_alias="$(get_database_name "$SERVICE").$PLUGIN_COMMAND_PREFIX"
+    network_alias="dokku-$PLUGIN_COMMAND_PREFIX-$(get_database_name "$SERVICE")"
     DOCKER_ARGS+=("--network=${network}")
     DOCKER_ARGS+=("--network-alias=${network_alias}")
     LINK_CONTAINER_DOCKER_ARGS+=("--network=${network}")
@@ -122,7 +122,7 @@ service_create_container() {
     dokku_log_verbose_quiet "Connecting to networks after container create"
     while read -r line || [[ -n "$line" ]]; do
       dokku_log_verbose_quiet "- $line"
-      "$DOCKER_BIN" network connect --alias "$(get_database_name "$SERVICE").$PLUGIN_COMMAND_PREFIX" "$line" "$SERVICE_NAME"
+      "$DOCKER_BIN" network connect --alias "dokku-$PLUGIN_COMMAND_PREFIX-$(get_database_name "$SERVICE")" "$line" "$SERVICE_NAME"
     done < <(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "post-create-network" | tr "," "\n")
   fi
   suppress_output "$DOCKER_BIN" container start "$(cat "$SERVICE_ROOT/ID")"
@@ -130,7 +130,7 @@ service_create_container() {
     dokku_log_verbose_quiet "Connecting to networks after container start"
     while read -r line || [[ -n "$line" ]]; do
       dokku_log_verbose_quiet "- $line"
-      "$DOCKER_BIN" network connect --alias "$(get_database_name "$SERVICE").$PLUGIN_COMMAND_PREFIX" "$line" "$SERVICE_NAME"
+      "$DOCKER_BIN" network connect --alias "dokku-$PLUGIN_COMMAND_PREFIX-$(get_database_name "$SERVICE")" "$line" "$SERVICE_NAME"
     done < <(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "post-start-network" | tr "," "\n")
   fi
 
