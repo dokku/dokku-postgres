@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source "$PLUGIN_BASE_PATH/common/functions"
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/functions"
