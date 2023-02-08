@@ -2,8 +2,8 @@
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
-source "$PLUGIN_BASE_PATH/common/functions"
-source "$PLUGIN_BASE_PATH/common/property-functions"
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/property-functions"
 source "$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)/common-functions"
 
 service-set-cmd() {

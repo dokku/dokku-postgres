@@ -2,7 +2,7 @@
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
-source "$PLUGIN_BASE_PATH/common/property-functions"
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/property-functions"
 source "$PLUGIN_AVAILABLE_PATH/config/functions"
 
 add_to_links_file() {
@@ -348,6 +348,18 @@ service_commit_config() {
 
   if [[ -n "$PLUGIN_IMAGE_VERSION" ]]; then
     echo "$PLUGIN_IMAGE_VERSION" >"$SERVICE_ROOT/IMAGE_VERSION"
+  fi
+
+  if [[ -n "$SERVICE_INITIAL_NETWORK" ]]; then
+    fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "initial-network" "$SERVICE_INITIAL_NETWORK"
+  fi
+
+  if [[ -n "$SERVICE_POST_CREATE_NETWORK" ]]; then
+    fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "post-create-network" "$SERVICE_POST_CREATE_NETWORK"
+  fi
+
+  if [[ -n "$SERVICE_POST_START_NETWORK" ]]; then
+    fn-plugin-property-write "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "post-start-network" "$SERVICE_POST_START_NETWORK"
   fi
 }
 
@@ -699,9 +711,12 @@ service_parse_args() {
       "--custom-env") set -- "$@" "-C" ;;
       "--database") set -- "$@" "-d" ;;
       "--image-version") set -- "$@" "-I" ;;
+      "--initial-network") set -- "$@" "-N" ;;
       "--image") set -- "$@" "-i" ;;
       "--memory") set -- "$@" "-m" ;;
       "--password") set -- "$@" "-p" ;;
+      "--post-create-network") set -- "$@" "-P" ;;
+      "--post-start-network") set -- "$@" "-S" ;;
       "--querystring") set -- "$@" "-q" ;;
       "--restart-apps") set -- "$@" "-R" ;;
       "--root-password") set -- "$@" "-r" ;;
@@ -712,7 +727,7 @@ service_parse_args() {
   done
 
   OPTIND=1
-  while getopts "a:c:C:d:i:I:m:p:q:R:r:s:u:" opt; do
+  while getopts "a:c:C:d:i:I:m:n:N:p:P:q:R:r:s:S:u:" opt; do
     case "$opt" in
       a)
         SERVICE_ALIAS="${OPTARG^^}"
@@ -736,8 +751,14 @@ service_parse_args() {
       m)
         export SERVICE_MEMORY=$OPTARG
         ;;
+      N)
+        export SERVICE_INITIAL_NETWORK=$OPTARG
+        ;;
       p)
         export SERVICE_PASSWORD=$OPTARG
+        ;;
+      P)
+        export SERVICE_POST_CREATE_NETWORK=$OPTARG
         ;;
       q)
         export SERVICE_QUERYSTRING=${OPTARG#"?"}
@@ -750,6 +771,9 @@ service_parse_args() {
         ;;
       s)
         export SERVICE_SHM_SIZE=$OPTARG
+        ;;
+      S)
+        export SERVICE_POST_START_NETWORK=$OPTARG
         ;;
       u)
         export SERVICE_USER=$OPTARG

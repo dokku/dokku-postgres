@@ -72,8 +72,11 @@ flags:
 - `-i|--image IMAGE`: the image name to start the service with
 - `-I|--image-version IMAGE_VERSION`: the image version to start the service with
 - `-m|--memory MEMORY`: container memory limit in megabytes (default: unlimited)
+- `-N|--initial-network INITIAL_NETWORK`: the initial network to attach the service to
 - `-p|--password PASSWORD`: override the user-level service password
+- `-P|--post-create-network NETWORKS`: a comman-separated list of networks to attach the service container to after service creation
 - `-r|--root-password PASSWORD`: override the root-level service password
+- `-S|--post-start-network NETWORKS`: a comman-separated list of networks to attach the service container to after service start
 - `-s|--shm-size SHM_SIZE`: override shared memory size for postgres docker container
 
 Create a postgres service named lollipop:
@@ -454,7 +457,10 @@ flags:
 - `-C|--custom-env "USER=alpha;HOST=beta"`: semi-colon delimited environment variables to start the service with
 - `-i|--image IMAGE`: the image name to start the service with
 - `-I|--image-version IMAGE_VERSION`: the image version to start the service with
+- `-N|--initial-network INITIAL_NETWORK`: the initial network to attach the service to
+- `-P|--post-create-network NETWORKS`: a comman-separated list of networks to attach the service container to after service creation
 - `-R|--restart-apps "true"`: whether to force an app restart
+- `-S|--post-start-network NETWORKS`: a comman-separated list of networks to attach the service container to after service start
 - `-s|--shm-size SHM_SIZE`: override shared memory size for postgres docker container
 
 You can upgrade an existing service to a new image or image-version:
@@ -525,8 +531,11 @@ flags:
 - `-i|--image IMAGE`: the image name to start the service with
 - `-I|--image-version IMAGE_VERSION`: the image version to start the service with
 - `-m|--memory MEMORY`: container memory limit in megabytes (default: unlimited)
+- `-N|--initial-network INITIAL_NETWORK`: the initial network to attach the service to
 - `-p|--password PASSWORD`: override the user-level service password
+- `-P|--post-create-network NETWORKS`: a comman-separated list of networks to attach the service container to after service creation
 - `-r|--root-password PASSWORD`: override the root-level service password
+- `-S|--post-start-network NETWORKS`: a comman-separated list of networks to attach the service container to after service start
 - `-s|--shm-size SHM_SIZE`: override shared memory size for postgres docker container
 
 You can clone an existing service to a new one:
