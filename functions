@@ -106,9 +106,10 @@ service_create_container() {
   [[ -f "$SERVICE_ROOT/IMAGE" ]] && PLUGIN_IMAGE="$(cat "$SERVICE_ROOT/IMAGE")"
   [[ -f "$SERVICE_ROOT/IMAGE_VERSION" ]] && PLUGIN_IMAGE_VERSION="$(cat "$SERVICE_ROOT/IMAGE_VERSION")"
 
-  local network_alias="$(get_database_name "$SERVICE").$PLUGIN_COMMAND_PREFIX"
+  local network_alias="$SERVICE_NAME"
   local network="$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "initial-network")"
   if [[ -n "$network" ]]; then
+    network_alias="$(get_database_name "$SERVICE").$PLUGIN_COMMAND_PREFIX"
     DOCKER_ARGS+=("--network=${network}")
     DOCKER_ARGS+=("--network-alias=${network_alias}")
     LINK_CONTAINER_DOCKER_ARGS+=("--network=${network}")
