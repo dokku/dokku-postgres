@@ -257,9 +257,8 @@ teardown() {
   echo "output: $output"
   echo "status: $status"
   assert_success
-  assert_output_contains "alias:dokku.$PLUGIN_COMMAND_PREFIX.ls"
-  assert_output_contains "alias:ls.$PLUGIN_COMMAND_PREFIX"
-  assert_output_contains "alias:ls"
+  assert_output_contains "alias:dokku.$PLUGIN_COMMAND_PREFIX.lsa"
+  assert_output_contains "alias:lsa.$PLUGIN_COMMAND_PREFIX"
 
   run dokku "$PLUGIN_COMMAND_PREFIX:destroy" lsa --force
   echo "output: $output"
