@@ -44,6 +44,7 @@ postgres:logs <service> [-t|--tail] <tail-num-optional> # print the most recent 
 postgres:pause <service>                           # pause a running postgres service
 postgres:promote <service> <app>                   # promote service <service> as DATABASE_URL in <app>
 postgres:restart <service>                         # graceful shutdown and restart of the postgres service container
+postgres:set <service> <key> <value>               # set or clear a property for a service
 postgres:start <service>                           # start a previously stopped postgres service
 postgres:stop <service>                            # stop a running postgres service
 postgres:unexpose <service>                        # unexpose a previously exposed postgres service
@@ -117,7 +118,10 @@ flags:
 - `--exposed-ports`: show service exposed ports
 - `--id`: show the service container id
 - `--internal-ip`: show the service internal ip
+- `--initial-network`: show the initial network being connected to
 - `--links`: show the service app links
+- `--post-create-network`: show the networks to attach to after service container creation
+- `--post-start-network`: show the networks to attach to after service container start
 - `--service-root`: show the service root directory
 - `--status`: show the service running status
 - `--version`: show the service image version
@@ -137,7 +141,10 @@ dokku postgres:info lollipop --dsn
 dokku postgres:info lollipop --exposed-ports
 dokku postgres:info lollipop --id
 dokku postgres:info lollipop --internal-ip
+dokku postgres:info lollipop --initial-network
 dokku postgres:info lollipop --links
+dokku postgres:info lollipop --post-create-network
+dokku postgres:info lollipop --post-start-network
 dokku postgres:info lollipop --service-root
 dokku postgres:info lollipop --status
 dokku postgres:info lollipop --version
@@ -254,6 +261,31 @@ You can unlink a postgres service:
 
 ```shell
 dokku postgres:unlink lollipop playground
+```
+
+### set or clear a property for a service
+
+```shell
+# usage
+dokku postgres:set <service> <key> <value>
+```
+
+Set the network to attach after the service container is started:
+
+```shell
+dokku postgres:set lollipop post-create-network custom-network
+```
+
+Set multiple networks:
+
+```shell
+dokku postgres:set lollipop post-create-network custom-network,other-network
+```
+
+Unset the post-create-network value:
+
+```shell
+dokku postgres:set lollipop post-create-network
 ```
 
 ### Service Lifecycle
