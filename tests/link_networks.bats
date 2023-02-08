@@ -54,7 +54,6 @@ teardown() {
   assert_success
   assert_output_contains "alias:dokku.$PLUGIN_COMMAND_PREFIX.ls"
   assert_output_contains "alias:dokku-$PLUGIN_COMMAND_PREFIX-ls"
-  assert_output_contains "alias:ls"
 
   run dokku "$PLUGIN_COMMAND_PREFIX:set" ls initial-network
   echo "output: $output"
@@ -127,7 +126,6 @@ teardown() {
   assert_success
   assert_output_contains "alias:dokku.$PLUGIN_COMMAND_PREFIX.ls"
   assert_output_contains "alias:dokku-$PLUGIN_COMMAND_PREFIX-ls"
-  assert_output_contains "alias:ls"
 
   run dokku "$PLUGIN_COMMAND_PREFIX:set" ls post-create-network
   echo "output: $output"
@@ -200,7 +198,6 @@ teardown() {
   assert_success
   assert_output_contains "alias:dokku.$PLUGIN_COMMAND_PREFIX.ls"
   assert_output_contains "alias:dokku-$PLUGIN_COMMAND_PREFIX-ls"
-  assert_output_contains "alias:ls"
 
   run dokku "$PLUGIN_COMMAND_PREFIX:set" ls post-start-network
   echo "output: $output"
