@@ -17,6 +17,7 @@ plugin-install() {
     fi
   }
 
+  fn-plugin-property-setup "$PLUGIN_COMMAND_PREFIX"
   pull-docker-image "${PLUGIN_IMAGE}:${PLUGIN_IMAGE_VERSION}"
   pull-docker-image "$PLUGIN_BUSYBOX_IMAGE"
   pull-docker-image "$PLUGIN_AMBASSADOR_IMAGE"
