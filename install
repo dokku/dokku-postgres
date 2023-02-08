@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common-functions"
+source "$PLUGIN_BASE_PATH/common/property-functions"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 
