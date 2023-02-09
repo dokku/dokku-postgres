@@ -74,6 +74,8 @@ service_create_container() {
     export CONFIG_OPTIONS="$(cat "$SERVICE_ROOT/CONFIG_OPTIONS")"
   fi
 
+  local network_alias="$(service_dns_hostname "$SERVICE")"
+
   rm -f "$SERVICE_ROOT/ID"
   declare -a DOCKER_ARGS
   DOCKER_ARGS=()
@@ -91,7 +93,7 @@ service_create_container() {
   LINK_CONTAINER_DOCKER_ARGS=()
   LINK_CONTAINER_DOCKER_ARGS+=("--rm")
   LINK_CONTAINER_DOCKER_ARGS+=("--link")
-  LINK_CONTAINER_DOCKER_ARGS+=("$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX")
+  LINK_CONTAINER_DOCKER_ARGS+=("$SERVICE_NAME:$network_alias")
 
   [[ -f "$SERVICE_ROOT/SERVICE_MEMORY" ]] && SERVICE_MEMORY="$(cat "$SERVICE_ROOT/SERVICE_MEMORY")"
   if [[ -n "$SERVICE_MEMORY" ]]; then
@@ -106,7 +108,6 @@ service_create_container() {
   [[ -f "$SERVICE_ROOT/IMAGE" ]] && PLUGIN_IMAGE="$(cat "$SERVICE_ROOT/IMAGE")"
   [[ -f "$SERVICE_ROOT/IMAGE_VERSION" ]] && PLUGIN_IMAGE_VERSION="$(cat "$SERVICE_ROOT/IMAGE_VERSION")"
 
-  local network_alias="dokku-$PLUGIN_COMMAND_PREFIX-$(get_database_name "$SERVICE")"
   local network="$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "initial-network")"
   if [[ -n "$network" ]]; then
     DOCKER_ARGS+=("--network=${network}")
