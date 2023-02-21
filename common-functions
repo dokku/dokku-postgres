@@ -728,7 +728,7 @@ service_parse_args() {
   done
 
   OPTIND=1
-  while getopts "a:c:C:d:i:I:m:n:nN:p:P:q:R:r:s:S:u:" opt; do
+  while getopts "na:c:C:d:i:I:m:n:N:p:P:q:R:r:s:S:u:" opt; do
     case "$opt" in
       a)
         SERVICE_ALIAS="${OPTARG^^}"
