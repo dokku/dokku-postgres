@@ -51,3 +51,9 @@ teardown() {
   config=$(dokku config:get my-app DATABASE_URL || true)
   assert_equal "$config" ""
 }
+
+@test "($PLUGIN_COMMAND_PREFIX:unlink) respects --no-restart" {
+  run dokku "$PLUGIN_COMMAND_PREFIX:unlink" ls my-app --no-restart
+  assert_output_contains "Restarting app my-app" 0
+  assert_success
+}
