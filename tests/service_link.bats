@@ -116,3 +116,19 @@ teardown() {
   assert_success
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" ls my-app
 }
+
+@test "($PLUGIN_COMMAND_PREFIX:unlink) respects --no-restart" {
+  run dokku "$PLUGIN_COMMAND_PREFIX:link" ls my-app --no-restart
+  assert_output_contains "Restarting app my-app" 1
+  assert_success
+
+  run dokku "$PLUGIN_COMMAND_PREFIX:unlink" ls my-app
+  assert_success
+
+  run dokku "$PLUGIN_COMMAND_PREFIX:link" ls my-app --no-restart
+  assert_output_contains "Restarting app my-app" 0
+  assert_success
+
+  run dokku "$PLUGIN_COMMAND_PREFIX:unlink" ls my-app
+  assert_success
+}
