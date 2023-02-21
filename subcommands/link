@@ -38,10 +38,15 @@ service-link-cmd() {
   #E this will cause ${PLUGIN_DEFAULT_ALIAS}_URL to be set as:
   #E
   #E     ${PLUGIN_SCHEME}2://lollipop:SOME_PASSWORD@dokku-${PLUGIN_COMMAND_PREFIX}-lollipop:${PLUGIN_DATASTORE_PORTS[0]}/lollipop
+  #E
+  #E If you specify ${PLUGIN_VARIABLE}_DATABASE_SCHEME to equal `http`, we'll also automatically adjust ${PLUGIN_DEFAULT_ALIAS}_URL to match the http interface:
+  #E
+  #E     http://lollipop:SOME_PASSWORD@dokku-${PLUGIN_COMMAND_PREFIX}-lollipop:${PLUGIN_DATASTORE_PORTS[1]}
   #A service, service to run command against
   #A app, app to run command against
   #F -a|--alias "BLUE_DATABASE", an alternative alias to use for linking to an app via environment variable
   #F -q|--querystring "pool=5", ampersand delimited querystring arguments to append to the service link
+  #F -n|--no-restart "false", whether or not to restart the app on link (default: true)
   declare desc="link the $PLUGIN_SERVICE service to the app"
   local cmd="$PLUGIN_COMMAND_PREFIX:link" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
