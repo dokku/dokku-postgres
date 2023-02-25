@@ -42,6 +42,7 @@ service-link-cmd() {
   #A app, app to run command against
   #F -a|--alias "BLUE_DATABASE", an alternative alias to use for linking to an app via environment variable
   #F -q|--querystring "pool=5", ampersand delimited querystring arguments to append to the service link
+  #F -n|--no-restart "false", whether or not to restart the app on link (default: true)
   declare desc="link the $PLUGIN_SERVICE service to the app"
   local cmd="$PLUGIN_COMMAND_PREFIX:link" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1

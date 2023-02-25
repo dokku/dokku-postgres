@@ -631,8 +631,9 @@ service_link() {
   fi
   [[ -n "$SERVICE_QUERYSTRING" ]] && SERVICE_URL="${SERVICE_URL}?${SERVICE_QUERYSTRING}"
   plugn trigger service-action post-link "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "$APP"
-  if [[ "$DOKKU_GLOBAL_FLAGS" == *"--no-restart"* ]]; then
+  if [[ "$DOKKU_GLOBAL_FLAGS" == *"--no-restart"* ]] || [[ "$SERVICE_RESTART_APPS" == "false" ]]; then
     config_set --no-restart "$APP" "${ALIAS}_URL=$SERVICE_URL"
+    dokku_log_verbose "Skipping restart of linked app"
   else
     config_set "$APP" "${ALIAS}_URL=$SERVICE_URL"
   fi
@@ -714,6 +715,7 @@ service_parse_args() {
       "--initial-network") set -- "$@" "-N" ;;
       "--image") set -- "$@" "-i" ;;
       "--memory") set -- "$@" "-m" ;;
+      "--no-restart") set -- "$@" "-n" ;;
       "--password") set -- "$@" "-p" ;;
       "--post-create-network") set -- "$@" "-P" ;;
       "--post-start-network") set -- "$@" "-S" ;;
@@ -727,7 +729,7 @@ service_parse_args() {
   done
 
   OPTIND=1
-  while getopts "a:c:C:d:i:I:m:n:N:p:P:q:R:r:s:S:u:" opt; do
+  while getopts "na:c:C:d:i:I:m:n:N:p:P:q:R:r:s:S:u:" opt; do
     case "$opt" in
       a)
         SERVICE_ALIAS="${OPTARG^^}"
@@ -750,6 +752,9 @@ service_parse_args() {
         ;;
       m)
         export SERVICE_MEMORY=$OPTARG
+        ;;
+      n)
+        export SERVICE_RESTART_APPS=false
         ;;
       N)
         export SERVICE_INITIAL_NETWORK=$OPTARG
@@ -971,8 +976,9 @@ service_unlink() {
 
   [[ -z ${LINK[*]} ]] && dokku_log_fail "Not linked to app $APP"
   plugn trigger service-action post-unlink "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "$APP"
-  if [[ "$DOKKU_GLOBAL_FLAGS" == *"--no-restart"* ]]; then
+  if [[ "$DOKKU_GLOBAL_FLAGS" == *"--no-restart"* ]] || [[ "$SERVICE_RESTART_APPS" == "false" ]]; then
     config_unset --no-restart "$APP" "${LINK[@]}"
+    dokku_log_verbose "Skipping restart of linked app"
   else
     config_unset "$APP" "${LINK[@]}"
   fi
