@@ -252,12 +252,6 @@ This will cause `DATABASE_URL` to be set as:
 postgres2://lollipop:SOME_PASSWORD@dokku-postgres-lollipop:5432/lollipop
 ```
 
-If you specify `POSTGRES_DATABASE_SCHEME` to equal `http`, we`ll also automatically adjust `DATABASE_URL` to match the http interface:
-
-```
-http://lollipop:SOME_PASSWORD@dokku-postgres-lollipop:${PLUGIN_DATASTORE_PORTS[1]}
-```
-
 ### unlink the postgres service from the app
 
 ```shell
