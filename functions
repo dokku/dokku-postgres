@@ -126,6 +126,8 @@ service_create_container() {
     done < <(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "post-create-network" | tr "," "\n")
   fi
   suppress_output "$DOCKER_BIN" container start "$(cat "$SERVICE_ROOT/ID")"
+  service_port_reconcile_status "$SERVICE"
+
   if [[ -n "$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "post-start-network")" ]]; then
     dokku_log_verbose_quiet "Connecting to networks after container start"
     while read -r line || [[ -n "$line" ]]; do
@@ -150,7 +152,7 @@ service_create_container() {
   "$DOCKER_BIN" container run --rm -i -v "$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" bash -s <"$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/enable_ssl.sh" &>/dev/null
 
   suppress_output "$DOCKER_BIN" container start "$(cat "$SERVICE_ROOT/ID")"
-  service_port_unpause "$SERVICE"
+  service_port_reconcile_status "$SERVICE"
 
   dokku_log_info2 "$PLUGIN_SERVICE container created: $SERVICE"
   service_info "$SERVICE"
@@ -205,7 +207,7 @@ service_start() {
 
   if [[ -n $PREVIOUS_ID ]]; then
     "$DOCKER_BIN" container start "$PREVIOUS_ID" >/dev/null
-    service_port_unpause "$SERVICE"
+    service_port_reconcile_status "$SERVICE"
     dokku_log_info2 "Container started"
   elif service_image_exists "$SERVICE" && [[ -n "$PASSWORD" ]]; then
     service_create_container "$SERVICE"

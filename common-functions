@@ -62,7 +62,7 @@ fn-services-list() {
     [[ -d $f ]] || continue
     services+=("$f")
   done
-  popd &>/dev/null || pushd "/tmp" >/dev/null
+  popd >/dev/null 2>&1 || pushd "/tmp" >/dev/null
 
   if [[ "${#services[@]}" -eq 0 ]]; then
     return
@@ -282,7 +282,7 @@ service_backup() {
   BACKUP_TMPDIR=$(mktemp -d --tmpdir)
   trap 'rm -rf "$BACKUP_TMPDIR" > /dev/null' RETURN INT TERM EXIT
 
-  "$DOCKER_BIN" container inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"
+  "$DOCKER_BIN" container inspect "$ID" >/dev/null 2>&1 || dokku_log_fail "Service container does not exist"
   is_container_status "$ID" "Running" || dokku_log_fail "Service container is not running"
 
   (service_export "$SERVICE" >"${BACKUP_TMPDIR}/export")
@@ -483,7 +483,7 @@ service_enter() {
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local ID="$(cat "$SERVICE_ROOT/ID")"
 
-  "$DOCKER_BIN" container inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"
+  "$DOCKER_BIN" container inspect "$ID" >/dev/null 2>&1 || dokku_log_fail "Service container does not exist"
   is_container_status "$ID" "Running" || dokku_log_fail "Service container is not running"
 
   local EXEC_CMD=""
@@ -691,7 +691,7 @@ service_logs() {
     DOKKU_LOGS_ARGS+=" --follow"
   fi
 
-  "$DOCKER_BIN" container inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"
+  "$DOCKER_BIN" container inspect "$ID" >/dev/null 2>&1 || dokku_log_fail "Service container does not exist"
   is_container_status "$ID" "Running" || dokku_log_warn "Service logs may not be output as service is not running"
 
   # shellcheck disable=SC2086
@@ -810,39 +810,36 @@ service_root_password() {
 
 service_port_expose() {
   declare desc="wrapper for exposing service ports"
-  declare SERVICE="$1"
-  service_start "$SERVICE" "true"
-  service_port_unpause "$SERVICE" "true" "${@:2}"
-}
-
-service_port_pause() {
-  declare desc="pause service exposure"
-  declare SERVICE="$1" LOG_FAIL="$2"
+  declare SERVICE="$1" PORTS=(${@:2})
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local EXPOSED_NAME="$(get_service_name "$SERVICE").ambassador"
   local PORT_FILE="$SERVICE_ROOT/PORT"
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
+  local EXPOSED_NAME="$SERVICE_NAME.ambassador"
 
-  if [[ "$LOG_FAIL" == "true" ]]; then
-    [[ ! -f "$PORT_FILE" ]] && dokku_log_fail "Service not exposed"
-  else
-    [[ ! -f "$PORT_FILE" ]] && return 0
+  if [[ ${#PORTS[@]} -eq 0 ]]; then
+    # shellcheck disable=SC2206
+    PORTS=(${PORTS[@]:-$(get_random_ports ${#PLUGIN_DATASTORE_PORTS[@]})})
   fi
 
-  local GREP_NAME="^/${EXPOSED_NAME}$"
-  local CONTAINER_NAME="$("$DOCKER_BIN" container ps -f name="$GREP_NAME" --format "{{.Names}}")"
-  if [[ -z "$CONTAINER_NAME" ]]; then
-    if [[ "$LOG_FAIL" == "true" ]]; then
-      dokku_log_info1 "Service $SERVICE unexposed"
-    fi
+  [[ "${#PORTS[@]}" != "${#PLUGIN_DATASTORE_PORTS[@]}" ]] && dokku_log_fail "${#PLUGIN_DATASTORE_PORTS[@]} ports to be exposed need to be provided in the following order: ${PLUGIN_DATASTORE_PORTS[*]}"
 
-    return
+  if [[ -s "$PORT_FILE" ]]; then
+    # shellcheck disable=SC2207
+    PORTS=($(cat "$PORT_FILE"))
+    dokku_log_fail "Service $SERVICE already exposed on port(s) ${PORTS[*]}"
   fi
 
-  "$DOCKER_BIN" container stop "$EXPOSED_NAME" >/dev/null 2>&1 || true
-  "$DOCKER_BIN" container rm "$EXPOSED_NAME" >/dev/null 2>&1 || true
-  if [[ "$LOG_FAIL" == "true" ]]; then
-    dokku_log_info1 "Service $SERVICE unexposed"
+  if "$DOCKER_BIN" container inspect "$EXPOSED_NAME" >/dev/null 2>&1; then
+    dokku_log_warn "Service $SERVICE has an untracked expose container, removing"
+    "$DOCKER_BIN" container stop "$EXPOSED_NAME" >/dev/null 2>&1 || true
+    suppress_output "$DOCKER_BIN" container rm "$EXPOSED_NAME"
   fi
+
+  echo "${PORTS[@]}" >"$PORT_FILE"
+
+  service_start "$SERVICE" "true"
+  service_port_reconcile_status "$SERVICE"
+  dokku_log_info1 "Service $SERVICE exposed on port(s) [container->host]: $(service_exposed_ports "$SERVICE")"
 }
 
 service_port_unexpose() {
@@ -850,39 +847,41 @@ service_port_unexpose() {
   declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local PORT_FILE="$SERVICE_ROOT/PORT"
-  service_port_pause "$SERVICE" "true"
+
   rm -rf "$PORT_FILE"
+  service_port_reconcile_status "$SERVICE"
+  dokku_log_info1 "Service $SERVICE unexposed"
 }
 
-service_port_unpause() {
-  declare desc="start service exposure"
-  declare SERVICE="$1" LOG_FAIL="$2"
+service_port_reconcile_status() {
+  declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local SERVICE_NAME="$(get_service_name "$SERVICE")"
-  local EXPOSED_NAME="${SERVICE_NAME}.ambassador"
   local PORT_FILE="$SERVICE_ROOT/PORT"
-  # shellcheck disable=SC2068
-  local PORTS=(${@:3})
-  # shellcheck disable=SC2068
-  PORTS=(${PORTS[@]:-$(get_random_ports ${#PLUGIN_DATASTORE_PORTS[@]})})
-  local ID=$(cat "$SERVICE_ROOT/ID")
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
+  local EXPOSED_NAME="$SERVICE_NAME.ambassador"
 
-  [[ "${#PORTS[@]}" != "${#PLUGIN_DATASTORE_PORTS[@]}" ]] && dokku_log_fail "${#PLUGIN_DATASTORE_PORTS[@]} ports to be exposed need to be provided in the following order: ${PLUGIN_DATASTORE_PORTS[*]}"
-
-  if [[ "$LOG_FAIL" == "true" ]]; then
-    [[ -f "$PORT_FILE" ]] && PORTS=($(cat "$PORT_FILE")) && dokku_log_fail "Service $SERVICE already exposed on port(s) ${PORTS[*]}"
-  else
-    [[ ! -f "$PORT_FILE" ]] && return 0
-    PORTS=($(cat "$PORT_FILE"))
+  if [[ ! -s "$PORT_FILE" ]]; then
+    if "$DOCKER_BIN" container inspect "$EXPOSED_NAME" >/dev/null 2>&1; then
+      "$DOCKER_BIN" container stop "$EXPOSED_NAME" >/dev/null 2>&1 || true
+      suppress_output "$DOCKER_BIN" container rm "$EXPOSED_NAME"
+      return $?
+    fi
+    return
   fi
 
-  echo "${PORTS[@]}" >"$PORT_FILE"
+  if is_container_status "$EXPOSED_NAME" "Running"; then
+    return
+  fi
 
+  if "$DOCKER_BIN" container inspect "$EXPOSED_NAME" >/dev/null 2>&1; then
+    suppress_output "$DOCKER_BIN" container start "$EXPOSED_NAME"
+    return $?
+  fi
+
+  # shellcheck disable=SC2207
+  PORTS=($(cat "$PORT_FILE"))
   # shellcheck disable=SC2046
   "$DOCKER_BIN" container run -d --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" --name "$EXPOSED_NAME" $(docker_ports_options "${PORTS[@]}") --restart always --label dokku=ambassador --label "dokku.ambassador=$PLUGIN_COMMAND_PREFIX" "$PLUGIN_AMBASSADOR_IMAGE" >/dev/null
-  if [[ "$LOG_FAIL" == "true" ]]; then
-    dokku_log_info1 "Service $SERVICE exposed on port(s) [container->host]: $(service_exposed_ports "$SERVICE")"
-  fi
 }
 
 service_promote() {
@@ -946,7 +945,9 @@ service_pause() {
   if [[ -n $ID ]]; then
     dokku_log_info2_quiet "Pausing container"
     "$DOCKER_BIN" container stop "$SERVICE_NAME" >/dev/null
-    service_port_pause "$SERVICE"
+    if "$DOCKER_BIN" container inspect "$ID" >/dev/null 2>&1; then
+      "$DOCKER_BIN" container stop "$SERVICE_NAME.ambassador" >/dev/null 2>&1 || true
+    fi
     dokku_log_verbose_quiet "Container paused"
   else
     dokku_log_verbose_quiet "No container exists for $SERVICE"
