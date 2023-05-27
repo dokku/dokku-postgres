@@ -4,6 +4,7 @@ set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common-functions"
 source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/property-functions"
 source "$PLUGIN_AVAILABLE_PATH/config/functions"
 if [[ -f "$PLUGIN_AVAILABLE_PATH/docker-options/functions" ]]; then
   source "$PLUGIN_AVAILABLE_PATH/docker-options/functions"
@@ -17,7 +18,7 @@ service_connect() {
   local SERVICE_TTY_OPTS
   has_tty && SERVICE_TTY_OPTS="-t"
 
-  docker exec --env=LANG=C.UTF-8 --env=LC_ALL=C.UTF-8 -i $SERVICE_TTY_OPTS "$SERVICE_NAME" psql -h localhost -U postgres "$DATABASE_NAME"
+  "$DOCKER_BIN" container exec --env=LANG=C.UTF-8 --env=LC_ALL=C.UTF-8 -i $SERVICE_TTY_OPTS "$SERVICE_NAME" psql -h localhost -U postgres "$DATABASE_NAME"
 }
 
 service_create() {
@@ -33,11 +34,11 @@ service_create() {
   if ! service_image_exists "$SERVICE"; then
     if [[ "$PLUGIN_DISABLE_PULL" == "true" ]]; then
       dokku_log_warn "${PLUGIN_DISABLE_PULL_VARIABLE} environment variable detected. Not running pull command." 1>&2
-      dokku_log_warn "   docker pull ${IMAGE}" 1>&2
+      dokku_log_warn "   docker image pull ${IMAGE}" 1>&2
       dokku_log_warn "$PLUGIN_SERVICE service creation failed"
       exit 1
     fi
-    docker pull "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" || dokku_log_fail "$PLUGIN_SERVICE image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION pull failed"
+    "$DOCKER_BIN" image pull "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" || dokku_log_fail "$PLUGIN_SERVICE image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION pull failed"
   fi
 
   plugn trigger service-action pre-create "$PLUGIN_COMMAND_PREFIX" "$SERVICE"
@@ -73,38 +74,87 @@ service_create_container() {
     export CONFIG_OPTIONS="$(cat "$SERVICE_ROOT/CONFIG_OPTIONS")"
   fi
 
+  local network_alias="$(service_dns_hostname "$SERVICE")"
+
+  rm -f "$SERVICE_ROOT/ID"
+  declare -a DOCKER_ARGS
+  DOCKER_ARGS=()
+  DOCKER_ARGS+=("--cidfile=$SERVICE_ROOT/ID")
+  DOCKER_ARGS+=("--env-file=$SERVICE_ROOT/ENV")
+  DOCKER_ARGS+=("--env=POSTGRES_PASSWORD=$PASSWORD")
+  DOCKER_ARGS+=("--hostname=$SERVICE_NAME")
+  DOCKER_ARGS+=("--label=dokku.service=$PLUGIN_COMMAND_PREFIX")
+  DOCKER_ARGS+=("--label=dokku=service")
+  DOCKER_ARGS+=("--name=$SERVICE_NAME")
+  DOCKER_ARGS+=("--restart=always")
+  DOCKER_ARGS+=("--volume=$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data")
+
+  declare -a LINK_CONTAINER_DOCKER_ARGS
+  LINK_CONTAINER_DOCKER_ARGS=()
+  LINK_CONTAINER_DOCKER_ARGS+=("--rm")
+  LINK_CONTAINER_DOCKER_ARGS+=("--link")
+  LINK_CONTAINER_DOCKER_ARGS+=("$SERVICE_NAME:$network_alias")
+
   [[ -f "$SERVICE_ROOT/SERVICE_MEMORY" ]] && SERVICE_MEMORY="$(cat "$SERVICE_ROOT/SERVICE_MEMORY")"
   if [[ -n "$SERVICE_MEMORY" ]]; then
-    MEMORY_LIMIT="--memory=${SERVICE_MEMORY}m"
+    DOCKER_ARGS+=("--memory=${SERVICE_MEMORY}m")
   fi
 
   [[ -f "$SERVICE_ROOT/SHM_SIZE" ]] && SERVICE_SHM_SIZE="$(cat "$SERVICE_ROOT/SHM_SIZE")"
   if [[ -n "$SERVICE_SHM_SIZE" ]]; then
-    SHM_SIZE="--shm-size=${SERVICE_SHM_SIZE}"
+    DOCKER_ARGS+=("--shm-size=${SERVICE_SHM_SIZE}")
   fi
 
   [[ -f "$SERVICE_ROOT/IMAGE" ]] && PLUGIN_IMAGE="$(cat "$SERVICE_ROOT/IMAGE")"
   [[ -f "$SERVICE_ROOT/IMAGE_VERSION" ]] && PLUGIN_IMAGE_VERSION="$(cat "$SERVICE_ROOT/IMAGE_VERSION")"
 
+  local network="$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "initial-network")"
+  if [[ -n "$network" ]]; then
+    DOCKER_ARGS+=("--network=${network}")
+    DOCKER_ARGS+=("--network-alias=${network_alias}")
+    LINK_CONTAINER_DOCKER_ARGS+=("--network=${network}")
+  fi
+
   # shellcheck disable=SC2086
-  ID=$(docker run --name "$SERVICE_NAME" $MEMORY_LIMIT $SHM_SIZE -v "$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data" -e "POSTGRES_PASSWORD=$PASSWORD" --env-file="$SERVICE_ROOT/ENV" -d --restart always --label dokku=service --label dokku.service=postgres "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" $CONFIG_OPTIONS)
-  echo "$ID" >"$SERVICE_ROOT/ID"
+  suppress_output "$DOCKER_BIN" container create "${DOCKER_ARGS[@]}" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" $CONFIG_OPTIONS
+
+  if [[ -n "$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "post-create-network")" ]]; then
+    dokku_log_verbose_quiet "Connecting to networks after container create"
+    while read -r line || [[ -n "$line" ]]; do
+      dokku_log_verbose_quiet "- $line"
+      "$DOCKER_BIN" network connect --alias "$network_alias" "$line" "$SERVICE_NAME"
+    done < <(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "post-create-network" | tr "," "\n")
+  fi
+  suppress_output "$DOCKER_BIN" container start "$(cat "$SERVICE_ROOT/ID")"
+  service_port_reconcile_status "$SERVICE"
+
+  if [[ -n "$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "post-start-network")" ]]; then
+    dokku_log_verbose_quiet "Connecting to networks after container start"
+    while read -r line || [[ -n "$line" ]]; do
+      dokku_log_verbose_quiet "- $line"
+      "$DOCKER_BIN" network connect --alias "$network_alias" "$line" "$SERVICE_NAME"
+    done < <(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "post-start-network" | tr "," "\n")
+  fi
 
   dokku_log_verbose_quiet "Waiting for container to be ready"
-  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" "$PLUGIN_WAIT_IMAGE" -p "$PLUGIN_DATASTORE_WAIT_PORT" >/dev/null
+  if ! suppress_output "$DOCKER_BIN" container run "${LINK_CONTAINER_DOCKER_ARGS[@]}" "$PLUGIN_WAIT_IMAGE" -c "$network_alias:$PLUGIN_DATASTORE_WAIT_PORT"; then
+    dokku_log_info2_quiet "Start of $SERVICE container output"
+    dokku_container_log_verbose_quiet "$SERVICE_NAME"
+    dokku_log_info2_quiet "End of $SERVICE container output"
+    return 1
+  fi
 
   dokku_log_verbose_quiet "Creating container database"
-  docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2>/dev/null || dokku_log_verbose_quiet 'Already exists'
+  "$DOCKER_BIN" container exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME" 2>/dev/null || dokku_log_verbose_quiet 'Already exists'
 
   dokku_log_verbose_quiet "Securing connection to database"
-  service_stop "$SERVICE" >/dev/null
+  service_pause "$SERVICE" >/dev/null
   "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/create_ssl_certs.sh" "$SERVICE_HOST_ROOT" &>/dev/null
-  docker run --rm -i -v "$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data" -v "$SERVICE_HOST_ROOT/certs:/var/lib/postgresql/certs" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" bash -s <"$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/enable_ssl.sh" &>/dev/null
+  "$DOCKER_BIN" container run --rm -i -v "$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data" -v "$SERVICE_HOST_ROOT/certs:/var/lib/postgresql/certs" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" bash -s <"$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/enable_ssl.sh" &>/dev/null
   rm -rf "$SERVICE_HOST_ROOT/certs"
 
-  PREVIOUS_ID=$(docker ps -aq --no-trunc --filter "status=exited" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
-  docker start "$PREVIOUS_ID" >/dev/null
-  service_port_unpause "$SERVICE"
+  suppress_output "$DOCKER_BIN" container start "$(cat "$SERVICE_ROOT/ID")"
+  service_port_reconcile_status "$SERVICE"
 
   dokku_log_info2 "$PLUGIN_SERVICE container created: $SERVICE"
   service_info "$SERVICE"
@@ -118,7 +168,7 @@ service_export() {
   local PASSWORD="$(service_password "$SERVICE")"
 
   [[ -n $SSH_TTY ]] && stty -opost
-  docker exec "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_dump -Fc --no-acl --no-owner -h localhost -U postgres -w "$DATABASE_NAME"
+  "$DOCKER_BIN" container exec "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_dump -Fc --no-acl --no-owner -h localhost -U postgres -w "$DATABASE_NAME"
   status=$?
   [[ -n $SSH_TTY ]] && stty opost
   exit $status
@@ -135,7 +185,7 @@ service_import() {
   if [[ -t 0 ]]; then
     dokku_log_fail "No data provided on stdin."
   fi
-  docker exec -i "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_restore -h localhost -cO --if-exists -d "$DATABASE_NAME" -U postgres -w
+  "$DOCKER_BIN" container exec -i "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_restore -h localhost -cO --if-exists -d "$DATABASE_NAME" -U postgres -w
 }
 
 service_start() {
@@ -143,7 +193,7 @@ service_start() {
   local QUIET="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
-  local ID=$(docker ps -aq --no-trunc --filter "status=running" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
+  local ID=$("$DOCKER_BIN" container ps -aq --no-trunc --filter "status=running" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
   if [[ -n $ID ]]; then
     [[ -z $QUIET ]] && dokku_log_warn "Service is already started"
     if [[ ! -f "$SERVICE_ROOT/ID" ]] || [[ "$(cat "$SERVICE_ROOT/ID")" != "$ID" ]]; then
@@ -154,12 +204,12 @@ service_start() {
   fi
 
   dokku_log_info2_quiet "Starting container"
-  local PREVIOUS_ID=$(docker ps -aq --no-trunc --filter "status=exited" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
+  local PREVIOUS_ID=$("$DOCKER_BIN" container ps -aq --no-trunc --filter "status=exited" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
   local PASSWORD="$(service_password "$SERVICE")"
 
   if [[ -n $PREVIOUS_ID ]]; then
-    docker start "$PREVIOUS_ID" >/dev/null
-    service_port_unpause "$SERVICE"
+    "$DOCKER_BIN" container start "$PREVIOUS_ID" >/dev/null
+    service_port_reconcile_status "$SERVICE"
     dokku_log_info2 "Container started"
   elif service_image_exists "$SERVICE" && [[ -n "$PASSWORD" ]]; then
     service_create_container "$SERVICE"

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common-functions"
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/property-functions"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 
@@ -9,14 +10,15 @@ plugin-install() {
     declare IMAGE="$1"
     if [[ "$PLUGIN_DISABLE_PULL" == "true" ]]; then
       echo " !     ${PLUGIN_DISABLE_PULL_VARIABLE} environment variable detected. Not running pull command." 1>&2
-      echo " !        docker pull ${IMAGE}" 1>&2
+      echo " !        docker image pull ${IMAGE}" 1>&2
       return
     fi
-    if [[ "$(docker images -q "${IMAGE}" 2>/dev/null)" == "" ]]; then
-      docker pull "${IMAGE}"
+    if [[ "$("$DOCKER_BIN" image ls -q "${IMAGE}" 2>/dev/null)" == "" ]]; then
+      "$DOCKER_BIN" image pull "${IMAGE}"
     fi
   }
 
+  fn-plugin-property-setup "$PLUGIN_COMMAND_PREFIX"
   pull-docker-image "${PLUGIN_IMAGE}:${PLUGIN_IMAGE_VERSION}"
   pull-docker-image "$PLUGIN_BUSYBOX_IMAGE"
   pull-docker-image "$PLUGIN_AMBASSADOR_IMAGE"

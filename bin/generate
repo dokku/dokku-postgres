@@ -35,7 +35,7 @@ def header(service):
     return " ".join(
         [
             f"# dokku {service}",
-            f'[![Build Status](https://img.shields.io/github/workflow/status/dokku/dokku-{service}/CI/master?style=flat-square "Build Status")](https://github.com/dokku/dokku-{service}/actions/workflows/ci.yml?query=branch%3Amaster)',
+            f'[![Build Status](https://img.shields.io/github/actions/workflow/status/dokku/dokku-{service}/ci.yml?branch=master&style=flat-square "Build Status")](https://github.com/dokku/dokku-{service}/actions/workflows/ci.yml?query=branch%3Amaster)',
             f'[![IRC Network](https://img.shields.io/badge/irc-libera-blue.svg?style=flat-square "IRC Libera")](https://webchat.libera.chat/?channels=dokku)',
         ]
     )
@@ -131,7 +131,7 @@ def usage_section(service, variable, alias, image, scheme, ports, options, unimp
 
 
 def usage_intro(service, variable, alias, image, scheme, ports, options, unimplemented):
-    commands = ["create", "info", "list", "logs", "link", "unlink"]
+    commands = ["create", "info", "list", "logs", "link", "unlink", "set"]
     content = ["### Basic Usage"]
 
     return fetch_commands_content(
@@ -148,6 +148,7 @@ def usage_lifecycle(service, variable, alias, image, scheme, ports, options, uni
         "promote",
         "start",
         "stop",
+        "pause",
         "restart",
         "upgrade",
     ]
@@ -222,11 +223,11 @@ def usage_docker_pull(service, variable, alias, image, scheme, ports, options, u
     service_prefix = service.upper()
     return "\n".join(
         [
-            "### Disabling `docker pull` calls",
+            "### Disabling `docker image pull` calls",
             "",
-            f"If you wish to disable the `docker pull` calls that the plugin triggers, you may set the `{service_prefix}_DISABLE_PULL` environment variable to `true`. Once disabled, you will need to pull the service image you wish to deploy as shown in the `stderr` output.",
+            f"If you wish to disable the `docker image pull` calls that the plugin triggers, you may set the `{service_prefix}_DISABLE_PULL` environment variable to `true`. Once disabled, you will need to pull the service image you wish to deploy as shown in the `stderr` output.",
             "",
-            "Please ensure the proper images are in place when `docker pull` is disabled.",
+            "Please ensure the proper images are in place when `docker image pull` is disabled.",
         ]
     )
 

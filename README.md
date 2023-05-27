@@ -1,6 +1,6 @@
-# dokku postgres [![Build Status](https://img.shields.io/github/workflow/status/dokku/dokku-postgres/CI/master?style=flat-square "Build Status")](https://github.com/dokku/dokku-postgres/actions/workflows/ci.yml?query=branch%3Amaster) [![IRC Network](https://img.shields.io/badge/irc-libera-blue.svg?style=flat-square "IRC Libera")](https://webchat.libera.chat/?channels=dokku)
+# dokku postgres [![Build Status](https://img.shields.io/github/actions/workflow/status/dokku/dokku-postgres/ci.yml?branch=master&style=flat-square "Build Status")](https://github.com/dokku/dokku-postgres/actions/workflows/ci.yml?query=branch%3Amaster) [![IRC Network](https://img.shields.io/badge/irc-libera-blue.svg?style=flat-square "IRC Libera")](https://webchat.libera.chat/?channels=dokku)
 
-Official postgres plugin for dokku. Currently defaults to installing [postgres 14.4](https://hub.docker.com/_/postgres/).
+Official postgres plugin for dokku. Currently defaults to installing [postgres 15.3](https://hub.docker.com/_/postgres/).
 
 ## Requirements
 
@@ -41,8 +41,10 @@ postgres:linked <service> <app>                    # check if the postgres servi
 postgres:links <service>                           # list all apps linked to the postgres service
 postgres:list                                      # list all postgres services
 postgres:logs <service> [-t|--tail] <tail-num-optional> # print the most recent log(s) for this service
+postgres:pause <service>                           # pause a running postgres service
 postgres:promote <service> <app>                   # promote service <service> as DATABASE_URL in <app>
 postgres:restart <service>                         # graceful shutdown and restart of the postgres service container
+postgres:set <service> <key> <value>               # set or clear a property for a service
 postgres:start <service>                           # start a previously stopped postgres service
 postgres:stop <service>                            # stop a running postgres service
 postgres:unexpose <service>                        # unexpose a previously exposed postgres service
@@ -70,8 +72,11 @@ flags:
 - `-i|--image IMAGE`: the image name to start the service with
 - `-I|--image-version IMAGE_VERSION`: the image version to start the service with
 - `-m|--memory MEMORY`: container memory limit in megabytes (default: unlimited)
+- `-N|--initial-network INITIAL_NETWORK`: the initial network to attach the service to
 - `-p|--password PASSWORD`: override the user-level service password
+- `-P|--post-create-network NETWORKS`: a comman-separated list of networks to attach the service container to after service creation
 - `-r|--root-password PASSWORD`: override the root-level service password
+- `-S|--post-start-network NETWORKS`: a comman-separated list of networks to attach the service container to after service start
 - `-s|--shm-size SHM_SIZE`: override shared memory size for postgres docker container
 
 Create a postgres service named lollipop:
@@ -95,7 +100,7 @@ export POSTGRES_CUSTOM_ENV="USER=alpha;HOST=beta"
 dokku postgres:create lollipop
 ```
 
-Official Postgres docker images does not include postgis extension (amongst others). The following example creates a new postgres service using `postgis/postgis:13-3.1` image, which includes the `postgis` extension.
+Official Postgres "$DOCKER_BIN" image ls does not include postgis extension (amongst others). The following example creates a new postgres service using `postgis/postgis:13-3.1` image, which includes the `postgis` extension.
 
 ```shell
 dokku postgres:create postgis-database --image "postgis/postgis" --image-version "13-3.1"
@@ -116,7 +121,10 @@ flags:
 - `--exposed-ports`: show service exposed ports
 - `--id`: show the service container id
 - `--internal-ip`: show the service internal ip
+- `--initial-network`: show the initial network being connected to
 - `--links`: show the service app links
+- `--post-create-network`: show the networks to attach to after service container creation
+- `--post-start-network`: show the networks to attach to after service container start
 - `--service-root`: show the service root directory
 - `--status`: show the service running status
 - `--version`: show the service image version
@@ -136,7 +144,10 @@ dokku postgres:info lollipop --dsn
 dokku postgres:info lollipop --exposed-ports
 dokku postgres:info lollipop --id
 dokku postgres:info lollipop --internal-ip
+dokku postgres:info lollipop --initial-network
 dokku postgres:info lollipop --links
+dokku postgres:info lollipop --post-create-network
+dokku postgres:info lollipop --post-start-network
 dokku postgres:info lollipop --service-root
 dokku postgres:info lollipop --status
 dokku postgres:info lollipop --version
@@ -195,6 +206,7 @@ flags:
 
 - `-a|--alias "BLUE_DATABASE"`: an alternative alias to use for linking to an app via environment variable
 - `-q|--querystring "pool=5"`: ampersand delimited querystring arguments to append to the service link
+- `-n|--no-restart "false"`: whether or not to restart the app on link (default: true)
 
 A postgres service can be linked to a container. This will use native docker links via the docker-options plugin. Here we link it to our `playground` app.
 
@@ -247,12 +259,41 @@ postgres2://lollipop:SOME_PASSWORD@dokku-postgres-lollipop:5432/lollipop
 dokku postgres:unlink <service> <app>
 ```
 
+flags:
+
+- `-n|--no-restart "false"`: whether or not to restart the app on unlink (default: true)
+
 You can unlink a postgres service:
 
 > NOTE: this will restart your app and unset related environment variables
 
 ```shell
 dokku postgres:unlink lollipop playground
+```
+
+### set or clear a property for a service
+
+```shell
+# usage
+dokku postgres:set <service> <key> <value>
+```
+
+Set the network to attach after the service container is started:
+
+```shell
+dokku postgres:set lollipop post-create-network custom-network
+```
+
+Set multiple networks:
+
+```shell
+dokku postgres:set lollipop post-create-network custom-network,other-network
+```
+
+Unset the post-create-network value:
+
+```shell
+dokku postgres:set lollipop post-create-network
 ```
 
 ### Service Lifecycle
@@ -376,10 +417,23 @@ dokku postgres:start lollipop
 dokku postgres:stop <service>
 ```
 
-Stop the service and the running container:
+Stop the service and removes the running container:
 
 ```shell
 dokku postgres:stop lollipop
+```
+
+### pause a running postgres service
+
+```shell
+# usage
+dokku postgres:pause <service>
+```
+
+Pause the running container for the service:
+
+```shell
+dokku postgres:pause lollipop
 ```
 
 ### graceful shutdown and restart of the postgres service container
@@ -408,7 +462,10 @@ flags:
 - `-C|--custom-env "USER=alpha;HOST=beta"`: semi-colon delimited environment variables to start the service with
 - `-i|--image IMAGE`: the image name to start the service with
 - `-I|--image-version IMAGE_VERSION`: the image version to start the service with
-- `-R|--restart-apps "true"`: whether to force an app restart
+- `-N|--initial-network INITIAL_NETWORK`: the initial network to attach the service to
+- `-P|--post-create-network NETWORKS`: a comman-separated list of networks to attach the service container to after service creation
+- `-R|--restart-apps "true"`: whether or not to force an app restart (default: false)
+- `-S|--post-start-network NETWORKS`: a comman-separated list of networks to attach the service container to after service start
 - `-s|--shm-size SHM_SIZE`: override shared memory size for postgres docker container
 
 You can upgrade an existing service to a new image or image-version:
@@ -479,8 +536,11 @@ flags:
 - `-i|--image IMAGE`: the image name to start the service with
 - `-I|--image-version IMAGE_VERSION`: the image version to start the service with
 - `-m|--memory MEMORY`: container memory limit in megabytes (default: unlimited)
+- `-N|--initial-network INITIAL_NETWORK`: the initial network to attach the service to
 - `-p|--password PASSWORD`: override the user-level service password
+- `-P|--post-create-network NETWORKS`: a comman-separated list of networks to attach the service container to after service creation
 - `-r|--root-password PASSWORD`: override the root-level service password
+- `-S|--post-start-network NETWORKS`: a comman-separated list of networks to attach the service container to after service start
 - `-s|--shm-size SHM_SIZE`: override shared memory size for postgres docker container
 
 You can clone an existing service to a new one:
@@ -722,8 +782,8 @@ Remove the scheduled backup from cron:
 dokku postgres:backup-unschedule lollipop
 ```
 
-### Disabling `docker pull` calls
+### Disabling `docker image pull` calls
 
-If you wish to disable the `docker pull` calls that the plugin triggers, you may set the `POSTGRES_DISABLE_PULL` environment variable to `true`. Once disabled, you will need to pull the service image you wish to deploy as shown in the `stderr` output.
+If you wish to disable the `docker image pull` calls that the plugin triggers, you may set the `POSTGRES_DISABLE_PULL` environment variable to `true`. Once disabled, you will need to pull the service image you wish to deploy as shown in the `stderr` output.
 
-Please ensure the proper images are in place when `docker pull` is disabled.
+Please ensure the proper images are in place when `docker image pull` is disabled.

@@ -2,7 +2,7 @@
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
-source "$PLUGIN_BASE_PATH/common/functions"
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-link-cmd() {
@@ -42,6 +42,7 @@ service-link-cmd() {
   #A app, app to run command against
   #F -a|--alias "BLUE_DATABASE", an alternative alias to use for linking to an app via environment variable
   #F -q|--querystring "pool=5", ampersand delimited querystring arguments to append to the service link
+  #F -n|--no-restart "false", whether or not to restart the app on link (default: true)
   declare desc="link the $PLUGIN_SERVICE service to the app"
   local cmd="$PLUGIN_COMMAND_PREFIX:link" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1

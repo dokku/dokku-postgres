@@ -10,21 +10,23 @@ on:
     branches:
       - master
 
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   unit-tests-master:
     name: unit-tests
-    runs-on: ubuntu-18.04
-    strategy:
-      fail-fast: true
+    runs-on: ubuntu-20.04
     env:
       DOKKU_VERSION: master
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.7.x'
 
@@ -49,7 +51,7 @@ jobs:
 
       - run: make test
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: tmp/test-results
@@ -57,18 +59,16 @@ jobs:
 
   unit-tests-0_19_0:
     name: unit-tests-0.19.0
-    runs-on: ubuntu-18.04
-    strategy:
-      fail-fast: true
+    runs-on: ubuntu-20.04
     env:
       DOKKU_TAG: v0.19.0
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.7.x'
 
@@ -93,7 +93,7 @@ jobs:
 
       - run: make test
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: tmp/test-results
