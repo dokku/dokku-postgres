@@ -457,7 +457,7 @@ service_container_rm() {
   local ID
 
   service_pause "$SERVICE"
-  ID=$("$DOCKER_BIN" container ps -aq --no-trunc --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
+  ID=$("$DOCKER_BIN" container ps -aq --no-trunc --filter "name=^/$SERVICE_NAME$") || true
   # this may be 'true' in tests...
   if [[ -z "$ID" ]] || [[ "$ID" == "true" ]]; then
     return 0
@@ -939,7 +939,7 @@ service_pause() {
   declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
-  local ID=$("$DOCKER_BIN" container ps -aq --no-trunc --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
+  local ID=$("$DOCKER_BIN" container ps -aq --no-trunc --filter "name=^/$SERVICE_NAME$") || true
   [[ -z $ID ]] && dokku_log_warn "Service is already paused" && return 0
 
   if [[ -n $ID ]]; then

@@ -193,7 +193,7 @@ service_start() {
   local QUIET="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
-  local ID=$("$DOCKER_BIN" container ps -aq --no-trunc --filter "status=running" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
+  local ID=$("$DOCKER_BIN" container ps -aq --no-trunc --filter "status=running" --filter "name=^/$SERVICE_NAME$") || true
   if [[ -n $ID ]]; then
     [[ -z $QUIET ]] && dokku_log_warn "Service is already started"
     if [[ ! -f "$SERVICE_ROOT/ID" ]] || [[ "$(cat "$SERVICE_ROOT/ID")" != "$ID" ]]; then
@@ -204,7 +204,7 @@ service_start() {
   fi
 
   dokku_log_info2_quiet "Starting container"
-  local PREVIOUS_ID=$("$DOCKER_BIN" container ps -aq --no-trunc --filter "status=exited" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
+  local PREVIOUS_ID=$("$DOCKER_BIN" container ps -aq --no-trunc --filter "status=exited" --filter "name=^/$SERVICE_NAME$") || true
   local PASSWORD="$(service_password "$SERVICE")"
 
   if [[ -n $PREVIOUS_ID ]]; then
