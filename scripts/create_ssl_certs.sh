@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 postgres_service_dir="$1"
 
 cd "$postgres_service_dir"
