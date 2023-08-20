@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 cd /var/lib/postgresql/data
 
 cp ../certs/* .
