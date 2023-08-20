@@ -1,4 +1,4 @@
 [plugin]
 description = "dokku postgres service plugin"
-version = "1.34.1"
+version = "1.34.2"
 [plugin.config]
