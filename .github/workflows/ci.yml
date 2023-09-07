@@ -17,7 +17,7 @@ concurrency:
 jobs:
   unit-tests-master:
     name: unit-tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       DOKKU_VERSION: master
 
@@ -59,7 +59,7 @@ jobs:
 
   unit-tests-0_19_0:
     name: unit-tests-0.19.0
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       DOKKU_TAG: v0.19.0
 
