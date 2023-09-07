@@ -1,7 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-BOX_NAME = ENV["BOX_NAME"] || "bento/ubuntu-20.04"
+BOX_NAME = ENV["BOX_NAME"] || "bento/ubuntu-22.04"
 BOX_MEMORY = ENV["BOX_MEMORY"] || "2048"
 DOKKU_VERSION = "master"
 
