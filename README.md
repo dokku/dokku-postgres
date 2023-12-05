@@ -74,9 +74,9 @@ flags:
 - `-m|--memory MEMORY`: container memory limit in megabytes (default: unlimited)
 - `-N|--initial-network INITIAL_NETWORK`: the initial network to attach the service to
 - `-p|--password PASSWORD`: override the user-level service password
-- `-P|--post-create-network NETWORKS`: a comman-separated list of networks to attach the service container to after service creation
+- `-P|--post-create-network NETWORKS`: a comma-separated list of networks to attach the service container to after service creation
 - `-r|--root-password PASSWORD`: override the root-level service password
-- `-S|--post-start-network NETWORKS`: a comman-separated list of networks to attach the service container to after service start
+- `-S|--post-start-network NETWORKS`: a comma-separated list of networks to attach the service container to after service start
 - `-s|--shm-size SHM_SIZE`: override shared memory size for postgres docker container
 
 Create a postgres service named lollipop:
@@ -93,7 +93,7 @@ export POSTGRES_IMAGE_VERSION="${PLUGIN_IMAGE_VERSION}"
 dokku postgres:create lollipop
 ```
 
-You can also specify custom environment variables to start the postgres service in semi-colon separated form.
+You can also specify custom environment variables to start the postgres service in semicolon-separated form.
 
 ```shell
 export POSTGRES_CUSTOM_ENV="USER=alpha;HOST=beta"
