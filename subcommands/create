@@ -14,7 +14,7 @@ service-create-cmd() {
   #E export ${PLUGIN_VARIABLE}_IMAGE_VERSION="${PLUGIN_IMAGE_VERSION}"
   #E dokku $PLUGIN_COMMAND_PREFIX:create lollipop
   #E you can also specify custom environment variables to start
-  #E the ${PLUGIN_COMMAND_PREFIX} service in semi-colon separated form.
+  #E the ${PLUGIN_COMMAND_PREFIX} service in semicolon-separated form.
   #E export ${PLUGIN_VARIABLE}_CUSTOM_ENV="USER=alpha;HOST=beta"
   #E dokku $PLUGIN_COMMAND_PREFIX:create lollipop
   #A service, service to run command against

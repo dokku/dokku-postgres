@@ -93,7 +93,7 @@ export POSTGRES_IMAGE_VERSION="${PLUGIN_IMAGE_VERSION}"
 dokku postgres:create lollipop
 ```
 
-You can also specify custom environment variables to start the postgres service in semi-colon separated form.
+You can also specify custom environment variables to start the postgres service in semicolon-separated form.
 
 ```shell
 export POSTGRES_CUSTOM_ENV="USER=alpha;HOST=beta"
