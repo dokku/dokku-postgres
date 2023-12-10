@@ -1,15 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+
 import os
 import re
 
 
-def compile(service, version, variable, alias, image, scheme, ports, sponsors, options, unimplemented, dokku_version):
-    prefix = "\n\n".join([
-        header(service),
-        description(service, image, version),
-    ])
+def compile(
+    service,
+    version,
+    variable,
+    alias,
+    image,
+    scheme,
+    ports,
+    sponsors,
+    options,
+    unimplemented,
+    dokku_version,
+):
+    prefix = "\n\n".join(
+        [
+            header(service),
+            description(service, image, version),
+        ]
+    )
 
     if len(sponsors) > 0:
         prefix += "\n\n"
@@ -21,8 +36,19 @@ def compile(service, version, variable, alias, image, scheme, ports, sponsors, o
                 prefix,
                 requirements_section(dokku_version),
                 installation_section(service, dokku_version),
-                commands_section(service, variable, alias, image, scheme, ports, unimplemented),
-                usage_section(service, variable, alias, image, scheme, ports, options, unimplemented),
+                commands_section(
+                    service, variable, alias, image, scheme, ports, unimplemented
+                ),
+                usage_section(
+                    service,
+                    variable,
+                    alias,
+                    image,
+                    scheme,
+                    ports,
+                    options,
+                    unimplemented,
+                ),
             ]
         )
         .replace("\n\n\n\n\n", "\n")
@@ -55,17 +81,25 @@ def sponsors_section(service, sponsors):
     if len(sponsors) == 0:
         return ""
 
-    sponsor_data = ["## Sponsors", "", f"The {service} plugin was generously sponsored by the following:", ""]
+    sponsor_data = [
+        "## Sponsors",
+        "",
+        f"The {service} plugin was generously sponsored by the following:",
+        "",
+    ]
     sponsor_data.extend([f"- [{s}](https://github.com/{s})" for s in sponsors])
 
-    return "\n".join(
-        sponsor_data
-    )
+    return "\n".join(sponsor_data)
 
 
 def requirements_section(dokku_version):
     return "\n".join(
-        ["## Requirements", "", f"- dokku {dokku_version}", "- docker 1.8.x",]
+        [
+            "## Requirements",
+            "",
+            f"- dokku {dokku_version}",
+            "- docker 1.8.x",
+        ]
     )
 
 
@@ -115,17 +149,31 @@ def commands_section(service, variable, alias, image, scheme, ports, unimplement
     return "\n".join(content)
 
 
-def usage_section(service, variable, alias, image, scheme, ports, options, unimplemented):
+def usage_section(
+    service, variable, alias, image, scheme, ports, options, unimplemented
+):
     return "\n\n".join(
         [
             "## Usage",
             f"Help for any commands can be displayed by specifying the command as an argument to {service}:help. Plugin help output in conjunction with any files in the `docs/` folder is used to generate the plugin documentation. Please consult the `{service}:help` command for any undocumented commands.",
-            usage_intro(service, variable, alias, image, scheme, ports, options, unimplemented),
-            usage_lifecycle(service, variable, alias, image, scheme, ports, options, unimplemented),
-            usage_automation(service, variable, alias, image, scheme, ports, options, unimplemented),
-            usage_data_management(service, variable, alias, image, scheme, ports, options, unimplemented),
-            usage_backup(service, variable, alias, image, scheme, ports, options, unimplemented),
-            usage_docker_pull(service, variable, alias, image, scheme, ports, options, unimplemented),
+            usage_intro(
+                service, variable, alias, image, scheme, ports, options, unimplemented
+            ),
+            usage_lifecycle(
+                service, variable, alias, image, scheme, ports, options, unimplemented
+            ),
+            usage_automation(
+                service, variable, alias, image, scheme, ports, options, unimplemented
+            ),
+            usage_data_management(
+                service, variable, alias, image, scheme, ports, options, unimplemented
+            ),
+            usage_backup(
+                service, variable, alias, image, scheme, ports, options, unimplemented
+            ),
+            usage_docker_pull(
+                service, variable, alias, image, scheme, ports, options, unimplemented
+            ),
         ]
     )
 
@@ -135,11 +183,22 @@ def usage_intro(service, variable, alias, image, scheme, ports, options, unimple
     content = ["### Basic Usage"]
 
     return fetch_commands_content(
-        service, variable, alias, image, scheme, ports, options, unimplemented, commands, content
+        service,
+        variable,
+        alias,
+        image,
+        scheme,
+        ports,
+        options,
+        unimplemented,
+        commands,
+        content,
     )
 
 
-def usage_lifecycle(service, variable, alias, image, scheme, ports, options, unimplemented):
+def usage_lifecycle(
+    service, variable, alias, image, scheme, ports, options, unimplemented
+):
     commands = [
         "connect",
         "enter",
@@ -160,11 +219,22 @@ def usage_lifecycle(service, variable, alias, image, scheme, ports, options, uni
     ]
 
     return fetch_commands_content(
-        service, variable, alias, image, scheme, ports, options, unimplemented, commands, content
+        service,
+        variable,
+        alias,
+        image,
+        scheme,
+        ports,
+        options,
+        unimplemented,
+        commands,
+        content,
     )
 
 
-def usage_automation(service, variable, alias, image, scheme, ports, options, unimplemented):
+def usage_automation(
+    service, variable, alias, image, scheme, ports, options, unimplemented
+):
     commands = ["app-links", "clone", "exists", "linked", "links"]
     content = [
         "### Service Automation",
@@ -174,11 +244,22 @@ def usage_automation(service, variable, alias, image, scheme, ports, options, un
     ]
 
     return fetch_commands_content(
-        service, variable, alias, image, scheme, ports, options, unimplemented, commands, content
+        service,
+        variable,
+        alias,
+        image,
+        scheme,
+        ports,
+        options,
+        unimplemented,
+        commands,
+        content,
     )
 
 
-def usage_data_management(service, variable, alias, image, scheme, ports, options, unimplemented):
+def usage_data_management(
+    service, variable, alias, image, scheme, ports, options, unimplemented
+):
     commands = ["import", "export"]
     content = [
         "### Data Management",
@@ -188,11 +269,22 @@ def usage_data_management(service, variable, alias, image, scheme, ports, option
     ]
 
     return fetch_commands_content(
-        service, variable, alias, image, scheme, ports, options, unimplemented, commands, content
+        service,
+        variable,
+        alias,
+        image,
+        scheme,
+        ports,
+        options,
+        unimplemented,
+        commands,
+        content,
     )
 
 
-def usage_backup(service, variable, alias, image, scheme, ports, options, unimplemented):
+def usage_backup(
+    service, variable, alias, image, scheme, ports, options, unimplemented
+):
     commands = [
         "backup-auth",
         "backup-deauth",
@@ -215,11 +307,22 @@ def usage_backup(service, variable, alias, image, scheme, ports, options, unimpl
     ]
 
     return fetch_commands_content(
-        service, variable, alias, image, scheme, ports, options, unimplemented, commands, content
+        service,
+        variable,
+        alias,
+        image,
+        scheme,
+        ports,
+        options,
+        unimplemented,
+        commands,
+        content,
     )
 
 
-def usage_docker_pull(service, variable, alias, image, scheme, ports, options, unimplemented):
+def usage_docker_pull(
+    service, variable, alias, image, scheme, ports, options, unimplemented
+):
     service_prefix = service.upper()
     return "\n".join(
         [
@@ -233,11 +336,30 @@ def usage_docker_pull(service, variable, alias, image, scheme, ports, options, u
 
 
 def fetch_commands_content(
-    service, variable, alias, image, scheme, ports, options, unimplemented, commands, content
+    service,
+    variable,
+    alias,
+    image,
+    scheme,
+    ports,
+    options,
+    unimplemented,
+    commands,
+    content,
 ):
     i = 0
     for command in commands:
-        output = command_help(command, service, variable, alias, image, scheme, ports, options, unimplemented)
+        output = command_help(
+            command,
+            service,
+            variable,
+            alias,
+            image,
+            scheme,
+            ports,
+            options,
+            unimplemented,
+        )
         if output == "":
             continue
         content.append(output)
@@ -275,7 +397,9 @@ def parse_args(line):
     return " ".join(arguments)
 
 
-def command_help(command, service, variable, alias, image, scheme, ports, options, unimplemented):
+def command_help(
+    command, service, variable, alias, image, scheme, ports, options, unimplemented
+):
     if command in unimplemented:
         return ""
 
@@ -285,7 +409,7 @@ def command_help(command, service, variable, alias, image, scheme, ports, option
         "",
         "```shell",
         "# usage",
-        f"dokku {service}:{command} {data['arguments_string']}",
+        f"dokku {service}:{command} {data['arguments_string']}".strip(),
         "```",
     ]
 
@@ -442,11 +566,11 @@ def process_sentence(sentence_lines):
         parts = []
         for word in sentence.strip().split(" "):
             if word.isupper() and len(word) > 1:
-                for ending in [':', '.']:
+                for ending in [":", "."]:
                     if word.endswith(ending):
-                        word = '`{0}`{1}'.format(word[:-1], ending)
+                        word = "`{0}`{1}".format(word[:-1], ending)
                 else:
-                    word = '`{0}`'.format(word)
+                    word = "`{0}`".format(word)
             parts.append(word)
         text.append(" ".join(parts))
 
@@ -491,10 +615,10 @@ def main():
 
     with open("Dockerfile") as f:
         for line in f.readlines():
-          if "FROM " in line:
-              image, version = line.split(" ")[1].split(":")
-              image = image.strip()
-              version = version.strip()
+            if "FROM " in line:
+                image, version = line.split(" ")[1].split(":")
+                image = image.strip()
+                version = version.strip()
 
     with open("config") as f:
         for line in f.readlines():
@@ -524,10 +648,22 @@ def main():
     with open("plugin.toml") as f:
         for line in f.readlines():
             if line.startswith("sponsors"):
-                sponsors = re.search("\[([\"\w\s,_-]+)\]", line).group(1)
-                sponsors = [s.strip("\"") for s in sponsors.split(",")]
+                sponsors = re.search('\[(["\w\s,_-]+)\]', line).group(1)
+                sponsors = [s.strip('"') for s in sponsors.split(",")]
 
-    text = compile(service, version, variable, alias, image, scheme, ports, sponsors, options, unimplemented, "0.19.x+")
+    text = compile(
+        service,
+        version,
+        variable,
+        alias,
+        image,
+        scheme,
+        ports,
+        sponsors,
+        options,
+        unimplemented,
+        "0.19.x+",
+    )
 
     base_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     readme_file = os.path.join(base_path, "README.md")

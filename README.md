@@ -1,6 +1,6 @@
 # dokku postgres [![Build Status](https://img.shields.io/github/actions/workflow/status/dokku/dokku-postgres/ci.yml?branch=master&style=flat-square "Build Status")](https://github.com/dokku/dokku-postgres/actions/workflows/ci.yml?query=branch%3Amaster) [![IRC Network](https://img.shields.io/badge/irc-libera-blue.svg?style=flat-square "IRC Libera")](https://webchat.libera.chat/?channels=dokku)
 
-Official postgres plugin for dokku. Currently defaults to installing [postgres 16.0](https://hub.docker.com/_/postgres/).
+Official postgres plugin for dokku. Currently defaults to installing [postgres 16.1](https://hub.docker.com/_/postgres/).
 
 ## Requirements
 
@@ -85,7 +85,7 @@ Create a postgres service named lollipop:
 dokku postgres:create lollipop
 ```
 
-You can also specify the image and image version to use for the service. It _must_ be compatible with the postgres image.
+You can also specify the image and image version to use for the service. It *must* be compatible with the postgres image.
 
 ```shell
 export POSTGRES_IMAGE="postgres"
@@ -744,7 +744,7 @@ flags:
 
 Schedule a backup:
 
-> 'schedule' is a crontab expression, eg. "0 3 \* \* \*" for each day at 3am
+> 'schedule' is a crontab expression, eg. "0 3 * * *" for each day at 3am
 
 ```shell
 dokku postgres:backup-schedule lollipop "0 3 * * *" my-s3-bucket
