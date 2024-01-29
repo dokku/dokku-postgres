@@ -1,5 +1,6 @@
 HARDWARE = $(shell uname -m)
 SYSTEM_NAME  = $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ARCH = $(shell dpkg --print-architecture)
 SHFMT_VERSION = 3.0.2
 XUNIT_TO_GITHUB_VERSION = 0.3.0
 XUNIT_READER_VERSION = 0.1.0
@@ -21,7 +22,11 @@ ifneq ($(shell shellcheck --version >/dev/null 2>&1 ; echo $$?),0)
 ifeq ($(SYSTEM_NAME),darwin)
 	brew install shellcheck
 else
-	sudo add-apt-repository 'deb http://archive.ubuntu.com/ubuntu jammy-backports main restricted universe multiverse'
+ifeq ($(ARCH),arm64)
+  sudo add-apt-repository 'deb http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse'
+else
+  sudo add-apt-repository 'deb http://archive.ubuntu.com/ubuntu jammy-backports main restricted universe multiverse'
+endif
 	sudo rm -rf /var/lib/apt/lists/* && sudo apt-get clean
 	sudo apt-get update -qq && sudo apt-get install -qq -y shellcheck
 endif
