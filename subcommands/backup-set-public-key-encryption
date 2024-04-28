@@ -22,4 +22,4 @@ service-backup-set-public-key-encryption-cmd() {
   service_backup_set_public_key_encryption "$SERVICE" "$PUBLIC_KEY_ID"
 }
 
-service-backup-set-encryption-cmd "$@"
+service-backup-set-public-key-encryption-cmd "$@"
