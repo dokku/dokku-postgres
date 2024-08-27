@@ -24,8 +24,10 @@ postgres:backup-deauth <service>                   # remove backup authenticatio
 postgres:backup-schedule <service> <schedule> <bucket-name> [--use-iam] # schedule a backup of the postgres service
 postgres:backup-schedule-cat <service>             # cat the contents of the configured backup cronfile for the service
 postgres:backup-set-encryption <service> <passphrase> # set encryption for all future backups of postgres service
+postgres:backup-set-public-key-encryption <service> <public-key-id> # set GPG Public Key encryption for all future backups of postgres service
 postgres:backup-unschedule <service>               # unschedule the backup of the postgres service
 postgres:backup-unset-encryption <service>         # unset encryption for future backups of the postgres service
+postgres:backup-unset-public-key-encryption <service> # unset GPG Public Key encryption for future backups of the postgres service
 postgres:clone <service> <new-service> [--clone-flags...] # create container <new-name> then copy data from <name> into <new-name>
 postgres:connect <service>                         # connect to the service via the postgres connection tool
 postgres:create <service> [--create-flags...]      # create a postgres service
@@ -718,6 +720,19 @@ Set the GPG-compatible passphrase for encrypting backups for backups:
 dokku postgres:backup-set-encryption lollipop
 ```
 
+### set GPG Public Key encryption for all future backups of postgres service
+
+```shell
+# usage
+dokku postgres:backup-set-public-key-encryption <service> <public-key-id>
+```
+
+Set the `GPG` Public Key for encrypting backups:
+
+```shell
+dokku postgres:backup-set-public-key-encryption lollipop
+```
+
 ### unset encryption for future backups of the postgres service
 
 ```shell
@@ -729,6 +744,19 @@ Unset the `GPG` encryption passphrase for backups:
 
 ```shell
 dokku postgres:backup-unset-encryption lollipop
+```
+
+### unset GPG Public Key encryption for future backups of the postgres service
+
+```shell
+# usage
+dokku postgres:backup-unset-public-key-encryption <service>
+```
+
+Unset the `GPG` Public Key encryption for backups:
+
+```shell
+dokku postgres:backup-unset-public-key-encryption lollipop
 ```
 
 ### schedule a backup of the postgres service
