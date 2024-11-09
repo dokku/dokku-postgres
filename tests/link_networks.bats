@@ -48,7 +48,7 @@ teardown() {
   assert_output_contains bridge 0
   assert_output_contains custom-network
 
-  run docker inspect dokku.$PLUGIN_COMMAND_PREFIX.ls -f '{{range $net,$v := .NetworkSettings.Networks}}{{range $k,$alias := $v.Aliases}}{{printf "alias:%s\n" $alias}}{{end}}{{end}}'
+  run docker inspect dokku.$PLUGIN_COMMAND_PREFIX.ls -f '{{range $net,$v := .NetworkSettings.Networks}}{{range $k,$alias := $v.DNSNames}}{{printf "alias:%s\n" $alias}}{{end}}{{end}}'
   echo "output: $output"
   echo "status: $status"
   assert_success
@@ -120,7 +120,7 @@ teardown() {
   assert_output_contains custom-network
   assert_output_contains bridge
 
-  run docker inspect dokku.$PLUGIN_COMMAND_PREFIX.ls -f '{{range $net,$v := .NetworkSettings.Networks}}{{range $k,$alias := $v.Aliases}}{{printf "alias:%s\n" $alias}}{{end}}{{end}}'
+  run docker inspect dokku.$PLUGIN_COMMAND_PREFIX.ls -f '{{range $net,$v := .NetworkSettings.Networks}}{{range $k,$alias := $v.DNSNames}}{{printf "alias:%s\n" $alias}}{{end}}{{end}}'
   echo "output: $output"
   echo "status: $status"
   assert_success
@@ -192,7 +192,7 @@ teardown() {
   assert_output_contains bridge
   assert_output_contains custom-network
 
-  run docker inspect dokku.$PLUGIN_COMMAND_PREFIX.ls -f '{{range $net,$v := .NetworkSettings.Networks}}{{range $k,$alias := $v.Aliases}}{{printf "alias:%s\n" $alias}}{{end}}{{end}}'
+  run docker inspect dokku.$PLUGIN_COMMAND_PREFIX.ls -f '{{range $net,$v := .NetworkSettings.Networks}}{{range $k,$alias := $v.DNSNames}}{{printf "alias:%s\n" $alias}}{{end}}{{end}}'
   echo "output: $output"
   echo "status: $status"
   assert_success
@@ -258,7 +258,7 @@ teardown() {
   assert_output_contains bridge
   assert_output_contains custom-network
 
-  run docker inspect dokku.$PLUGIN_COMMAND_PREFIX.lsa -f '{{range $net,$v := .NetworkSettings.Networks}}{{range $k,$alias := $v.Aliases}}{{printf "alias:%s\n" $alias}}{{end}}{{end}}'
+  run docker inspect dokku.$PLUGIN_COMMAND_PREFIX.lsa -f '{{range $net,$v := .NetworkSettings.Networks}}{{range $k,$alias := $v.DNSNames}}{{printf "alias:%s\n" $alias}}{{end}}{{end}}'
   echo "output: $output"
   echo "status: $status"
   assert_success
