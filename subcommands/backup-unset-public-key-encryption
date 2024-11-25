@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+service-backup-unset-public-key-encryption-cmd() {
+  #E unset the GPG Public Key encryption for backups
+  #E dokku $PLUGIN_COMMAND_PREFIX:backup-unset-public-key-encryption lollipop
+  #A service, service to run command against
+  declare desc="unset GPG Public Key encryption for future backups of the $PLUGIN_SERVICE service"
+  local cmd="$PLUGIN_COMMAND_PREFIX:backup-unset-public-key-encryption" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
+  declare SERVICE="$1"
+  is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"  # TODO: [22.03.2024 by Mykola]
+
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
+  verify_service_name "$SERVICE"
+  service_backup_unset_public_key_encryption "$SERVICE"  # TODO: [22.03.2024 by Mykola]
+}
+
+service-backup-unset-encryption-cmd "$@"

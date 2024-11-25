@@ -308,6 +308,10 @@ service_backup() {
     BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e ENCRYPTION_KEY=$(cat "$BACKUP_ENCRYPTION_CONFIG_ROOT/ENCRYPTION_KEY")"
   fi
 
+  if [[ -f "$BACKUP_ENCRYPTION_CONFIG_ROOT/ENCRYPT_WITH_PUBLIC_KEY_ID" ]]; then
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e ENCRYPT_WITH_PUBLIC_KEY_ID=$(cat "$BACKUP_ENCRYPTION_CONFIG_ROOT/ENCRYPT_WITH_PUBLIC_KEY_ID")"
+  fi
+
   # shellcheck disable=SC2086
   "$DOCKER_BIN" container run --rm $BACKUP_PARAMETERS "$PLUGIN_S3BACKUP_IMAGE"
 }
@@ -433,12 +437,31 @@ service_backup_set_encryption() {
   echo "$ENCRYPTION_KEY" >"${SERVICE_BACKUP_ENCRYPTION_ROOT}/ENCRYPTION_KEY"
 }
 
+service_backup_set_public_key_encryption() {
+  declare desc="set up backup GPG Public Key encryption"
+  declare SERVICE="$1" ENCRYPT_WITH_PUBLIC_KEY_ID="$2"
+  local SERVICE_ROOT="${PLUGIN_DATA_ROOT}/${SERVICE}"
+  local SERVICE_BACKUP_ENCRYPTION_ROOT="${SERVICE_ROOT}/backup-encryption/"
+
+  mkdir "$SERVICE_BACKUP_ENCRYPTION_ROOT"
+  echo "$ENCRYPT_WITH_PUBLIC_KEY_ID" >"${SERVICE_BACKUP_ENCRYPTION_ROOT}/ENCRYPT_WITH_PUBLIC_KEY_ID"
+}
+
 service_backup_unschedule() {
   declare desc="unschedule the backup of the service"
   declare SERVICE="$1"
   local CRON_FILE="/etc/cron.d/dokku-${PLUGIN_COMMAND_PREFIX}-${SERVICE}"
 
   sudo /bin/rm -f "$CRON_FILE"
+}
+
+service_backup_unset_encryption() {
+  declare desc="remove backup encryption"
+  declare SERVICE="$1"
+  local SERVICE_ROOT="${PLUGIN_DATA_ROOT}/${SERVICE}"
+  local SERVICE_BACKUP_ENCRYPTION_ROOT="${SERVICE_ROOT}/backup-encryption/"
+
+  rm -rf "$SERVICE_BACKUP_ENCRYPTION_ROOT"
 }
 
 service_backup_unset_encryption() {

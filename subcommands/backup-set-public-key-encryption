@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+service-backup-set-public-key-encryption-cmd() {
+  #E set the GPG Public Key for encrypting backups
+  #E dokku $PLUGIN_COMMAND_PREFIX:backup-set-public-key-encryption lollipop
+  #A service, service to run command against
+  #A public-key-id, a GPG Public Key ID (or fingerprint) to use for encryption. Must be uploaded to the GPG keyserver beforehand.
+  declare desc="set GPG Public Key encryption for all future backups of $PLUGIN_SERVICE service"
+  local cmd="$PLUGIN_COMMAND_PREFIX:backup-set-public-key-encryption" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
+  declare SERVICE="$1" PUBLIC_KEY_ID="$2"
+  is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
+
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
+  [[ -z "$PUBLIC_KEY_ID" ]] && dokku_log_fail "Please specify a valid GPG Public Key ID (or fingerprint)"
+  verify_service_name "$SERVICE"
+  service_backup_set_public_key_encryption "$SERVICE" "$PUBLIC_KEY_ID"
+}
+
+service-backup-set-public-key-encryption-cmd "$@"
