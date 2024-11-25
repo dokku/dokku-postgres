@@ -1,6 +1,6 @@
 # dokku postgres [![Build Status](https://img.shields.io/github/actions/workflow/status/dokku/dokku-postgres/ci.yml?branch=master&style=flat-square "Build Status")](https://github.com/dokku/dokku-postgres/actions/workflows/ci.yml?query=branch%3Amaster) [![IRC Network](https://img.shields.io/badge/irc-libera-blue.svg?style=flat-square "IRC Libera")](https://webchat.libera.chat/?channels=dokku)
 
-Official postgres plugin for dokku. Currently defaults to installing [postgres 17.0](https://hub.docker.com/_/postgres/).
+Official postgres plugin for dokku. Currently defaults to installing [postgres 17.1](https://hub.docker.com/_/postgres/).
 
 ## Requirements
 
@@ -24,8 +24,10 @@ postgres:backup-deauth <service>                   # remove backup authenticatio
 postgres:backup-schedule <service> <schedule> <bucket-name> [--use-iam] # schedule a backup of the postgres service
 postgres:backup-schedule-cat <service>             # cat the contents of the configured backup cronfile for the service
 postgres:backup-set-encryption <service> <passphrase> # set encryption for all future backups of postgres service
+postgres:backup-set-public-key-encryption <service> <public-key-id> # set GPG Public Key encryption for all future backups of postgres service
 postgres:backup-unschedule <service>               # unschedule the backup of the postgres service
 postgres:backup-unset-encryption <service>         # unset encryption for future backups of the postgres service
+postgres:backup-unset-public-key-encryption <service> # unset GPG Public Key encryption for future backups of the postgres service
 postgres:clone <service> <new-service> [--clone-flags...] # create container <new-name> then copy data from <name> into <new-name>
 postgres:connect <service>                         # connect to the service via the postgres connection tool
 postgres:create <service> [--create-flags...]      # create a postgres service
@@ -103,7 +105,15 @@ dokku postgres:create lollipop
 Official Postgres "$DOCKER_BIN" image ls does not include postgis extension (amongst others). The following example creates a new postgres service using `postgis/postgis:13-3.1` image, which includes the `postgis` extension.
 
 ```shell
+# use the appropriate image-version for your use-case
 dokku postgres:create postgis-database --image "postgis/postgis" --image-version "13-3.1"
+```
+
+To use pgvector instead, run the following:
+
+```shell
+# use the appropriate image-version for your use-case
+dokku postgres:create pgvector-database --image "pgvector/pgvector" --image-version "pg17"
 ```
 
 ### print the service information
@@ -718,6 +728,19 @@ Set the GPG-compatible passphrase for encrypting backups for backups:
 dokku postgres:backup-set-encryption lollipop
 ```
 
+### set GPG Public Key encryption for all future backups of postgres service
+
+```shell
+# usage
+dokku postgres:backup-set-public-key-encryption <service> <public-key-id>
+```
+
+Set the `GPG` Public Key for encrypting backups:
+
+```shell
+dokku postgres:backup-set-public-key-encryption lollipop
+```
+
 ### unset encryption for future backups of the postgres service
 
 ```shell
@@ -729,6 +752,19 @@ Unset the `GPG` encryption passphrase for backups:
 
 ```shell
 dokku postgres:backup-unset-encryption lollipop
+```
+
+### unset GPG Public Key encryption for future backups of the postgres service
+
+```shell
+# usage
+dokku postgres:backup-unset-public-key-encryption <service>
+```
+
+Unset the `GPG` Public Key encryption for backups:
+
+```shell
+dokku postgres:backup-unset-public-key-encryption lollipop
 ```
 
 ### schedule a backup of the postgres service
