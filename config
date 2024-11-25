@@ -28,9 +28,9 @@ if [[ -n $DOKKU_API_VERSION ]]; then
   export PLUGIN_BASE_PATH="$PLUGIN_ENABLED_PATH"
 fi
 
-export PLUGIN_BUSYBOX_IMAGE="busybox:1.34.1-uclibc"
-export PLUGIN_AMBASSADOR_IMAGE="dokku/ambassador:0.5.0"
-export PLUGIN_S3BACKUP_IMAGE="dokku/s3backup:0.16.0"
-export PLUGIN_WAIT_IMAGE="dokku/wait:0.6.0"
+export PLUGIN_BUSYBOX_IMAGE=${PLUGIN_BUSYBOX_IMAGE:=busybox:1.34.1-uclibc}
+export PLUGIN_AMBASSADOR_IMAGE=${PLUGIN_AMBASSADOR_IMAGE:=dokku/ambassador:0.5.0}
+export PLUGIN_S3BACKUP_IMAGE=${PLUGIN_S3BACKUP_IMAGE:=dokku/s3backup:0.16.0}
+export PLUGIN_WAIT_IMAGE=${PLUGIN_WAIT_IMAGE:=dokku/wait:0.6.0}
 
 export POSTGRES_CONFIG_OPTIONS=${POSTGRES_CONFIG_OPTIONS:=""}
