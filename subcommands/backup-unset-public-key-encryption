@@ -13,11 +13,11 @@ service-backup-unset-public-key-encryption-cmd() {
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-unset-public-key-encryption" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1"
-  is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"  # TODO: [22.03.2024 by Mykola]
+  is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
   verify_service_name "$SERVICE"
-  service_backup_unset_public_key_encryption "$SERVICE"  # TODO: [22.03.2024 by Mykola]
+  service_backup_unset_public_key_encryption "$SERVICE"
 }
 
-service-backup-unset-encryption-cmd "$@"
+service-backup-unset-public-key-encryption-cmd "$@"
