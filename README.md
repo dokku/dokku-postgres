@@ -11,7 +11,7 @@ Official postgres plugin for dokku. Currently defaults to installing [postgres 1
 
 ```shell
 # on 0.19.x+
-sudo dokku plugin:install https://github.com/dokku/dokku-postgres.git postgres
+sudo dokku plugin:install https://github.com/dokku/dokku-postgres.git --name postgres
 ```
 
 ## Commands
