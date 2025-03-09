@@ -110,7 +110,7 @@ def installation_section(service, dokku_version):
             "",
             "```shell",
             f"# on {dokku_version}",
-            f"sudo dokku plugin:install https://github.com/dokku/dokku-{service}.git {service}",
+            f"sudo dokku plugin:install https://github.com/dokku/dokku-{service}.git --name {service}",
             "```",
         ]
     )
