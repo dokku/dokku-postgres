@@ -8,7 +8,7 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 service-expose-cmd() {
   #E expose the service on the service's normal ports, allowing access to it from the public interface (0.0.0.0)
   #E dokku $PLUGIN_COMMAND_PREFIX:expose lollipop ${PLUGIN_DATASTORE_PORTS[@]}
-  #E expose the service on the service's normal ports, with the first on a specified ip adddress (127.0.0.1)
+  #E expose the service on the service's normal ports, with the first on a specified ip address (127.0.0.1)
   #E dokku $PLUGIN_COMMAND_PREFIX:expose lollipop 127.0.0.1:${PLUGIN_DATASTORE_PORTS[@]}
   #A service, service to run command against
   #A ports, a list of ports to run against
