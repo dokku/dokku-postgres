@@ -304,6 +304,10 @@ def usage_backup(
         "",
         "You may skip the `backup-auth` step if your dokku install is running within EC2 and has access to the bucket via an IAM profile. In that case, use the `--use-iam` option with the `backup` command.",
         "",
+        "If both passphrase and public key forms of encryption are set, the public key encryption will take precedence.",
+        "",
+        "The underlying core backup script is present [here](https://github.com/dokku/docker-s3backup/blob/main/backup.sh).",
+        "",
         "Backups can be performed using the backup commands:",
         "",
     ]
