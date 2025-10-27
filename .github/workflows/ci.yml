@@ -51,7 +51,7 @@ jobs:
 
       - run: make test
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: failure()
         with:
           name: tmp/test-results
@@ -93,7 +93,7 @@ jobs:
 
       - run: make test
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: failure()
         with:
           name: tmp/test-results
