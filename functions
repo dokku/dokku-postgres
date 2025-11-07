@@ -78,6 +78,14 @@ service_create_container() {
 
   rm -f "$SERVICE_ROOT/ID"
   declare -a DOCKER_ARGS
+
+  # Determine correct data directory for PostgreSQL version
+  local DATA_DIR="/var/lib/postgresql/data"
+  local PG_MAJOR="${PLUGIN_IMAGE_VERSION%%[^0-9]*}"
+  if [[ -n "$PG_MAJOR" && "$PG_MAJOR" -ge 18 ]]; then
+    DATA_DIR="/var/lib/postgresql"
+  fi
+
   DOCKER_ARGS=()
   DOCKER_ARGS+=("--cidfile=$SERVICE_ROOT/ID")
   DOCKER_ARGS+=("--env-file=$SERVICE_ROOT/ENV")
@@ -87,7 +95,7 @@ service_create_container() {
   DOCKER_ARGS+=("--label=dokku=service")
   DOCKER_ARGS+=("--name=$SERVICE_NAME")
   DOCKER_ARGS+=("--restart=always")
-  DOCKER_ARGS+=("--volume=$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data")
+  DOCKER_ARGS+=("--volume=$SERVICE_HOST_ROOT/data:$DATA_DIR")
 
   declare -a LINK_CONTAINER_DOCKER_ARGS
   LINK_CONTAINER_DOCKER_ARGS=()
@@ -150,7 +158,7 @@ service_create_container() {
   dokku_log_verbose_quiet "Securing connection to database"
   service_pause "$SERVICE" >/dev/null
   "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/create_ssl_certs.sh" "$SERVICE_ROOT" &>/dev/null
-  "$DOCKER_BIN" container run --rm -i -v "$SERVICE_HOST_ROOT/data:/var/lib/postgresql/data" -v "$SERVICE_HOST_ROOT/certs:/var/lib/postgresql/certs" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" bash -s <"$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/enable_ssl.sh" &>/dev/null
+  "$DOCKER_BIN" container run --rm -i -v "$SERVICE_HOST_ROOT/data:$DATA_DIR" -v "$SERVICE_HOST_ROOT/certs:/var/lib/postgresql/certs" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" bash -s <"$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/enable_ssl.sh" &>/dev/null
   rm -rf "$SERVICE_HOST_ROOT/certs"
 
   suppress_output "$DOCKER_BIN" container start "$(cat "$SERVICE_ROOT/ID")"
