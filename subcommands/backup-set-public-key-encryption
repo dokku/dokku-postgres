@@ -8,6 +8,7 @@ source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 service-backup-set-public-key-encryption-cmd() {
   #E set the GPG Public Key for encrypting backups
   #E dokku $PLUGIN_COMMAND_PREFIX:backup-set-public-key-encryption lollipop
+  #E this method currently requires the <public-key-id> to be present on the keyserver 'keyserver.ubuntu.com'
   #A service, service to run command against
   #A public-key-id, a GPG Public Key ID (or fingerprint) to use for encryption. Must be uploaded to the GPG keyserver beforehand.
   declare desc="set GPG Public Key encryption for all future backups of $PLUGIN_SERVICE service"

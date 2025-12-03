@@ -433,7 +433,7 @@ service_backup_set_encryption() {
   local SERVICE_ROOT="${PLUGIN_DATA_ROOT}/${SERVICE}"
   local SERVICE_BACKUP_ENCRYPTION_ROOT="${SERVICE_ROOT}/backup-encryption/"
 
-  mkdir "$SERVICE_BACKUP_ENCRYPTION_ROOT"
+  mkdir -p "$SERVICE_BACKUP_ENCRYPTION_ROOT"
   echo "$ENCRYPTION_KEY" >"${SERVICE_BACKUP_ENCRYPTION_ROOT}/ENCRYPTION_KEY"
 }
 
@@ -443,7 +443,7 @@ service_backup_set_public_key_encryption() {
   local SERVICE_ROOT="${PLUGIN_DATA_ROOT}/${SERVICE}"
   local SERVICE_BACKUP_ENCRYPTION_ROOT="${SERVICE_ROOT}/backup-encryption/"
 
-  mkdir "$SERVICE_BACKUP_ENCRYPTION_ROOT"
+  mkdir -p "$SERVICE_BACKUP_ENCRYPTION_ROOT"
   echo "$ENCRYPT_WITH_PUBLIC_KEY_ID" >"${SERVICE_BACKUP_ENCRYPTION_ROOT}/ENCRYPT_WITH_PUBLIC_KEY_ID"
 }
 
@@ -461,16 +461,16 @@ service_backup_unset_encryption() {
   local SERVICE_ROOT="${PLUGIN_DATA_ROOT}/${SERVICE}"
   local SERVICE_BACKUP_ENCRYPTION_ROOT="${SERVICE_ROOT}/backup-encryption/"
 
-  rm -rf "$SERVICE_BACKUP_ENCRYPTION_ROOT"
+  rm "$SERVICE_BACKUP_ENCRYPTION_ROOT/ENCRYPTION_KEY"
 }
 
-service_backup_unset_encryption() {
-  declare desc="remove backup encryption"
+service_backup_unset_public_key_encryption() {
+  declare desc="remove backup GPG Public Key encryption"
   declare SERVICE="$1"
   local SERVICE_ROOT="${PLUGIN_DATA_ROOT}/${SERVICE}"
   local SERVICE_BACKUP_ENCRYPTION_ROOT="${SERVICE_ROOT}/backup-encryption/"
 
-  rm -rf "$SERVICE_BACKUP_ENCRYPTION_ROOT"
+  rm "$SERVICE_BACKUP_ENCRYPTION_ROOT/ENCRYPT_WITH_PUBLIC_KEY_ID"
 }
 
 service_container_rm() {
