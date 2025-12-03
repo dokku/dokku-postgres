@@ -23,8 +23,8 @@ postgres:backup-auth <service> <aws-access-key-id> <aws-secret-access-key> <aws-
 postgres:backup-deauth <service>                   # remove backup authentication for the postgres service
 postgres:backup-schedule <service> <schedule> <bucket-name> [--use-iam] # schedule a backup of the postgres service
 postgres:backup-schedule-cat <service>             # cat the contents of the configured backup cronfile for the service
-postgres:backup-set-encryption <service> <passphrase> # set encryption for all future backups of postgres service; public key encryption will take precendence over the passphrase encryption if both types are set.
-postgres:backup-set-public-key-encryption <service> <public-key-id> # set GPG Public Key encryption for all future backups of postgres service; this method currently requires the <public-key-id> to be present on the \"keyserver.ubuntu.com\" keyserver.
+postgres:backup-set-encryption <service> <passphrase> # set encryption for all future backups of postgres service
+postgres:backup-set-public-key-encryption <service> <public-key-id> # set GPG Public Key encryption for all future backups of postgres service
 postgres:backup-unschedule <service>               # unschedule the backup of the postgres service
 postgres:backup-unset-encryption <service>         # unset encryption for future backups of the postgres service
 postgres:backup-unset-public-key-encryption <service> # unset GPG Public Key encryption for future backups of the postgres service
@@ -646,6 +646,10 @@ Datastore backups are supported via AWS S3 and S3 compatible services like [mini
 
 You may skip the `backup-auth` step if your dokku install is running within EC2 and has access to the bucket via an IAM profile. In that case, use the `--use-iam` option with the `backup` command.
 
+If both passphrase and public key forms of encryption are set, the public key encryption will take precedence.
+
+The underlying core backup script is present [here](https://github.com/dokku/docker-s3backup/blob/main/backup.sh).
+
 Backups can be performed using the backup commands:
 
 ### set up authentication for backups on the postgres service
@@ -715,7 +719,7 @@ Restore a backup file (assuming it was extracted via `tar -xf backup.tgz`):
 dokku postgres:import lollipop < backup-folder/export
 ```
 
-### set encryption for all future backups of postgres service; public key encryption will take precendence over the passphrase encryption if both types are set.
+### set encryption for all future backups of postgres service
 
 ```shell
 # usage
@@ -728,7 +732,9 @@ Set the GPG-compatible passphrase for encrypting backups for backups:
 dokku postgres:backup-set-encryption lollipop
 ```
 
-### set GPG Public Key encryption for all future backups of postgres service; this method currently requires the <public-key-id> to be present on the \"keyserver.ubuntu.com\" keyserver.
+Public key encryption will take precendence over the passphrase encryption if both types are set.
+
+### set GPG Public Key encryption for all future backups of postgres service
 
 ```shell
 # usage
@@ -740,6 +746,8 @@ Set the `GPG` Public Key for encrypting backups:
 ```shell
 dokku postgres:backup-set-public-key-encryption lollipop
 ```
+
+This method currently requires the <public-key-id> to be present on the keyserver `keyserver.ubuntu.com`:
 
 ### unset encryption for future backups of the postgres service
 
