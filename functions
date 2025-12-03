@@ -136,6 +136,29 @@ service_create_container() {
   suppress_output "$DOCKER_BIN" container start "$(cat "$SERVICE_ROOT/ID")"
   service_port_reconcile_status "$SERVICE"
 
+  # Ensure container stays running (workaround for postgres 18 init behaviour)
+  dokku_log_verbose_quiet "Ensuring container is running"
+  local START_ATTEMPTS=5
+  local attempt=0
+  local ID_RUNNING
+  while [[ $attempt -lt $START_ATTEMPTS ]]; do
+    ID_RUNNING=$("$DOCKER_BIN" container ps -aq --no-trunc --filter "status=running" --filter "name=^/$SERVICE_NAME$") || true
+    if [[ -n "$ID_RUNNING" ]]; then
+      break
+    fi
+    sleep 1
+    # Try starting the container again in case the init process exited and docker didn't keep it up
+    "$DOCKER_BIN" container start "$(cat "$SERVICE_ROOT/ID")" >/dev/null 2>&1 || true
+    attempt=$((attempt+1))
+  done
+  ID_RUNNING=$("$DOCKER_BIN" container ps -aq --no-trunc --filter "status=running" --filter "name=^/$SERVICE_NAME$") || true
+  if [[ -z "$ID_RUNNING" ]]; then
+    dokku_log_info2_quiet "Start of $SERVICE container output"
+    dokku_container_log_verbose_quiet "$SERVICE_NAME"
+    dokku_log_info2_quiet "End of $SERVICE container output"
+    dokku_log_fail "Failed to start $PLUGIN_SERVICE container $SERVICE"
+  fi
+
   if [[ -n "$(fn-plugin-property-get "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "post-start-network")" ]]; then
     dokku_log_verbose_quiet "Connecting to networks after container start"
     while read -r line || [[ -n "$line" ]]; do
