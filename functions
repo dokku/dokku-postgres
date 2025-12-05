@@ -196,6 +196,17 @@ service_import() {
   "$DOCKER_BIN" container exec -i "$SERVICE_NAME" env PGPASSWORD="$PASSWORD" pg_restore -h localhost -cO --if-exists -d "$DATABASE_NAME" -U postgres -w
 }
 
+service_reset() {
+  local SERVICE="$1"
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
+  local DATABASE_NAME="$(get_database_name "$SERVICE")"
+
+  dokku_log_info2_quiet "Deleting all data in $SERVICE"
+  docker exec "$SERVICE_NAME" su - postgres -c "dropdb $DATABASE_NAME"
+  docker exec "$SERVICE_NAME" su - postgres -c "createdb -E utf8 $DATABASE_NAME"
+  dokku_log_info2 "All $SERVICE data deleted"
+}
+
 service_start() {
   local SERVICE="$1"
   local QUIET="$2"
