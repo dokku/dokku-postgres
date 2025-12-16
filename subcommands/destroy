@@ -24,21 +24,8 @@ service-destroy-cmd() {
 
   [[ -s "$LINKS_FILE" ]] && dokku_log_fail "Cannot delete linked service"
 
-  if [[ "$FORCE_FLAG" == "force" ]] || [[ "$FORCE_FLAG" == "-f" ]] || [[ "$FORCE_FLAG" == "--force" ]]; then
-    DOKKU_APPS_FORCE_DELETE=1
-  fi
-  if [[ -z "$DOKKU_APPS_FORCE_DELETE" ]]; then
-    dokku_log_warn "WARNING: Potentially Destructive Action"
-    dokku_log_warn "This command will destroy $SERVICE $PLUGIN_SERVICE service."
-    dokku_log_warn "To proceed, type \"$SERVICE\""
-    echo ""
-
-    read -rp "> " service_name
-    if [[ "$service_name" != "$SERVICE" ]]; then
-      dokku_log_warn "Confirmation did not match $SERVICE. Aborted."
-      exit 1
-    fi
-  fi
+  local message="This command will destroy $SERVICE $PLUGIN_SERVICE service."
+  prompt_confirmation "$message" "$SERVICE" "$FORCE_FLAG"
 
   dokku_log_info2_quiet "Deleting $SERVICE"
   plugn trigger service-action pre-delete "$PLUGIN_COMMAND_PREFIX" "$SERVICE"
