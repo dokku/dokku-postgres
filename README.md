@@ -214,7 +214,7 @@ dokku postgres:link <service> <app> [--link-flags...]
 
 flags:
 
-- `-a|--alias "BLUE_DATABASE"`: an alternative alias to use for linking to an app via environment variable
+- `-a|--alias "BLUE_DATABASE"`: an alternative alias to use for linking to an app via environment variable. This exposes the database URL as `BLUE_DATABASE_URL` instead of `DATABASE_URL`
 - `-q|--querystring "pool=5"`: ampersand delimited querystring arguments to append to the service link
 - `-n|--no-restart "false"`: whether or not to restart the app on link (default: true)
 
