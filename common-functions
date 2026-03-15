@@ -98,6 +98,18 @@ get_container_ip() {
   "$DOCKER_BIN" container inspect --format '{{ .NetworkSettings.IPAddress }}' "$CONTAINER_ID" 2>/dev/null
 }
 
+service_local_ip() {
+  declare desc="retrieve the current local ip for a service container"
+  declare SERVICE="$1"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local ID="$(cat "$SERVICE_ROOT/ID")"
+
+  "$DOCKER_BIN" container inspect "$ID" >/dev/null 2>&1 || dokku_log_fail "Service container does not exist"
+  is_container_status "$ID" "Running" || dokku_log_fail "Service container is not running"
+
+  get_container_ip "$ID"
+}
+
 get_database_name() {
   declare desc="retrieve a sanitized database name"
   declare SERVICE="$1"

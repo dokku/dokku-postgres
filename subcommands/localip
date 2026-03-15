@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
+
+service-localip-cmd() {
+  #E print the local docker network ip for a running service:
+  #E dokku $PLUGIN_COMMAND_PREFIX:localip lollipop
+  #A service, service to run command against
+  declare desc="print the local docker network ip for a running service"
+  local cmd="$PLUGIN_COMMAND_PREFIX:localip" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
+  declare SERVICE="$1"
+
+  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
+  verify_service_name "$SERVICE"
+  service_local_ip "$SERVICE"
+}
+
+service-localip-cmd "$@"
