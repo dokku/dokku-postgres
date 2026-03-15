@@ -22,6 +22,9 @@ teardown() {
 @test "($PLUGIN_COMMAND_PREFIX:localip) success" {
   local expected_ip
   expected_ip="$(docker inspect "dokku.$PLUGIN_COMMAND_PREFIX.l" -f '{{ .NetworkSettings.IPAddress }}')"
+  if [[ -z "$expected_ip" ]]; then
+    expected_ip="$(docker inspect "dokku.$PLUGIN_COMMAND_PREFIX.l" -f '{{range .NetworkSettings.Networks}}{{println .IPAddress}}{{end}}' | awk 'NF { print; exit }')"
+  fi
 
   run dokku "$PLUGIN_COMMAND_PREFIX:localip" l
   assert_success
