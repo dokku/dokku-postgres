@@ -42,7 +42,6 @@ postgres:link <service> <app> [--link-flags...]    # link the postgres service t
 postgres:linked <service> <app>                    # check if the postgres service is linked to an app
 postgres:links <service>                           # list all apps linked to the postgres service
 postgres:list                                      # list all postgres services
-postgres:localip <service>                         # print the local docker network ip for a running service
 postgres:logs <service> [-t|--tail] <tail-num-optional> # print the most recent log(s) for this service
 postgres:pause <service>                           # pause a running postgres service
 postgres:promote <service> <app>                   # promote service <service> as DATABASE_URL in <app>
