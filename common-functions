@@ -95,7 +95,16 @@ docker_ports_options() {
 get_container_ip() {
   declare desc="retrieve the ip address of a container"
   declare CONTAINER_ID="$1"
-  "$DOCKER_BIN" container inspect --format '{{ .NetworkSettings.IPAddress }}' "$CONTAINER_ID" 2>/dev/null
+  local IP_ADDRESS
+
+  IP_ADDRESS=$("$DOCKER_BIN" container inspect --format '{{ .NetworkSettings.IPAddress }}' "$CONTAINER_ID" 2>/dev/null || true)
+  if [[ -n "$IP_ADDRESS" ]]; then
+    echo "$IP_ADDRESS"
+    return 0
+  fi
+
+  IP_ADDRESS=$("$DOCKER_BIN" container inspect --format '{{range .NetworkSettings.Networks}}{{println .IPAddress}}{{end}}' "$CONTAINER_ID" 2>/dev/null || true)
+  echo "$IP_ADDRESS" | awk 'NF { print; exit }'
 }
 
 get_database_name() {
