@@ -45,6 +45,7 @@ postgres:list                                      # list all postgres services
 postgres:logs <service> [-t|--tail] <tail-num-optional> # print the most recent log(s) for this service
 postgres:pause <service>                           # pause a running postgres service
 postgres:promote <service> <app>                   # promote service <service> as DATABASE_URL in <app>
+postgres:reset <service> [-f|--force]              # delete all data in postgres service
 postgres:restart <service>                         # graceful shutdown and restart of the postgres service container
 postgres:set <service> <key> <value>               # set or clear a property for a service
 postgres:start <service>                           # start a previously stopped postgres service
