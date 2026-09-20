@@ -1,10 +1,9 @@
 ---
 version: 2
 updates:
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "daily"
+  # no docker entry: the image is pinned in the definition under datastore/, which
+  # is generated from the dokku-datastore binary. A bump here would be reverted by
+  # the next `make generate`, so the image is watched where it is actually pinned.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

@@ -7,8 +7,8 @@ setup() {
 }
 
 teardown() {
-  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" ls || true
-  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" lsa || true
+  dokku "$PLUGIN_COMMAND_PREFIX:destroy" ls -f || true
+  dokku "$PLUGIN_COMMAND_PREFIX:destroy" lsa -f || true
   dokku network:destroy --force custom-network
 }
 

@@ -28,6 +28,21 @@ sudo find ./ -maxdepth 1 -type f -exec cp '{}' "$DOKKU_PLUGINS_ROOT/$PLUGIN_COMM
 [[ -d "./scripts" ]] && sudo find ./scripts -maxdepth 1 -type f -exec cp '{}' "$DOKKU_PLUGINS_ROOT/$PLUGIN_COMMAND_PREFIX/scripts" \;
 [[ -d "./subcommands" ]] && sudo find ./subcommands -maxdepth 1 -type f -exec cp '{}' "$DOKKU_PLUGINS_ROOT/$PLUGIN_COMMAND_PREFIX/subcommands" \;
 [[ -d "./templates" ]] && sudo find ./templates -maxdepth 1 -type f -exec cp '{}' "$DOKKU_PLUGINS_ROOT/$PLUGIN_COMMAND_PREFIX/templates" \;
+# recursive rather than the flat copies above, because a definition is a tree: it
+# has a rootfs and a bin below it. Without this the plugin's own definitions are
+# missing under test and the embedded ones answer instead, so an override would
+# work in production and quietly vanish here.
+[[ -d "./datastore" ]] && sudo cp -R ./datastore "$DOKKU_PLUGINS_ROOT/$PLUGIN_COMMAND_PREFIX/"
 sudo mkdir -p "$PLUGIN_CONFIG_ROOT" "$PLUGIN_DATA_ROOT"
 sudo dokku plugin:enable "$PLUGIN_COMMAND_PREFIX"
+
+# stage a locally built dokku-datastore so that an unreleased build can be
+# tested against this plugin, rather than the version pinned in config
+if [[ -n "$DOKKU_DATASTORE_BINARY" ]]; then
+  echo "Staging dokku-datastore from $DOKKU_DATASTORE_BINARY"
+  sudo mkdir -p "$DOKKU_LIB_ROOT/data/$PLUGIN_COMMAND_PREFIX"
+  sudo cp "$DOKKU_DATASTORE_BINARY" "$DOKKU_LIB_ROOT/data/$PLUGIN_COMMAND_PREFIX/dokku-datastore.local"
+  sudo chmod +x "$DOKKU_LIB_ROOT/data/$PLUGIN_COMMAND_PREFIX/dokku-datastore.local"
+fi
+
 sudo dokku plugin:install

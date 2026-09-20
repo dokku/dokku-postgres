@@ -1,36 +1,10 @@
 #!/usr/bin/env bash
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common-functions"
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/functions"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 
 plugin-pre-restore() {
-  declare SCHEDULER="$1" APP="$2"
-  local status
-
-  if [[ "$SCHEDULER" != "docker-local" ]]; then
-    return
-  fi
-
-  for SERVICE in $(fn-services-list false); do
-    if ! in_links_file "$SERVICE" "$APP"; then
-      continue
-    fi
-
-    status="$(service_status "$SERVICE")"
-    if [[ "$status" == "running" ]]; then
-      continue
-    fi
-
-    if [[ "$status" == "restarting" ]]; then
-      dokku_log_warn "$PLUGIN_SERVICE service $SERVICE is restarting and may cause issues with linked app $APP"
-      continue
-    fi
-
-    dokku_log_warn "$PLUGIN_SERVICE service $SERVICE is not running, issuing service start"
-    service_start "$SERVICE"
-  done
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" trigger-pre-restore "$PLUGIN_COMMAND_PREFIX" "$@"
 }
 
 plugin-pre-restore "$@"

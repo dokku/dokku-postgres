@@ -15,11 +15,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  unit-tests-master:
+  unit-tests:
     name: unit-tests
     runs-on: ubuntu-24.04
+    strategy:
+      # both versions are reported, because knowing a change works on one and
+      # not the other is the point of running it against two
+      fail-fast: false
+      matrix:
+        dokku_version:
+          # the version being developed against
+          - master
+          # the oldest dokku that runs on this runner: 0.35.0 is where ubuntu
+          # 24.04 became a supported distribution, and 0.34.9 before it tops
+          # out at 22.04
+          - "0.35.0"
     env:
-      DOKKU_VERSION: master
+      DOKKU_VERSION: ${{ matrix.dokku_version }}
 
     steps:
       - uses: actions/checkout@v7
@@ -34,19 +46,14 @@ jobs:
 
       - run: sudo sysctl -w vm.max_map_count=262144
 
-      - run: |
-          git fetch -q origin master
-          changed=$(git --no-pager diff --name-only $GITHUB_SHA..origin/master)
-          if [ $changed = "Dockerfile" ]; then
-            echo "Please run 'make generate' to update the image version in the README.md"
-          else
-            make generate
-            if ! git diff --quiet README.md; then
-              echo "Please run 'make generate'"
-              git status --short
-              git --no-pager diff README.md
-              exit 1
-            fi
+      - if: matrix.dokku_version == 'master'
+        run: |
+          make generate
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Please run 'make generate'"
+            git status --short
+            git --no-pager diff
+            exit 1
           fi
 
       - run: make test
@@ -54,47 +61,5 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: tmp/test-results
-          path: test-results
-
-  unit-tests-0_19_0:
-    name: unit-tests-0.19.0
-    runs-on: ubuntu-24.04
-    env:
-      DOKKU_TAG: v0.19.0
-
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.13"
-
-      - run: make setup
-
-      - run: sudo sysctl -w vm.max_map_count=262144
-
-      - run: |
-          git fetch -q origin master
-          changed=$(git --no-pager diff --name-only $GITHUB_SHA..origin/master)
-          if [ $changed = "Dockerfile" ]; then
-            echo "Please run 'make generate' to update the image version in the README.md"
-          else
-            make generate
-            if ! git diff --quiet README.md; then
-              echo "Please run 'make generate'"
-              git status --short
-              git --no-pager diff README.md
-              exit 1
-            fi
-          fi
-
-      - run: make test
-
-      - uses: actions/upload-artifact@v7
-        if: failure()
-        with:
-          name: tmp/test-results
+          name: test-results-${{ matrix.dokku_version }}
           path: test-results

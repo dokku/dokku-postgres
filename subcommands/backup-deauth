@@ -2,22 +2,13 @@
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
-source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
-source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-backup-deauth-cmd() {
-  #E remove s3 authentication
-  #E dokku $PLUGIN_COMMAND_PREFIX:backup-deauth lollipop
-  #A service, service to run command against
   declare desc="remove backup authentication for the $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-deauth" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1"
-  is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 
-  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
-  verify_service_name "$SERVICE"
-  service_backup_deauth "$SERVICE"
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" backup-deauth "$PLUGIN_COMMAND_PREFIX" "$@"
 }
 
 service-backup-deauth-cmd "$@"

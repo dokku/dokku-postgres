@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 export DOKKU_LIB_ROOT="/var/lib/dokku"
+export DOKKU_ROOT="${DOKKU_ROOT:-/home/dokku}"
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
 
 flunk() {
@@ -53,9 +54,37 @@ assert_exists() {
   fi
 }
 
+# delete_app_without_unlinking removes an app the way it disappears when this
+# plugin cannot see it go: disabled at the time, or removed outside dokku. The
+# link is left naming an app that is not there.
+delete_app_without_unlinking() {
+  sudo rm -rf "${DOKKU_ROOT:?}/${1:?}"
+}
+
+# clear_links removes a service's links file. A link naming an app that was
+# deleted out from under dokku blocks destroy, so a test that arranges one has
+# to be able to tear it down even on a build where the behaviour it asserts is
+# missing. Without this, one failing test leaves a service no later test can
+# create.
+clear_links() {
+  sudo rm -f "$PLUGIN_DATA_ROOT/${1:?}/LINKS"
+}
+
+assert_not_exists() {
+  if [ -e "$1" ]; then
+    flunk "expected file not to exist: $1"
+  fi
+}
+
 assert_contains() {
   if [[ "$1" != *"$2"* ]]; then
     flunk "expected $2 to be in: $1"
+  fi
+}
+
+assert_not_contains() {
+  if [[ "$1" == *"$2"* ]]; then
+    flunk "expected $2 to not be in: $1"
   fi
 }
 

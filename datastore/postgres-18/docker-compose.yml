@@ -1,0 +1,108 @@
+---
+services:
+  postgres:
+    image: "{{ .Image }}:{{ .ImageVersion }}"
+
+    # the image creates the database and the account from these during its own
+    # initialisation, which is why there is no step afterwards to make them
+    environment:
+      POSTGRES_DB: "{{ .Database }}"
+      POSTGRES_PASSWORD: "{{ .Secret.password }}"
+
+    # ssl is turned on by the server's own options rather than by editing the
+    # configuration file it writes during initialisation. The bash plugin has
+    # to pause the service, patch that file and start it again, because the
+    # file does not exist until the service has run once.
+    command:
+      - postgres
+      - -c
+      - ssl=on
+      - -c
+      - ssl_cert_file=/certs/server.crt
+      - -c
+      - ssl_key_file=/certs/server.key
+      - -c
+      - ssl_ciphers=AES256+EECDH:AES256+EDH
+
+    volumes:
+      # postgres moved its data directory up one level in eighteen
+      - type: bind
+        source: "{{ .HostRoot }}/data"
+        target: /var/lib/postgresql
+      - type: bind
+        source: "{{ .HostRoot }}/certs"
+        target: /certs
+
+    ports:
+      - name: native
+        target: 5432
+        primary: true
+
+x-dokku:
+  plugin: postgres
+  title: Postgres
+  scheme: postgres
+
+  # DATABASE rather than POSTGRES: a linked app gets DATABASE_URL, which is
+  # what postgres, mysql and mariadb all hand over
+  alias: DATABASE
+  alt_alias: DOKKU_POSTGRES
+
+  # the account is the image's own superuser rather than one named for the
+  # service, which is what the bash plugin hands over
+  dsn: "{{ .Scheme }}://postgres:{{ .Secret.password }}@{{ .Host }}:{{ .Port.native }}/{{ .Database }}"
+
+  wait: native
+
+  secrets:
+    password:
+      file: PASSWORD
+      length: 16
+      env: SERVICE_PASSWORD
+
+  hooks:
+    pre_create:
+      # the certificate, made before the service runs rather than after. It is
+      # left alone once it exists, so a service keeps the identity it was
+      # created with rather than being given a new one each time its container
+      # is remade.
+      user: "0"
+      entrypoint: ""
+      volumes:
+        - type: bind
+          source: "{{ .HostRoot }}/certs"
+          target: /certs
+      exec:
+        - sh
+        - -c
+        # postgres refuses to start on a key anyone but its own user can read
+        # the two files change hands, but the directory holding them stays
+        # with dokku: postgres only ever stats the key, and a directory owned
+        # by the server would leave destroy unable to unlink what is inside it
+        - >-
+          test -f /certs/server.key ||
+          (openssl req -new -newkey rsa:4096 -x509 -days 365000 -nodes
+          -out /certs/server.crt -keyout /certs/server.key -batch >/dev/null 2>&1);
+          chown 999:999 /certs/server.key /certs/server.crt &&
+          chmod 600 /certs/server.key && chmod 644 /certs/server.crt
+
+  commands:
+    # the password goes in PGPASSWORD rather than on the command line, which is
+    # what the bash plugin does too
+    connect:
+      exec: ["psql", "-v", "ON_ERROR_STOP=1", "-h", "localhost", "-U", "postgres", "{{ .Database }}"]
+      env:
+        PGPASSWORD: "{{ .Secret.password }}"
+        LANG: C.UTF-8
+        LC_ALL: C.UTF-8
+
+    export:
+      exec: ["pg_dump", "-Fc", "--no-acl", "--no-owner", "-h", "localhost", "-U", "postgres", "-w", "{{ .Database }}"]
+      env:
+        PGPASSWORD: "{{ .Secret.password }}"
+
+    import:
+      stdin: true
+      exec: ["pg_restore", "-h", "localhost", "-cO", "--if-exists", "-d", "{{ .Database }}", "-U", "postgres", "-w"]
+      env:
+        PGPASSWORD: "{{ .Secret.password }}"

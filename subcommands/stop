@@ -2,21 +2,13 @@
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
-source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
-source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-stop-cmd() {
-  #E stop the service and removes the running container
-  #E dokku $PLUGIN_COMMAND_PREFIX:stop lollipop
-  #A service, service to run command against
   declare desc="stop a running $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:stop" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1"
 
-  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
-  verify_service_name "$SERVICE"
-  service_container_rm "$SERVICE"
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" stop "$PLUGIN_COMMAND_PREFIX" "$@"
 }
 
 service-stop-cmd "$@"
