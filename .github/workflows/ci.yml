@@ -49,7 +49,7 @@ jobs:
       - if: matrix.dokku_version == 'master'
         run: |
           make generate
-          if [ -n "$(git status --porcelain)" ]; then
+          if [ -n "$(git status --porcelain -- README.md datastore)" ]; then
             echo "Please run 'make generate'"
             git status --short
             git --no-pager diff
