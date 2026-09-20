@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
-source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/functions"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 
-APP="$1"
-for SERVICE in $(fn-services-list false); do
-  [[ -n "$SERVICE" ]] || continue
-  dokku_log_verbose_quiet "Unlinking from $SERVICE"
-  remove_from_links_file "$(basename "$SERVICE")" "$APP"
-done
+plugin-pre-delete() {
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" trigger-pre-delete "$PLUGIN_COMMAND_PREFIX" "$@"
+}
+
+plugin-pre-delete "$@"

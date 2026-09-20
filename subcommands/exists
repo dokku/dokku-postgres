@@ -2,21 +2,13 @@
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
-source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
-source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-exists-cmd() {
-  #E here we check if the lollipop $PLUGIN_COMMAND_PREFIX service exists.
-  #E dokku $PLUGIN_COMMAND_PREFIX:exists lollipop
-  #A service, service to run command against
   declare desc="check if the $PLUGIN_SERVICE service exists"
   local cmd="$PLUGIN_COMMAND_PREFIX:exists" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1"
 
-  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
-  verify_service_name "$SERVICE"
-  dokku_log_info1 "Service $SERVICE exists"
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" exists "$PLUGIN_COMMAND_PREFIX" "$@"
 }
 
 service-exists-cmd "$@"

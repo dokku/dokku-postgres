@@ -3,7 +3,7 @@ load test_helper
 
 @test "($PLUGIN_COMMAND_PREFIX:destroy) success with --force" {
   dokku "$PLUGIN_COMMAND_PREFIX:create" l
-  run dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l
+  run dokku "$PLUGIN_COMMAND_PREFIX:destroy" l -f
   assert_contains "${lines[*]}" "container deleted: l"
 }
 
@@ -21,10 +21,10 @@ load test_helper
   dokku "$PLUGIN_COMMAND_PREFIX:create" l
   dokku apps:create app
   dokku "$PLUGIN_COMMAND_PREFIX:link" l app
-  run dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l
+  run dokku "$PLUGIN_COMMAND_PREFIX:destroy" l -f
   assert_contains "${lines[*]}" "Cannot delete linked service"
 
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" l app
-  run dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l
+  run dokku "$PLUGIN_COMMAND_PREFIX:destroy" l -f
   assert_contains "${lines[*]}" "container deleted: l"
 }

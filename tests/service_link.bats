@@ -8,9 +8,9 @@ setup() {
 }
 
 teardown() {
-  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" ms
-  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" ls
-  dokku --force apps:destroy my-app
+  dokku "$PLUGIN_COMMAND_PREFIX:destroy" ms -f
+  dokku "$PLUGIN_COMMAND_PREFIX:destroy" ls -f
+  dokku apps:destroy my-app --force
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:link) error when there are no arguments" {

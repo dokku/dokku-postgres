@@ -2,21 +2,13 @@
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
-source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
-source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-unexpose-cmd() {
-  #E unexpose the service, removing access to it from the public interface (0.0.0.0)
-  #E dokku $PLUGIN_COMMAND_PREFIX:unexpose lollipop
-  #A service, service to run command against
   declare desc="unexpose a previously exposed $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:unexpose" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1"
 
-  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
-  verify_service_name "$SERVICE"
-  service_port_unexpose "$SERVICE"
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" unexpose "$PLUGIN_COMMAND_PREFIX" "$@"
 }
 
 service-unexpose-cmd "$@"

@@ -1,11 +1,28 @@
 #!/usr/bin/env bash
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config"
-[[ " help $PLUGIN_COMMAND_PREFIX:help $PLUGIN_COMMAND_PREFIX $PLUGIN_COMMAND_PREFIX:default " == *" $1 "* ]] || [[ "$1" == "$PLUGIN_COMMAND_PREFIX:"* ]] || exit "$DOKKU_NOT_IMPLEMENTED_EXIT"
-source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
+# dokku runs every plugin's commands script for any command it cannot dispatch
+# to a subcommand file, so this bows out before touching anything of ours
+[[ " help $PLUGIN_COMMAND_PREFIX $PLUGIN_COMMAND_PREFIX:default $PLUGIN_COMMAND_PREFIX:help " == *" $1 "* ]] || exit "$DOKKU_NOT_IMPLEMENTED_EXIT"
 
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/help-functions"
+plugin-commands() {
+  declare DOKKU_DATASTORE="${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore"
 
-fn-help "$@"
+  if [[ "$1" == "help" ]]; then
+    # dokku builds its own command listing by asking every plugin in turn, in a
+    # pipeline under set -e, so anything non-zero here takes the listing down for
+    # every other plugin too. plugin:enable also primes that listing before
+    # plugin:install has had the chance to fetch the binary.
+    [[ -x "$DOKKU_DATASTORE" ]] || return 0
+    "$DOKKU_DATASTORE" trigger-help "$PLUGIN_COMMAND_PREFIX" "$@" || true
+    return 0
+  fi
+
+  [[ -x "$DOKKU_DATASTORE" ]] || return "$DOKKU_NOT_IMPLEMENTED_EXIT"
+
+  "$DOKKU_DATASTORE" trigger-help "$PLUGIN_COMMAND_PREFIX" "$@"
+}
+
+plugin-commands "$@"

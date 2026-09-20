@@ -6,7 +6,7 @@ setup() {
 }
 
 teardown() {
-  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" l
+  dokku "$PLUGIN_COMMAND_PREFIX:destroy" l -f
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:clone) error when there are no arguments" {
@@ -33,7 +33,7 @@ teardown() {
   assert_contains "${lines[*]}" "Invalid service name new_service"
   assert_failure
 
-  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" new_service
+  dokku "$PLUGIN_COMMAND_PREFIX:destroy" new_service -f
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:clone) success" {
@@ -43,5 +43,5 @@ teardown() {
   assert_contains "${lines[*]}" "Done"
   assert_success
 
-  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" new_service
+  dokku "$PLUGIN_COMMAND_PREFIX:destroy" new_service -f
 }

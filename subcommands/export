@@ -2,24 +2,13 @@
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
-source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
-source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-export-cmd() {
-  #E by default, datastore output is exported to stdout
-  #E dokku $PLUGIN_COMMAND_PREFIX:export lollipop
-  #E you can redirect this output to a file
-  #E dokku $PLUGIN_COMMAND_PREFIX:export lollipop > data.dump
-  #A service, service to run command against
   declare desc="export a dump of the $PLUGIN_SERVICE service database"
   local cmd="$PLUGIN_COMMAND_PREFIX:export" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1"
-  is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 
-  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
-  verify_service_name "$SERVICE"
-  service_export "$SERVICE"
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" export "$PLUGIN_COMMAND_PREFIX" "$@"
 }
 
 service-export-cmd "$@"

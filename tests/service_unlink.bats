@@ -7,8 +7,8 @@ setup() {
 }
 
 teardown() {
-  dokku --force "$PLUGIN_COMMAND_PREFIX:destroy" ls
-  dokku --force apps:destroy my-app
+  dokku "$PLUGIN_COMMAND_PREFIX:destroy" ls -f
+  dokku apps:destroy my-app --force
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:unlink) error when there are no arguments" {
@@ -37,12 +37,17 @@ teardown() {
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:unlink) removes link from docker-options" {
-  dokku "$PLUGIN_COMMAND_PREFIX:link" ls my-app >&2
-  dokku "$PLUGIN_COMMAND_PREFIX:unlink" ls my-app
+  link_option="--link dokku.$PLUGIN_COMMAND_PREFIX.ls:dokku-$PLUGIN_COMMAND_PREFIX-ls"
 
-  check_value="Docker options build: Docker options deploy: --restart=on-failure:10 Docker options run:"
-  options=$(dokku --quiet docker-options:report my-app | xargs)
-  assert_equal "$options" "$check_value"
+  # the run phase is asked for by name rather than the whole report as json,
+  # because a report format is a newer dokku than this suite runs against
+  dokku "$PLUGIN_COMMAND_PREFIX:link" ls my-app >&2
+  options=$(dokku docker-options:report my-app --docker-options-run)
+  assert_contains "$options" "$link_option"
+
+  dokku "$PLUGIN_COMMAND_PREFIX:unlink" ls my-app
+  options=$(dokku docker-options:report my-app --docker-options-run)
+  assert_not_contains "$options" "$link_option"
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:unlink) unsets config url from app" {

@@ -2,25 +2,13 @@
 source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
-source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
-source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/functions"
 
 service-backup-set-encryption-cmd() {
-  #E set the GPG-compatible passphrase for encrypting backups for backups
-  #E dokku $PLUGIN_COMMAND_PREFIX:backup-set-encryption lollipop
-  #E public key encryption will take precendence over the passphrase encryption if both types are set.
-  #A service, service to run command against
-  #A passphrase, a GPG-compatible passphrase
   declare desc="set encryption for all future backups of $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-set-encryption" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
-  declare SERVICE="$1" PASSPHRASE="$2"
-  is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 
-  [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
-  [[ -z "$PASSPHRASE" ]] && dokku_log_fail "Please specify a GPG backup passphrase"
-  verify_service_name "$SERVICE"
-  service_backup_set_encryption "$SERVICE" "$PASSPHRASE"
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" backup-set-encryption "$PLUGIN_COMMAND_PREFIX" "$@"
 }
 
 service-backup-set-encryption-cmd "$@"

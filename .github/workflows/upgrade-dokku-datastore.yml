@@ -1,0 +1,116 @@
+---
+name: "upgrade-dokku-datastore"
+
+# yamllint disable-line rule:truthy
+on:
+  schedule:
+    # daily, off the hour so it is not queued behind everything that runs at one
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  upgrade:
+    name: upgrade
+    runs-on: ubuntu-24.04
+    env:
+      # a pull request opened with the default GITHUB_TOKEN does not start any
+      # workflow, which would leave the bump with no tests at all. A personal
+      # token is used when the repository has one so that CI runs on what it
+      # opens; without one the pull request still appears, and needs a push or a
+      # reopen to be checked.
+      GH_TOKEN: ${{ secrets.GH_ACCESS_TOKEN || github.token }}
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.GH_ACCESS_TOKEN || github.token }}
+
+      - name: Compare the pinned version with the released one
+        id: versions
+        run: |
+          current="$(make -s datastore-version)"
+          latest="$(gh release view --repo dokku/dokku-datastore --json tagName --jq .tagName)"
+          echo "pinned $current, released $latest"
+
+          {
+            echo "current=$current"
+            echo "latest=$latest"
+            echo "branch=dokku-datastore-$latest"
+          } >>"$GITHUB_OUTPUT"
+
+          # forward only: an unexpected answer must not roll the plugin back to
+          # a release older than the one it already pins
+          newest="$(printf '%s\n%s\n' "$current" "$latest" | sort -V | tail -1)"
+          if [[ "$current" == "$latest" ]] || [[ "$newest" != "$latest" ]]; then
+            echo "upgrade=false" >>"$GITHUB_OUTPUT"
+          else
+            echo "upgrade=true" >>"$GITHUB_OUTPUT"
+          fi
+
+      # any state, so that a bump somebody closed on purpose is not reopened
+      # every morning
+      - name: Check whether this bump has been proposed already
+        id: proposed
+        if: steps.versions.outputs.upgrade == 'true'
+        run: |
+          existing="$(gh pr list --head "$BRANCH" --state all --json number --jq '.[0].number')"
+          if [[ -n "$existing" ]]; then
+            echo "already proposed as #$existing"
+            echo "open=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "open=false" >>"$GITHUB_OUTPUT"
+          fi
+        env:
+          BRANCH: ${{ steps.versions.outputs.branch }}
+
+      - name: Bump the pin and regenerate what it produces
+        id: bump
+        if: steps.versions.outputs.upgrade == 'true' && steps.proposed.outputs.open == 'false'
+        run: |
+          # the whole line is rewritten rather than the version substituted, so
+          # that nothing depends on escaping the dots in the version being right
+          line='export DOKKU_DATASTORE_VERSION="${DOKKU_DATASTORE_VERSION:-'"$LATEST"'}"'
+          sed -i "s|^export DOKKU_DATASTORE_VERSION=.*|$line|" config
+
+          # a sed that matched nothing would otherwise regenerate against the old
+          # binary and open a pull request that changes nothing
+          if [[ "$(make -s datastore-version)" != "$LATEST" ]]; then
+            echo "config still pins $(make -s datastore-version)" >&2
+            exit 1
+          fi
+
+          # the definition this plugin ships and the readme both come from the
+          # binary, so they move with the pin or the drift check fails later
+          make generate
+
+          if git diff --quiet; then
+            echo "nothing changed"
+            echo "changed=false" >>"$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >>"$GITHUB_OUTPUT"
+          fi
+        env:
+          LATEST: ${{ steps.versions.outputs.latest }}
+
+      - name: Open a pull request
+        if: steps.bump.outputs.changed == 'true'
+        run: |
+          git config user.name 'Dokku Bot'
+          git config user.email no-reply@dokku.com
+          git checkout -b "$BRANCH"
+          git add -A
+          git commit --quiet --message "chore: upgrade dokku-datastore to $LATEST"
+          git push --quiet origin "$BRANCH"
+
+          gh pr create \
+            --title "chore: upgrade dokku-datastore to $LATEST" \
+            --body "$(printf '%s\n\n%s' \
+              "Picks up https://github.com/dokku/dokku-datastore/releases/tag/$LATEST." \
+              "The definition this plugin ships and the readme are generated from the binary, so they move with the pin.")"
+        env:
+          BRANCH: ${{ steps.versions.outputs.branch }}
+          LATEST: ${{ steps.versions.outputs.latest }}

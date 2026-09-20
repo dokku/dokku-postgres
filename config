@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 _DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export POSTGRES_IMAGE=${POSTGRES_IMAGE:="$(awk -F '[ :]' '{print $2}' "${_DIR}/Dockerfile")"}
-export POSTGRES_IMAGE_VERSION=${POSTGRES_IMAGE_VERSION:="$(awk -F '[ :]' '{print $3}' "${_DIR}/Dockerfile")"}
 export POSTGRES_ROOT=${POSTGRES_ROOT:="$DOKKU_LIB_ROOT/services/postgres"}
 export DOKKU_LIB_HOST_ROOT=${DOKKU_LIB_HOST_ROOT:=$DOKKU_LIB_ROOT}
 export POSTGRES_HOST_ROOT=${POSTGRES_HOST_ROOT:="$DOKKU_LIB_HOST_ROOT/services/postgres"}
 
-export PLUGIN_UNIMPLEMENTED_SUBCOMMANDS=()
 export PLUGIN_COMMAND_PREFIX="postgres"
 export PLUGIN_CONFIG_ROOT=${PLUGIN_CONFIG_ROOT:="$DOKKU_LIB_ROOT/config/$PLUGIN_COMMAND_PREFIX"}
 export PLUGIN_DATA_ROOT=$POSTGRES_ROOT
@@ -17,6 +14,26 @@ export PLUGIN_DEFAULT_ALIAS="DATABASE"
 export PLUGIN_DISABLE_PULL=${POSTGRES_DISABLE_PULL:=}
 export PLUGIN_DISABLE_PULL_VARIABLE="POSTGRES_DISABLE_PULL"
 export PLUGIN_ALT_ALIAS="DOKKU_POSTGRES"
+# the image this plugin runs is pinned by the definition it ships rather than by
+# a Dockerfile of its own, so that the version documented and the version the
+# services actually run cannot say different things. The newest definition is the
+# one a fresh service gets, which is what these describe.
+#
+# The directory is tested rather than the error suppressed, because this file is
+# sourced by every command and some of them source it with errexit already on: a
+# find over a directory that is not there fails, and under pipefail that failure
+# is the value of the assignment, which would end the command before it started.
+# Sorted by version rather than by name, because plain sort puts a tenth major
+# before a seventh.
+_DEFINITION=""
+if [[ -d "${_DIR}/datastore" ]]; then
+  _DEFINITION="$(find "${_DIR}/datastore" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+fi
+
+if [[ -n "$_DEFINITION" ]]; then
+  export POSTGRES_IMAGE=${POSTGRES_IMAGE:="$(awk -F'[ :]' '/^FROM / {print $2}' "${_DEFINITION}/Dockerfile")"}
+  export POSTGRES_IMAGE_VERSION=${POSTGRES_IMAGE_VERSION:="$(awk -F'[ :]' '/^FROM / {print $3}' "${_DEFINITION}/Dockerfile")"}
+fi
 export PLUGIN_IMAGE=$POSTGRES_IMAGE
 export PLUGIN_IMAGE_VERSION=$POSTGRES_IMAGE_VERSION
 export PLUGIN_SCHEME="postgres"
@@ -28,6 +45,7 @@ if [[ -n $DOKKU_API_VERSION ]]; then
   export PLUGIN_BASE_PATH="$PLUGIN_ENABLED_PATH"
 fi
 
+export DOKKU_DATASTORE_VERSION="${DOKKU_DATASTORE_VERSION:-0.1.42}"
 export PLUGIN_BUSYBOX_IMAGE=${PLUGIN_BUSYBOX_IMAGE:=busybox:1.37.0-uclibc}
 export PLUGIN_AMBASSADOR_IMAGE=${PLUGIN_AMBASSADOR_IMAGE:=dokku/ambassador:0.8.2}
 export PLUGIN_S3BACKUP_IMAGE=${PLUGIN_S3BACKUP_IMAGE:=dokku/s3backup:0.18.0}
