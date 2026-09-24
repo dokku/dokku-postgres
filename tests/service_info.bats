@@ -9,9 +9,10 @@ teardown() {
   dokku "$PLUGIN_COMMAND_PREFIX:destroy" l -f
 }
 
-@test "($PLUGIN_COMMAND_PREFIX:info) error when there are no arguments" {
+@test "($PLUGIN_COMMAND_PREFIX:info) reports every service when there are no arguments" {
   run dokku "$PLUGIN_COMMAND_PREFIX:info"
-  assert_contains "${lines[*]}" "Please specify a valid name for the service"
+  assert_success
+  assert_contains "${lines[*]}" "$PLUGIN_DATA_ROOT/l"
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:info) error when service does not exist" {
