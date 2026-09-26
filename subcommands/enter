@@ -8,7 +8,12 @@ service-enter-cmd() {
   local cmd="$PLUGIN_COMMAND_PREFIX:enter" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
 
-  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" enter "$PLUGIN_COMMAND_PREFIX" "$@"
+  # everything after the service name belongs to the command run in the
+  # container, so it is fenced off from the binary's own flag and help parsing
+  local args=()
+  [[ $# -gt 0 ]] && args=("$1" -- "${@:2}")
+
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" enter "$PLUGIN_COMMAND_PREFIX" "${args[@]}"
 }
 
 service-enter-cmd "$@"
