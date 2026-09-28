@@ -7,8 +7,6 @@ service-links-cmd() {
   declare desc="list all apps linked to the $PLUGIN_SERVICE service"
   local cmd="$PLUGIN_COMMAND_PREFIX:links" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
-  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local LINKS_FILE="$SERVICE_ROOT/LINKS"
 
   "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" links "$PLUGIN_COMMAND_PREFIX" "$@"
 }

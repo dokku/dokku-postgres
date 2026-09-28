@@ -97,12 +97,18 @@ x-dokku:
         LC_ALL: C.UTF-8
 
     export:
+      extra_args: true
       exec: ["pg_dump", "-Fc", "--no-acl", "--no-owner", "-h", "localhost", "-U", "postgres", "-w", "{{ .Database }}"]
       env:
         PGPASSWORD: "{{ .Secret.password }}"
 
     import:
+      extra_args: true
       stdin: true
       exec: ["pg_restore", "-h", "localhost", "-cO", "--if-exists", "-d", "{{ .Database }}", "-U", "postgres", "-w"]
       env:
         PGPASSWORD: "{{ .Secret.password }}"
+
+  # the templates every new database is copied from. postgres is left out: it
+  # is only the default database, and a service named after it works
+  reserved_names: [template0, template1]

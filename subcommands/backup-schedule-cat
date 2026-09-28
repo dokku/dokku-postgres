@@ -4,7 +4,7 @@ set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 
 service-backup-schedule-cat-cmd() {
-  declare desc="cat the contents of the configured backup cronfile for the service"
+  declare desc="cat the crontab line of the scheduled backup for the service"
   local cmd="$PLUGIN_COMMAND_PREFIX:backup-schedule-cat" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
 

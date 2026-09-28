@@ -34,9 +34,9 @@ postgres:create <service> [--create-flags...]      # create a Postgres service
 postgres:destroy <service> [-f|--force]            # delete the Postgres service/data/container if there are no links left
 postgres:enter <service>                           # enter or run a command in a running Postgres service container
 postgres:exists <service>                          # check if the Postgres service exists
-postgres:export <service>                          # export a dump of the Postgres service database
+postgres:export <service> [-f|--file <path>] [--force] [-- <export-args...>] # export a dump of the Postgres service database
 postgres:expose <service> <ports...>               # expose a Postgres service on custom host:port if provided (random port on the 0.0.0.0 interface if otherwise unspecified)
-postgres:import <service> [-f|--file <path>]       # import a dump into the Postgres service database
+postgres:import <service> [-f|--file <path>] [-- <import-args...>] # import a dump into the Postgres service database
 postgres:info [<service>] [--info-flags...]        # print the service information
 postgres:link <service> [<app>] [--link-flags...]  # link the Postgres service to the app
 postgres:linked <service> [<app>]                  # check if the Postgres service is linked to an app
@@ -46,6 +46,7 @@ postgres:logs <service> [-t|--tail [<tail-num>]]   # print the most recent log(s
 postgres:mount [--replace] <service> <source:container-dir[:options]>... # mount a host path or docker volume into the service container
 postgres:pause <service>                           # pause a running Postgres service
 postgres:promote <service> [<app>]                 # promote service <service> as DATABASE_URL in <app>
+postgres:reexpose <service>                        # reexpose a Postgres service, applying its expose settings without restarting it
 postgres:restart <service>                         # graceful shutdown and restart of the Postgres service container
 postgres:set <service> <key> <value>               # set or clear a property for a service
 postgres:start <service>                           # start a previously stopped Postgres service
@@ -79,13 +80,14 @@ flags:
 - `--log-driver <string>`: the docker logging driver to run the service container with (default: the daemon's own)
 - `--log-opt <strings>`: a comma-separated list of key=value docker log options for the service container
 - `-m|--memory <int>`: container memory limit in megabytes (default: unlimited)
-- `-p|--password <string>`: override the user-level service password
+- `-p|--password <string>`: override the user-level service password, for datastores that have one
 - `-P|--post-create-network <strings>`: a comma-separated list of networks to attach the service container to after service creation
 - `-S|--post-start-network <strings>`: a comma-separated list of networks to attach the service container to after service start
 - `--restart <string>`: the docker restart policy to run the service container with (default: always)
-- `-r|--root-password <string>`: override the root-level service password
+- `-r|--root-password <string>`: override the root-level service password, for datastores that have one
 - `-s|--shm-size <string>`: override shared memory size for the service docker container
 - `--volume <stringArray>`: a host path or docker volume to mount into the service container, as <source>:<container-dir>[:<options>], repeatable
+- `--wait-timeout <string>`: seconds to wait for the service to become ready (default: the datastore's own)
 
 Create a postgres service named lollipop:
 
@@ -126,10 +128,22 @@ The container is restarted by docker whenever it stops, which a service may chan
 dokku postgres:create lollipop --restart unless-stopped
 ```
 
+The service is waited on until it answers, for as long as the datastore's own default, which a slow host may raise for every service with `POSTGRES_WAIT_TIMEOUT` or a service may raise for itself.
+
+```shell
+dokku postgres:create lollipop --wait-timeout 120
+```
+
 The config options are handed to the process the container runs, not to docker, so a host path or docker volume is mounted with --volume, which may be repeated.
 
 ```shell
 dokku postgres:create lollipop --volume /var/lib/dokku/data/storage/lollipop:/opt/extra:ro
+```
+
+The service passwords are generated unless they are given. A datastore without a root password refuses --root-password rather than dropping it.
+
+```shell
+dokku postgres:create lollipop --password <password> --root-password <root-password>
 ```
 
 Official Postgres "$DOCKER_BIN" image ls does not include postgis extension (amongst others). The following example creates a new postgres service using `postgis/postgis:13-3.1` image, which includes the `postgis` extension.
@@ -175,12 +189,17 @@ dokku postgres:info [<service>] [--info-flags...]
 flags:
 
 - `--backend`: show the execution backend the service was created with
+- `--backup-auth-fingerprint`: show a sha256 fingerprint of the stored backup access key id and secret
 - `--backup-authenticated`: show whether backup credentials are stored for the service
 - `--backup-bucket`: show the bucket scheduled backups are shipped to
+- `--backup-default-region`: show the region backups authenticate against
 - `--backup-encrypted`: show whether scheduled backups are encrypted with a passphrase
+- `--backup-encryption-fingerprint`: show a sha256 fingerprint of the stored backup passphrase
+- `--backup-endpoint-url`: show the s3-compatible endpoint backups are shipped to
 - `--backup-keyserver`: show the keyserver backup public keys are fetched from
 - `--backup-public-key-id`: show the gpg public key id backups are encrypted with
 - `--backup-schedule`: show the cron schedule backups run on
+- `--backup-signature-version`: show the signature version backups authenticate with
 - `--backup-use-iam`: show whether scheduled backups authenticate with an instance role
 - `--config-dir`: show the service configuration directory
 - `--config-options`: show the config options the service container is run with
@@ -189,10 +208,14 @@ flags:
 - `--database-name`: show the name of the database inside the service
 - `--definition`: show the definition the service was created with
 - `--dsn`: show the service DSN
+- `--export-args`: show the extra arguments every export of the service is run with
+- `--expose-address`: show the address exposed ports without one of their own are published on
+- `--expose-source-range`: show the only range of client addresses the exposed ports accept
 - `--exposed-ports`: show service exposed ports
 - `--id`: show the service container id
 - `--image`: show the image the service runs
 - `--image-version`: show the image version the service was created with
+- `--import-args`: show the extra arguments every import into the service is run with
 - `--initial-network`: show the initial network being connected to
 - `--internal-ip`: show the service internal ip
 - `--links`: show the service app links
@@ -208,6 +231,7 @@ flags:
 - `--shm-size`: show the shared memory size the service container is run with
 - `--status`: show the service running status
 - `--version`: show the service image version
+- `--wait-timeout`: show the seconds the service is waited on to become ready
 
 Get connection information as follows:
 
@@ -241,6 +265,20 @@ The properties postgres:set writes are reported under the names it takes, so a v
 
 ```shell
 dokku postgres:set lollipop initial-network my-network
+```
+
+The stored backup credentials and passphrase are never printed. Each is reported as a lowercase hex sha256 fingerprint of the stored value, with surrounding whitespace trimmed, so a copy of the values can be compared against it:
+
+```shell
+dokku postgres:info lollipop --backup-auth-fingerprint
+dokku postgres:info lollipop --backup-encryption-fingerprint
+```
+
+The same fingerprints can be computed from the values that were passed to backup-auth and backup-set-encryption:
+
+```
+printf '%s\n%s' "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" | sha256sum
+printf '%s' "$PASSPHRASE" | sha256sum
 ```
 
 ### list all Postgres services
@@ -294,9 +332,9 @@ dokku postgres:link <service> [<app>] [--link-flags...]
 
 flags:
 
-- `-a|--alias <string>`: an alternative alias to use for the config url exported to the app
+- `-a|--alias <string>`: the prefix of the config variable the service url is set as on the app, which is suffixed with _URL
 - `-n|--no-restart`: whether to skip restarting the app
-- `-q|--querystring <string>`: ampersand delimited querystring arguments to append to the service url
+- `-q|--querystring <string>`: ampersand delimited querystring arguments to append to the service url after a ?
 
 A postgres service can be linked to a container. This will use native docker links via the docker-options plugin. Here we link it to our `playground` app.
 
@@ -327,6 +365,30 @@ The host exposed here only works internally in docker containers. If you want yo
 
 ```shell
 dokku postgres:link other_service playground
+```
+
+The url can be set under another name with the `--alias` flag. The value given is the prefix of the config variable, which is suffixed with `_URL` and holds the same url:
+
+```shell
+dokku postgres:link lollipop playground --alias BLUE_DATABASE
+```
+
+This will set the following on the linked application instead of `DATABASE_URL`:
+
+```
+BLUE_DATABASE_URL=postgres://:SOME_PASSWORD@dokku-postgres-lollipop:5432
+```
+
+An alias whose variable is already set on the app is refused, and unlink removes the variable whatever alias it was set under. Arguments can be appended to the url as a querystring with the `--querystring` flag:
+
+```shell
+dokku postgres:link lollipop playground --querystring "foo=bar&baz=qux"
+```
+
+This will cause `DATABASE_URL` to be set as:
+
+```
+postgres://:SOME_PASSWORD@dokku-postgres-lollipop:5432?foo=bar&baz=qux
 ```
 
 It is possible to change the protocol for `DATABASE_URL` by setting the environment variable `POSTGRES_DATABASE_SCHEME` on the app. Doing so after linking means unlink no longer finds the variable it set, and leaves it in place, so we advise you to unlink before proceeding.
@@ -424,7 +486,62 @@ Go back to always restarting the container:
 dokku postgres:set lollipop restart-policy
 ```
 
+Wait up to two minutes for the service to answer, used the next time it is started:
+
+```shell
+dokku postgres:set lollipop wait-timeout 120
+```
+
+Go back to the wait timeout the host or the datastore sets:
+
+```shell
+dokku postgres:set lollipop wait-timeout
+```
+
+Publish exposed ports that have no address of their own on one address rather than on every interface:
+
+```shell
+dokku postgres:set lollipop expose-address 10.0.0.5
+```
+
+Only accept connections to the exposed ports from clients in one `IP` address or `CIDR`:
+
+```shell
+dokku postgres:set lollipop expose-source-range 10.0.0.0/8
+```
+
+Go back to accepting every client:
+
+```shell
+dokku postgres:set lollipop expose-source-range
+```
+
+Pass extra arguments to every export of the service, including the ones backups and clones make. The value follows -- so that its leading dash is not read as a flag, and an argument with a space in it is quoted:
+
+```shell
+dokku postgres:set lollipop export-args -- "<export-args...>"
+```
+
+Go back to exporting with the datastore's own arguments alone:
+
+```shell
+dokku postgres:set lollipop export-args
+```
+
+Pass extra arguments to every import into the service, including the one a clone makes:
+
+```shell
+dokku postgres:set lollipop import-args -- "<import-args...>"
+```
+
+Go back to importing with the datastore's own arguments alone:
+
+```shell
+dokku postgres:set lollipop import-args
+```
+
 > NOTE: a log setting or a restart policy reaches the container the next time one is built. postgres:restart keeps the container it has, so use postgres:stop and then postgres:start on a service that is already running.
+> NOTE: an expose-address or expose-source-range reaches an exposed service with postgres:reexpose, which replaces the container publishing its ports and leaves the service container running.
 
 ### mount a host path or docker volume into the service container
 
@@ -436,10 +553,10 @@ dokku postgres:mount [--replace] <service> <source:container-dir[:options]>...
 flags:
 
 - `--replace`: replace the service's entire set of mounts with the ones given
-- `--volume-chown <string>`: a chown option, recorded but not applied; not valid with --replace
+- `--volume-chown <string>`: who to hand the mounted directory to, for a host path inside the service's directory; not valid with --replace
 - `--volume-options <string>`: comma-separated docker mount options, such as z or nocopy; not valid with --replace
 - `--volume-readonly`: mount the volume read only; not valid with --replace
-- `--volume-subpath <string>`: a subpath within the source, recorded but not applied; not valid with --replace
+- `--volume-subpath <string>`: a subpath within the source to mount rather than the source itself; not valid with --replace
 
 Mount a host directory into the service container:
 
@@ -447,10 +564,22 @@ Mount a host directory into the service container:
 dokku postgres:mount lollipop /var/lib/dokku/data/storage/lollipop:/opt/extra
 ```
 
-The source is an absolute host path, which must already exist, or the name of a docker volume. Options follow a second colon: ro or rw, docker's own mount options, and volume-subpath=<path> and volume-chown=<option>, which are recorded but not applied:
+The source is an absolute host path, which must already exist, or the name of a docker volume. Options follow a second colon: ro or rw, docker's own mount options, volume-subpath=<path> and volume-chown=<option>:
 
 ```shell
 dokku postgres:mount lollipop /var/lib/dokku/data/storage/lollipop:/opt/extra:ro,z
+```
+
+A subpath mounts a directory within the source rather than the source itself. A docker volume mounted from a subpath needs Docker Engine 26.0 or newer, and takes no mount option but nocopy.
+
+```shell
+dokku postgres:mount lollipop my-volume:/opt/extra:volume-subpath=uploads
+```
+
+A chown hands the mounted directory to a user before the container is made: herokuish, heroku, paketo, root or a uid. It is only taken for a host path inside the service's own directory.
+
+```shell
+dokku postgres:mount lollipop /var/lib/dokku/services/postgres/lollipop/extra:/opt/extra:volume-chown=heroku
 ```
 
 The same can be said with flags instead:
@@ -563,6 +692,14 @@ Expose the service on the service's normal ports, with the first on a specified 
 dokku postgres:expose lollipop 127.0.0.1:5432
 ```
 
+Expose the service on random ports on a single address, and only to clients in one network:
+
+```shell
+dokku postgres:set lollipop expose-address 10.0.0.5
+dokku postgres:set lollipop expose-source-range 10.0.0.0/8
+dokku postgres:expose lollipop
+```
+
 ### unexpose a previously exposed Postgres service
 
 ```shell
@@ -576,6 +713,22 @@ Unexpose the service, removing access to it from the public interface (`0.0.0.0`
 dokku postgres:unexpose lollipop
 ```
 
+### reexpose a Postgres service, applying its expose settings without restarting it
+
+```shell
+# usage
+dokku postgres:reexpose <service>
+```
+
+Apply a changed expose-address or expose-source-range to an exposed service, on the ports it is already exposed on:
+
+```shell
+dokku postgres:set lollipop expose-source-range 10.0.0.0/8
+dokku postgres:reexpose lollipop
+```
+
+> NOTE: only the container publishing the service's ports is replaced, so the service keeps running, though connections made through the exposed ports are dropped. A service that is not exposed, or is not running, is refused.
+
 ### promote service <service> as DATABASE_URL in <app>
 
 ```shell
@@ -586,7 +739,7 @@ dokku postgres:promote <service> [<app>]
 If you have a postgres service linked to an app and try to link another postgres service another link environment variable will be generated automatically:
 
 ```
-DOKKU_DATABASE_BLUE_URL=postgres://:ANOTHER_PASSWORD@dokku-postgres-other-service:5432/other_service
+DOKKU_POSTGRES_AQUA_URL=postgres://:ANOTHER_PASSWORD@dokku-postgres-other-service:5432/other_service
 ```
 
 You can promote the new service to be the primary one:
@@ -601,8 +754,8 @@ This will replace `DATABASE_URL` with the url from other_service and generate an
 
 ```
 DATABASE_URL=postgres://:ANOTHER_PASSWORD@dokku-postgres-other-service:5432/other_service
-DOKKU_DATABASE_BLUE_URL=postgres://:ANOTHER_PASSWORD@dokku-postgres-other-service:5432/other_service
-DOKKU_DATABASE_SILVER_URL=postgres://:SOME_PASSWORD@dokku-postgres-lollipop:5432/lollipop
+DOKKU_POSTGRES_AQUA_URL=postgres://:ANOTHER_PASSWORD@dokku-postgres-other-service:5432/other_service
+DOKKU_POSTGRES_BLACK_URL=postgres://:SOME_PASSWORD@dokku-postgres-lollipop:5432/lollipop
 ```
 
 ### start a previously stopped Postgres service
@@ -675,12 +828,14 @@ flags:
 - `-N|--initial-network <string>`: the initial network to attach the service to
 - `--log-driver <string>`: the docker logging driver to run the service container with (default: the daemon's own)
 - `--log-opt <strings>`: a comma-separated list of key=value docker log options for the service container
+- `-m|--memory <int>`: container memory limit in megabytes, 0 for unlimited
 - `-P|--post-create-network <strings>`: a comma-separated list of networks to attach the service container to after service creation
 - `-S|--post-start-network <strings>`: a comma-separated list of networks to attach the service container to after service start
 - `--restart <string>`: the docker restart policy to run the service container with (default: always)
 - `-R|--restart-apps`: whether to stop and start the linked apps around the upgrade
 - `-s|--shm-size <string>`: override shared memory size for the service docker container
 - `--volume <stringArray>`: a host path or docker volume to mount into the service container, as <source>:<container-dir>[:<options>], repeatable
+- `--wait-timeout <string>`: seconds to wait for the service to become ready (default: the datastore's own)
 
 You can upgrade an existing service to a new image or image-version:
 
@@ -698,6 +853,12 @@ Moving across a major version has to be asked for by name, because it is not a t
 
 ```shell
 dokku postgres:upgrade lollipop --volume /var/lib/dokku/data/storage/lollipop:/opt/extra:ro
+```
+
+A service keeps its memory limit unless --memory is passed, and --memory 0 removes it.
+
+```shell
+dokku postgres:upgrade lollipop --memory 512
 ```
 
 Postgres does not handle upgrading data for major versions automatically (eg. 11 => 12). Upgrades should be done manually. Users are encouraged to upgrade to the latest minor release for their postgres version before performing a major upgrade.
@@ -763,13 +924,14 @@ flags:
 - `--log-driver <string>`: the docker logging driver to run the service container with (default: the daemon's own)
 - `--log-opt <strings>`: a comma-separated list of key=value docker log options for the service container
 - `-m|--memory <int>`: container memory limit in megabytes (default: unlimited)
-- `-p|--password <string>`: override the user-level service password
+- `-p|--password <string>`: override the user-level service password, for datastores that have one
 - `-P|--post-create-network <strings>`: a comma-separated list of networks to attach the service container to after service creation
 - `-S|--post-start-network <strings>`: a comma-separated list of networks to attach the service container to after service start
 - `--restart <string>`: the docker restart policy to run the service container with (default: always)
-- `-r|--root-password <string>`: override the root-level service password
+- `-r|--root-password <string>`: override the root-level service password, for datastores that have one
 - `-s|--shm-size <string>`: override shared memory size for the service docker container
 - `--volume <stringArray>`: a host path or docker volume to mount into the service container, as <source>:<container-dir>[:<options>], repeatable
+- `--wait-timeout <string>`: seconds to wait for the service to become ready (default: the datastore's own)
 
 You can clone an existing service to a new one:
 
@@ -783,7 +945,11 @@ The new service starts from the settings of the one it copies: its config option
 dokku postgres:clone lollipop lollipop-2 --restart no --custom-env ""
 ```
 
-The password, exposed ports, links and backup credentials, schedule and encryption are not copied.
+The password, exposed ports, links and backup credentials, schedule and encryption are not copied. The clone's passwords are generated unless they are given.
+
+```shell
+dokku postgres:clone lollipop lollipop-2 --password <password>
+```
 
 ### check if the Postgres service exists
 
@@ -834,7 +1000,7 @@ The underlying service data can be imported and exported with the following comm
 
 ```shell
 # usage
-dokku postgres:import <service> [-f|--file <path>]
+dokku postgres:import <service> [-f|--file <path>] [-- <import-args...>]
 ```
 
 flags:
@@ -853,12 +1019,29 @@ A dump that is already on the dokku host can be imported with --file. The path i
 dokku postgres:import lollipop --file /var/lib/dokku/data/storage/data.dump
 ```
 
+Arguments after -- are passed to the tool that loads the dump, in place of the import-args property:
+
+```shell
+dokku postgres:import lollipop -- <import-args...> < data.dump
+```
+
+The import-args property holds the arguments every import into the service is made with, a clone's included:
+
+```shell
+dokku postgres:set lollipop import-args -- "<import-args...>"
+```
+
 ### export a dump of the Postgres service database
 
 ```shell
 # usage
-dokku postgres:export <service>
+dokku postgres:export <service> [-f|--file <path>] [--force] [-- <export-args...>]
 ```
+
+flags:
+
+- `-f|--file <string>`: a file on the dokku host to export to instead of writing stdout
+- `--force`: replace the file named with --file if it already exists
 
 By default, datastore output is exported to stdout:
 
@@ -870,6 +1053,30 @@ You can redirect this output to a file:
 
 ```shell
 dokku postgres:export lollipop > data.dump
+```
+
+A dump can be written to a file on the dokku host with --file. The path is on the dokku host, not on the machine running ssh.
+
+```shell
+dokku postgres:export lollipop --file /var/lib/dokku/data/storage/data.dump
+```
+
+A file that already exists is not overwritten unless --force is given:
+
+```shell
+dokku postgres:export lollipop --file /var/lib/dokku/data/storage/data.dump --force
+```
+
+Arguments after -- are passed to the tool that makes the dump, in place of the export-args property:
+
+```shell
+dokku postgres:export lollipop -- <export-args...>
+```
+
+The export-args property holds the arguments every export, backup and clone of the service is made with:
+
+```shell
+dokku postgres:set lollipop export-args -- "<export-args...>"
 ```
 
 Note that the export will result in a file containing the binary postgres export data. It can be converted to plain text using `pg_restore` as follows
@@ -900,6 +1107,8 @@ dokku postgres:backup-auth <service> <aws-access-key-id> <aws-secret-access-key>
 ```
 
 Setup s3 backup authentication:
+
+> NOTE: each call replaces the stored credentials as a whole, so a region, signature version or endpoint url that is not passed is removed
 
 ```shell
 dokku postgres:backup-auth lollipop AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
@@ -1071,6 +1280,28 @@ Remove the scheduled backup from the dokku crontab:
 ```shell
 dokku postgres:backup-unschedule lollipop
 ```
+
+### Limiting where and to whom a service is exposed
+
+An exposed service's ports are published on every interface unless they are given an address of their own. To publish them on one address instead, set the service's `expose-address` property with `dokku postgres:set`, and to accept connections only from clients in one IP address or CIDR, set its `expose-source-range` property. Either reaches a running service with `dokku postgres:reexpose`, which leaves the service running.
+
+Only one source range can be given. The range is checked against the address a connection reaches the service from, which for a connection to the exposed port on the loopback interface, or an IPv6 connection to a service network without IPv6, is the docker network's gateway rather than the client, so with a range that leaves the gateway out, connecting to `127.0.0.1` from the dokku host itself is refused.
+
+### Passing extra arguments to export and import
+
+Arguments given to `export` or `import` after `--` are appended to the ones the datastore's own tool is run with, for that run alone. To use them every time, set the service's `export-args` or `import-args` property with `dokku postgres:set`, giving the value after `--` so that its leading dash is not read as a flag. The property is split the way a shell would split it, so an argument with a space in it is quoted, and a variable in it is refused rather than expanded.
+
+Arguments given after `--` replace the property rather than adding to it. Backups and clones are made with the property, and a clone is given the source's.
+
+### Waiting for a service to become ready
+
+A service is waited on until it answers on its port after it is created, cloned, started, restarted, upgraded or exposed. If it takes longer than that to start - on a slow host, or with an image that does more on its first boot - the command fails with `ERROR: unable to connect`.
+
+To wait longer for every postgres service on the host, set the `POSTGRES_WAIT_TIMEOUT` environment variable to a number of seconds. To wait longer for a single service, set its `wait-timeout` property with `dokku postgres:set` or pass `--wait-timeout` to `create`, `clone` or `upgrade`. The service's own setting is used first, then the environment variable, then the datastore's default.
+
+### Reserved service names
+
+A service's database is named after the service, with hyphens replaced by underscores. So that an app is never handed a database Postgres keeps for itself, `dokku postgres:create` and `dokku postgres:clone` refuse a name that is, or whose database would be, one of `template0`, `template1`, in any case. A service that already has such a name is not affected.
 
 ### Disabling `docker image pull` calls
 

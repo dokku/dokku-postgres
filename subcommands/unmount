@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+
+service-unmount-cmd() {
+  declare desc="remove one or all mounts from the service container"
+  local cmd="$PLUGIN_COMMAND_PREFIX:unmount" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
+
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" unmount "$PLUGIN_COMMAND_PREFIX" "$@"
+}
+
+service-unmount-cmd "$@"
