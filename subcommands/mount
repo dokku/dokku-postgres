@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+
+service-mount-cmd() {
+  declare desc="mount a host path or docker volume into the service container"
+  local cmd="$PLUGIN_COMMAND_PREFIX:mount" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
+
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" mount "$PLUGIN_COMMAND_PREFIX" "$@"
+}
+
+service-mount-cmd "$@"

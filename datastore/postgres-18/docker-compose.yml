@@ -18,9 +18,9 @@ services:
       - -c
       - ssl=on
       - -c
-      - ssl_cert_file=/certs/server.crt
+      - "ssl_cert_file={{ .Target.certs }}/server.crt"
       - -c
-      - ssl_key_file=/certs/server.key
+      - "ssl_key_file={{ .Target.certs }}/server.key"
       - -c
       - ssl_ciphers=AES256+EECDH:AES256+EDH
 
@@ -86,6 +86,41 @@ x-dokku:
           chown 999:999 /certs/server.key /certs/server.crt &&
           chmod 600 /certs/server.key && chmod 644 /certs/server.crt
 
+  # the certificate the server was started with, so that a client off the host
+  # can verify it is talking to this service. Read from the running container
+  # rather than the host, which keeps it following a moved certs volume
+  custom_commands:
+    certificate:
+      description: print the certificate the {{.Title}} service encrypts connections with
+      documentation: |
+        print the certificate the {{.Title}} service encrypts connections with
+        > NOTE: the service must be running
+        dokku {{.CommandPrefix}}:certificate lollipop
+        save it to verify the server from a client off the host
+        dokku {{.CommandPrefix}}:certificate lollipop > server.crt
+      exec: ["cat", "{{ .Target.certs }}/server.crt"]
+
+  # written the way a command's documentation is: every sentence ends in a
+  # period, since prose lines run together, and inline code is quoted
+  documentation:
+    - title: Encrypting connections with TLS
+      body: |
+        every {{.Title}} service is created with a self-signed certificate, and the server encrypts any connection whose client asks it to.
+        the certificate and its key are kept in '/var/lib/dokku/services/{{.CommandPrefix}}/lollipop/certs', and are kept when the service is rebuilt or upgraded.
+        clients such as psql ask for an encrypted connection by default, but fall back to an unencrypted one when the server does not offer it.
+        to refuse an unencrypted connection instead, add 'sslmode=require' to the dsn the service is exposed at:
+        dokku {{.CommandPrefix}}:info lollipop --exposed-dsn
+            postgres://postgres:PASSWORD@db.example.com:5432/lollipop?sslmode=require
+        to also check that the client is talking to this service, save its certificate and have the client verify the server with it.
+        the certificate names no host, so 'sslmode=verify-ca' works where 'sslmode=verify-full' does not:
+        dokku {{.CommandPrefix}}:certificate lollipop > server.crt
+            postgres://postgres:PASSWORD@db.example.com:5432/lollipop?sslmode=verify-ca&sslrootcert=server.crt
+        to use a certificate of your own, write it and its key over the ones the service was created with as root, and restart the service.
+        writing over the files rather than replacing them keeps the owner and mode the server needs to read its key:
+            sudo sh -c 'cat server.crt > /var/lib/dokku/services/{{.CommandPrefix}}/lollipop/certs/server.crt'
+            sudo sh -c 'cat server.key > /var/lib/dokku/services/{{.CommandPrefix}}/lollipop/certs/server.key'
+        dokku {{.CommandPrefix}}:restart lollipop
+
   commands:
     # the password goes in PGPASSWORD rather than on the command line, which is
     # what the bash plugin does too
@@ -97,12 +132,18 @@ x-dokku:
         LC_ALL: C.UTF-8
 
     export:
+      extra_args: true
       exec: ["pg_dump", "-Fc", "--no-acl", "--no-owner", "-h", "localhost", "-U", "postgres", "-w", "{{ .Database }}"]
       env:
         PGPASSWORD: "{{ .Secret.password }}"
 
     import:
+      extra_args: true
       stdin: true
       exec: ["pg_restore", "-h", "localhost", "-cO", "--if-exists", "-d", "{{ .Database }}", "-U", "postgres", "-w"]
       env:
         PGPASSWORD: "{{ .Secret.password }}"
+
+  # the templates every new database is copied from. postgres is left out: it
+  # is only the default database, and a service named after it works
+  reserved_names: [template0, template1]

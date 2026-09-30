@@ -1,4 +1,7 @@
 ---
+# postgres with the postgis extension, on the image postgis publishes. It is a
+# definition of its own so that the image is followed by dependabot and a bare
+# upgrade has a newest postgis to move to
 services:
   postgres:
     image: "{{ .Image }}:{{ .ImageVersion }}"
@@ -25,11 +28,10 @@ services:
       - ssl_ciphers=AES256+EECDH:AES256+EDH
 
     volumes:
-      # where postgres kept its data before eighteen, which is the whole
-      # reason this line has a definition of its own
+      # postgres moved its data directory up one level in eighteen
       - type: bind
         source: "{{ .HostRoot }}/data"
-        target: /var/lib/postgresql/data
+        target: /var/lib/postgresql
       - type: bind
         source: "{{ .HostRoot }}/certs"
         target: /certs

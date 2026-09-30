@@ -1,4 +1,8 @@
 ---
+# postgres with the timescaledb extension, on the image timescale publishes. It
+# is a definition of its own because its tags write the major as pg17 rather
+# than leading with it, and because the image is alpine rather than debian:
+# its postgres user is 70 and it ships no openssl
 services:
   postgres:
     image: "{{ .Image }}:{{ .ImageVersion }}"
@@ -25,11 +29,10 @@ services:
       - ssl_ciphers=AES256+EECDH:AES256+EDH
 
     volumes:
-      # where postgres kept its data before eighteen, which is the whole
-      # reason this line has a definition of its own
+      # postgres moved its data directory up one level in eighteen
       - type: bind
         source: "{{ .HostRoot }}/data"
-        target: /var/lib/postgresql/data
+        target: /var/lib/postgresql
       - type: bind
         source: "{{ .HostRoot }}/certs"
         target: /certs
@@ -67,6 +70,12 @@ x-dokku:
       # left alone once it exists, so a service keeps the identity it was
       # created with rather than being given a new one each time its container
       # is remade.
+      #
+      # made in the plain postgres image rather than the service's, because
+      # the timescaledb image ships no openssl. Any postgres image would do;
+      # this one is kept to the tag the postgres-18 definition pins, which a
+      # test holds it to, so a host running both pulls one image rather than two
+      image: postgres:18.6
       user: "0"
       entrypoint: ""
       volumes:
@@ -76,7 +85,8 @@ x-dokku:
       exec:
         - sh
         - -c
-        # postgres refuses to start on a key anyone but its own user can read
+        # postgres refuses to start on a key anyone but its own user can read,
+        # and that user is 70 on alpine rather than the 999 debian gives it.
         # the two files change hands, but the directory holding them stays
         # with dokku: postgres only ever stats the key, and a directory owned
         # by the server would leave destroy unable to unlink what is inside it
@@ -84,7 +94,7 @@ x-dokku:
           test -f /certs/server.key ||
           (openssl req -new -newkey rsa:4096 -x509 -days 365000 -nodes
           -out /certs/server.crt -keyout /certs/server.key -batch >/dev/null 2>&1);
-          chown 999:999 /certs/server.key /certs/server.crt &&
+          chown 70:70 /certs/server.key /certs/server.crt &&
           chmod 600 /certs/server.key && chmod 644 /certs/server.crt
 
   # the certificate the server was started with, so that a client off the host
