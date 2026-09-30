@@ -1,4 +1,7 @@
 ---
+# postgres with the postgis extension, on the image postgis publishes. It is a
+# definition of its own so that the image is followed by dependabot and a bare
+# upgrade has a newest postgis to move to
 services:
   postgres:
     image: "{{ .Image }}:{{ .ImageVersion }}"

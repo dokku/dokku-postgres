@@ -1,4 +1,8 @@
 ---
+# postgres with the pgvector extension, on the image pgvector publishes. It is
+# a definition of its own rather than an image handed to the plain postgres
+# ones because its tags write the major as pg17 rather than leading with it, so
+# the version alone never placed it on the right data directory
 services:
   postgres:
     image: "{{ .Image }}:{{ .ImageVersion }}"

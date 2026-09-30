@@ -1,4 +1,8 @@
 ---
+# postgres with the pgvector extension, on the image pgvector publishes. It is
+# a definition of its own rather than an image handed to the plain postgres
+# ones because its tags write the major as pg17 rather than leading with it, so
+# the version alone never placed it on the right data directory
 services:
   postgres:
     image: "{{ .Image }}:{{ .ImageVersion }}"
@@ -25,11 +29,10 @@ services:
       - ssl_ciphers=AES256+EECDH:AES256+EDH
 
     volumes:
-      # where postgres kept its data before eighteen, which is the whole
-      # reason this line has a definition of its own
+      # postgres moved its data directory up one level in eighteen
       - type: bind
         source: "{{ .HostRoot }}/data"
-        target: /var/lib/postgresql/data
+        target: /var/lib/postgresql
       - type: bind
         source: "{{ .HostRoot }}/certs"
         target: /certs

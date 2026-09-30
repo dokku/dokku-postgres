@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+
+service-certificate-cmd() {
+  declare desc="print the certificate the $PLUGIN_SERVICE service encrypts connections with"
+  local cmd="$PLUGIN_COMMAND_PREFIX:certificate" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
+
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" invoke "$PLUGIN_COMMAND_PREFIX" certificate "$@"
+}
+
+service-certificate-cmd "$@"
