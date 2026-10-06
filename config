@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export POSTGRES_ROOT=${POSTGRES_ROOT:="$DOKKU_LIB_ROOT/services/postgres"}
 export DOKKU_LIB_HOST_ROOT=${DOKKU_LIB_HOST_ROOT:=$DOKKU_LIB_ROOT}
 export POSTGRES_HOST_ROOT=${POSTGRES_HOST_ROOT:="$DOKKU_LIB_HOST_ROOT/services/postgres"}
@@ -14,26 +13,10 @@ export PLUGIN_DEFAULT_ALIAS="DATABASE"
 export PLUGIN_DISABLE_PULL=${POSTGRES_DISABLE_PULL:=}
 export PLUGIN_DISABLE_PULL_VARIABLE="POSTGRES_DISABLE_PULL"
 export PLUGIN_ALT_ALIAS="DOKKU_POSTGRES"
-# the image this plugin runs is pinned by the definition it ships rather than by
-# a Dockerfile of its own, so that the version documented and the version the
-# services actually run cannot say different things. The newest definition is the
-# one a fresh service gets, which is what these describe.
-#
-# The directory is tested rather than the error suppressed, because this file is
-# sourced by every command and some of them source it with errexit already on: a
-# find over a directory that is not there fails, and under pipefail that failure
-# is the value of the assignment, which would end the command before it started.
-# Sorted by version rather than by name, because plain sort puts a tenth major
-# before a seventh.
-_DEFINITION=""
-if [[ -d "${_DIR}/datastore" ]]; then
-  _DEFINITION="$(find "${_DIR}/datastore" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
-fi
-
-if [[ -n "$_DEFINITION" ]]; then
-  export POSTGRES_IMAGE=${POSTGRES_IMAGE:="$(awk -F'[ :]' '/^FROM / {print $2}' "${_DEFINITION}/Dockerfile")"}
-  export POSTGRES_IMAGE_VERSION=${POSTGRES_IMAGE_VERSION:="$(awk -F'[ :]' '/^FROM / {print $3}' "${_DEFINITION}/Dockerfile")"}
-fi
+# the image is left to the binary, which places a service naming none on the
+# newest of the datastore's own definitions. Exporting a default here is read as
+# one the operator asked for, and picking it by directory name put a datastore
+# with flavors on a flavor's image rather than its own.
 export PLUGIN_IMAGE=$POSTGRES_IMAGE
 export PLUGIN_IMAGE_VERSION=$POSTGRES_IMAGE_VERSION
 export PLUGIN_SCHEME="postgres"
