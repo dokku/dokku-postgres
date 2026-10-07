@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+
+service-reset-cmd() {
+  declare desc="delete all data in the $PLUGIN_SERVICE service, keeping the service and its links"
+  local cmd="$PLUGIN_COMMAND_PREFIX:reset" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
+
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" reset "$PLUGIN_COMMAND_PREFIX" "$@"
+}
+
+service-reset-cmd "$@"
