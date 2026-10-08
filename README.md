@@ -21,6 +21,7 @@ postgres:app-links [<app>]                         # list all Postgres service l
 postgres:backup <service> <bucket-name> [-u|--use-iam] # create a backup of the Postgres service to an existing s3 bucket
 postgres:backup-auth <service> <aws-access-key-id> <aws-secret-access-key> <aws-default-region> <aws-signature-version> <endpoint-url> # set up authentication for backups on the Postgres service
 postgres:backup-deauth <service>                   # remove backup authentication for the Postgres service
+postgres:backup-logs <service> [-t|--tail [<tail-num>]] # print the most recent output of the scheduled backups of the service
 postgres:backup-schedule <service> <schedule> <bucket-name> [-u|--use-iam] # schedule a backup of the Postgres service
 postgres:backup-schedule-cat <service>             # cat the crontab line of the scheduled backup for the service
 postgres:backup-set-encryption <service> <passphrase> # set encryption for all future backups of Postgres service
@@ -35,9 +36,9 @@ postgres:create <service> [--create-flags...]      # create a Postgres service
 postgres:destroy <service> [-f|--force]            # delete the Postgres service/data/container if there are no links left
 postgres:enter <service>                           # enter or run a command in a running Postgres service container
 postgres:exists <service>                          # check if the Postgres service exists
-postgres:export <service> [-f|--file <path>] [--force] [-- <export-args...>] # export a dump of the Postgres service database
+postgres:export <service> [-f|--file <path>] [--force] [--all-databases] [-- <export-args...>] # export a dump of the Postgres service database
 postgres:expose <service> <ports...>               # expose a Postgres service on custom host:port if provided (random port on the 0.0.0.0 interface if otherwise unspecified)
-postgres:import <service> [-f|--file <path>] [-- <import-args...>] # import a dump into the Postgres service database
+postgres:import <service> [-f|--file <path>] [--all-databases] [-- <import-args...>] # import a dump into the Postgres service database
 postgres:info [<service>] [--info-flags...]        # print the service information
 postgres:link <service> [<app>] [--link-flags...]  # link the Postgres service to the app
 postgres:linked <service> [<app>]                  # check if the Postgres service is linked to an app
@@ -48,6 +49,7 @@ postgres:mount [--replace] <service> <source:container-dir[:options]>... # mount
 postgres:pause <service>                           # pause a running Postgres service
 postgres:promote <service> [<app>]                 # promote service <service> as DATABASE_URL in <app>
 postgres:reexpose <service>                        # reexpose a Postgres service, applying its expose settings
+postgres:reset <service> [-f|--force]              # delete all data in the Postgres service, keeping the service and its links
 postgres:restart <service>                         # graceful shutdown and restart of the Postgres service container
 postgres:set <service> <key> <value>               # set or clear a property for a service
 postgres:start <service>                           # start a previously stopped Postgres service
@@ -56,6 +58,7 @@ postgres:unexpose <service>                        # unexpose a previously expos
 postgres:unlink <service> [<app>] [-n|--no-restart] # unlink the Postgres service from the app
 postgres:unmount [--all] <service> [<source:container-dir>...] # remove one or all mounts from the service container
 postgres:upgrade <service> [--upgrade-flags...]    # upgrade service <service> to the specified versions
+postgres:upgrade-cleanup <service>                 # remove the data an upgrade across a major version kept aside
 ```
 
 ## Usage
@@ -115,9 +118,9 @@ dokku postgres:create lollipop --image <image> --image-version <version>
 These images each have definitions of their own, one per major version, so a service on one is placed by the major its tag carries and has a version to fall back on.
 
 ```shell
-dokku postgres:create lollipop --image pgvector/pgvector --image-version 0.8.6-pg18
+dokku postgres:create lollipop --image pgvector/pgvector --image-version 0.8.7-pg18
 dokku postgres:create lollipop --image postgis/postgis --image-version 18-3.6
-dokku postgres:create lollipop --image timescale/timescaledb --image-version 2.30.1-pg18
+dokku postgres:create lollipop --image timescale/timescaledb --image-version 2.30.2-pg18
 ```
 
 The definition a service runs on decides where its data is mounted, and is otherwise worked out from the image and version. An image whose tags do not carry the major version can name one outright, and --image and --image-version are laid over the image and version it ships. The definitions are: postgres-17, postgres-18, postgres-pgvector-pg17, postgres-pgvector-pg18, postgres-postgis-pg17, postgres-postgis-pg18, postgres-timescaledb-pg17, postgres-timescaledb-pg18.
@@ -222,10 +225,13 @@ flags:
 - `--backup-encryption-fingerprint`: show a sha256 fingerprint of the stored backup passphrase
 - `--backup-endpoint-url`: show the s3-compatible endpoint backups are shipped to
 - `--backup-keyserver`: show the keyserver backup public keys are fetched from
+- `--backup-mailto`: show who cron mails the output of scheduled backups to in place of the global MAILTO
+- `--backup-object-name`: show the name backups are uploaded under in place of the default
 - `--backup-public-key-id`: show the gpg public key id backups are encrypted with
 - `--backup-schedule`: show the cron schedule backups run on
 - `--backup-signature-version`: show the signature version backups authenticate with
 - `--backup-storage-class`: show the s3 storage class backups are uploaded with
+- `--backup-timestamp`: show whether backups are uploaded under a key ending in the time they started
 - `--backup-use-iam`: show whether scheduled backups authenticate with an instance role
 - `--config-dir`: show the service configuration directory
 - `--config-options`: show the config options the service container is run with
@@ -516,6 +522,36 @@ Go back to uploading backups with the bucket's default storage class:
 
 ```shell
 dokku postgres:set lollipop backup-storage-class
+```
+
+Upload backups under a name of your own rather than postgres-lollipop:
+
+```shell
+dokku postgres:set lollipop backup-object-name db/latest
+```
+
+Upload every backup to the same key, without a timestamp, so bucket versioning and lifecycle rules can keep and rotate them:
+
+```shell
+dokku postgres:set lollipop backup-timestamp false
+```
+
+Go back to timestamped backups:
+
+```shell
+dokku postgres:set lollipop backup-timestamp
+```
+
+Mail the output of scheduled backups to a comma-separated list of email addresses or local users rather than to the global cron `MAILTO`. Requires a dokku version that reads json entries from the cron-entries plugin trigger, and a mail transfer agent on the host:
+
+```shell
+dokku postgres:set lollipop backup-mailto ops@example.com,dba@example.com
+```
+
+Go back to mailing scheduled backup output to the global cron `MAILTO`:
+
+```shell
+dokku postgres:set lollipop backup-mailto
 ```
 
 Cap the container log at a size of your own rather than the one it inherits:
@@ -973,7 +1009,7 @@ flags:
 - `-P|--post-create-network <strings>`: a comma-separated list of networks to attach the service container to after service creation
 - `-S|--post-start-network <strings>`: a comma-separated list of networks to attach the service container to after service start
 - `--restart <string>`: the docker restart policy to run the service container with (default: always)
-- `-R|--restart-apps`: whether to stop and start the linked apps around the upgrade
+- `-R|--restart-apps`: whether to stop and start the linked apps around the upgrade, required for one that migrates the data
 - `-s|--shm-size <string>`: override shared memory size for the service docker container
 - `--volume <stringArray>`: a host path or docker volume to mount into the service container, as <source>:<container-dir>[:<options>], repeatable
 - `--volume-target <stringArray>`: mount one of the definition's volumes at another container path, as <volume>=<container-dir>, repeatable
@@ -995,6 +1031,12 @@ Moving across a major version has to be asked for by name, because it is not a t
 
 ```shell
 dokku postgres:upgrade lollipop --definition postgres-17
+```
+
+An upgrade that moves a service onto another of its definitions carries the data across rather than leaving it where the new one would not read it, which needs --restart-apps so that the linked apps write nothing while it is copied. The old data is kept beside the new, and a move that fails puts the service back on what it ran.
+
+```shell
+dokku postgres:upgrade lollipop --definition postgres-17 --restart-apps
 ```
 
 A service keeps the mounts it has unless --volume is passed, which replaces them, and each one is checked against the new container before the old one is taken away.
@@ -1094,13 +1136,13 @@ You can clone an existing service to a new one:
 dokku postgres:clone lollipop lollipop-2
 ```
 
-The new service starts from the settings of the one it copies: its config options, custom env, memory, shm size, networks, log driver, log options, restart policy, mounts, volume targets, backup keyserver and backup storage class. A flag passed to clone overrides that one setting, and a flag passed empty clears it:
+The new service starts from the settings of the one it copies: its config options, custom env, memory, shm size, networks, log driver, log options, restart policy, mounts, volume targets, backup keyserver, backup storage class and backup timestamp. A flag passed to clone overrides that one setting, and a flag passed empty clears it:
 
 ```shell
 dokku postgres:clone lollipop lollipop-2 --restart no --custom-env ""
 ```
 
-The password, exposed ports, links and backup credentials, schedule and encryption are not copied. The clone's passwords are generated unless they are given.
+The password, exposed ports, links and backup credentials, schedule, encryption and object name are not copied. The clone's passwords are generated unless they are given.
 
 ```shell
 dokku postgres:clone lollipop lollipop-2 --password <password>
@@ -1155,11 +1197,12 @@ The underlying service data can be imported and exported with the following comm
 
 ```shell
 # usage
-dokku postgres:import <service> [-f|--file <path>] [-- <import-args...>]
+dokku postgres:import <service> [-f|--file <path>] [--all-databases] [-- <import-args...>]
 ```
 
 flags:
 
+- `--all-databases`: load a dump of every database in the service, as written by export --all-databases or a backup
 - `-f|--file <string>`: a file on the dokku host to import instead of reading stdin
 
 Import a datastore dump:
@@ -1172,6 +1215,12 @@ A dump that is already on the dokku host can be imported with --file. The path i
 
 ```shell
 dokku postgres:import lollipop --file /var/lib/dokku/data/storage/data.dump
+```
+
+A dump of every database, as written by export --all-databases or a backup, is imported with --all-databases. Each database in the dump is replaced under the name it was exported from, and any other database is left alone.
+
+```shell
+dokku postgres:import lollipop --all-databases < all.dump
 ```
 
 Arguments after -- are passed to the tool that loads the dump, in place of the import-args property:
@@ -1190,11 +1239,12 @@ dokku postgres:set lollipop import-args -- "<import-args...>"
 
 ```shell
 # usage
-dokku postgres:export <service> [-f|--file <path>] [--force] [-- <export-args...>]
+dokku postgres:export <service> [-f|--file <path>] [--force] [--all-databases] [-- <export-args...>]
 ```
 
 flags:
 
+- `--all-databases`: export every database in the service rather than only the one named for it
 - `-f|--file <string>`: a file on the dokku host to export to instead of writing stdout
 - `--force`: replace the file named with --file if it already exists
 
@@ -1222,6 +1272,12 @@ A file that already exists is not overwritten unless --force is given:
 dokku postgres:export lollipop --file /var/lib/dokku/data/storage/data.dump --force
 ```
 
+Only the database named for the service is exported unless --all-databases is given, which exports every database in the service, leaving out the ones the server keeps for itself. It is imported again with import --all-databases, into the databases it was exported from.
+
+```shell
+dokku postgres:export lollipop --all-databases > all.dump
+```
+
 Arguments after -- are passed to the tool that makes the dump, in place of the export-args property:
 
 ```shell
@@ -1240,9 +1296,34 @@ Note that the export will result in a file containing the binary postgres export
 pg_restore data.dump -f plain.sql
 ```
 
+### delete all data in the Postgres service, keeping the service and its links
+
+```shell
+# usage
+dokku postgres:reset <service> [-f|--force]
+```
+
+flags:
+
+- `-f|--force`: reset the service without asking for its name first
+
+Delete all data in the service, leaving it as empty as a newly created one. The service, its credentials, and the apps it is linked to are kept, so linked apps do not need to be relinked. Connections the apps hold open may be closed.
+
+```shell
+dokku postgres:reset lollipop
+```
+
+The service name is asked for before anything is deleted, unless --force is given:
+
+```shell
+dokku postgres:reset lollipop --force
+```
+
 ### Backups
 
-Datastore backups are supported via AWS S3 and S3 compatible services like [minio](https://github.com/minio/minio).
+Datastore backups are supported via AWS S3 and S3 compatible services like [minio](https://github.com/minio/minio) and [DigitalOcean Spaces](https://docs.digitalocean.com/products/spaces/).
+
+The endpoint of an S3 compatible service is passed as the `endpoint-url` argument of `backup-auth`, such as `https://nyc3.digitaloceanspaces.com`, and must not include the bucket. The bucket is passed to `backup` and `backup-schedule` by its name alone, such as `my-s3-bucket` rather than `s3://my-s3-bucket`, and must follow the [S3 bucket naming rules](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html).
 
 You may skip the `backup-auth` step if your dokku install is running within EC2 and has access to the bucket via an IAM profile. In that case, use the `--use-iam` option with the `backup` command.
 
@@ -1250,9 +1331,11 @@ If both passphrase and public key forms of encryption are set, the public key en
 
 Backups are uploaded with the bucket's default storage class unless the service sets the `backup-storage-class` property with the `set` command.
 
+Backups are uploaded to `<prefix>-<service>-<timestamp>.tgz`. The service may name the key with the `backup-object-name` property and drop the timestamp by setting the `backup-timestamp` property to `false`, so that every backup is uploaded to the same key and bucket versioning and lifecycle rules can keep and rotate them. The bucket name may end in a path to upload under, such as `my-s3-bucket/backups`.
+
 The underlying core backup script is present [here](https://github.com/dokku/docker-s3backup/blob/main/backup.sh).
 
-Scheduled backups are added to the dokku crontab, and are listed by `dokku cron:list --global`.
+Scheduled backups are added to the dokku crontab, and are listed by `dokku cron:list --global`. Each service's scheduled backups append their output to a log of its own, `/var/log/dokku/<prefix>.<service>.backup.log`, which the `backup-logs` command shows. The output of a service's scheduled backups can be mailed to specific recipients by setting the `backup-mailto` property with the `set` command, on dokku versions that support a per-entry `MAILTO`.
 
 Backups can be performed using the backup commands:
 
@@ -1289,6 +1372,12 @@ More specific example for minio auth:
 dokku postgres:backup-auth lollipop MINIO_ACCESS_KEY_ID MINIO_SECRET_ACCESS_KEY us-east-1 s3v4 https://YOURMINIOSERVICE
 ```
 
+More specific example for digitalocean spaces auth, where the endpoint does not include the space name:
+
+```shell
+dokku postgres:backup-auth lollipop SPACES_ACCESS_KEY SPACES_SECRET_KEY nyc3 s3v4 https://nyc3.digitaloceanspaces.com
+```
+
 ### remove backup authentication for the Postgres service
 
 ```shell
@@ -1319,7 +1408,19 @@ Backup the `lollipop` service to the `my-s3-bucket` bucket on `AWS`:
 dokku postgres:backup lollipop my-s3-bucket --use-iam
 ```
 
-Restore a backup file (assuming it was extracted via `tar -xf backup.tgz`):
+Backup the `lollipop` service under a path in the bucket:
+
+```shell
+dokku postgres:backup lollipop my-s3-bucket/postgres-backups
+```
+
+A backup holds every database in the service, so it is restored with --all-databases (assuming it was extracted via `tar -xf backup.tgz`):
+
+```shell
+dokku postgres:import lollipop --all-databases < backup-folder/export
+```
+
+A backup made by an older version of the plugin holds only the database named for the service, and is restored without it:
 
 ```shell
 dokku postgres:import lollipop < backup-folder/export
@@ -1399,7 +1500,7 @@ flags:
 Schedule a backup:
 
 > 'schedule' is a crontab expression, eg. "0 3 * * *" for each day at 3am, or a descriptor such as "@daily". A schedule cron cannot run is refused.
-> the backup is added to the dokku crontab through the cron-entries plugin trigger, so it is listed by "dokku cron:list --global" and its output is appended to /var/log/dokku/postgres.log
+> the backup is added to the dokku crontab through the cron-entries plugin trigger, so it is listed by "dokku cron:list --global" and its output is appended to /var/log/dokku/postgres.<service>.backup.log, which "dokku postgres:backup-logs <service>" prints
 > NOTE: dokku only writes a crontab when the global scheduler or at least one app uses the docker-local scheduler, so a scheduled backup does not run on a host that only uses k3s or null
 
 ```shell
@@ -1438,6 +1539,37 @@ Remove the scheduled backup from the dokku crontab:
 dokku postgres:backup-unschedule lollipop
 ```
 
+### print the most recent output of the scheduled backups of the service
+
+```shell
+# usage
+dokku postgres:backup-logs <service> [-t|--tail [<tail-num>]]
+```
+
+flags:
+
+- `-t|--tail <int>`: follow the log, optionally showing this many lines
+
+Print the most recent output of the scheduled backups of the service:
+
+> each service's scheduled backups append their output to /var/log/dokku/postgres.<service>.backup.log, or to the same file under DOKKU_LOGS_DIR when dokku keeps its logs elsewhere. Every run starts and ends with a line marked with the time in utc.
+
+```shell
+dokku postgres:backup-logs lollipop
+```
+
+By default, the log will not be tailed, but you can do this with the --tail flag:
+
+```shell
+dokku postgres:backup-logs lollipop --tail
+```
+
+By default the last 100 lines are shown, but a different count can be specified:
+
+```shell
+dokku postgres:backup-logs lollipop --tail=5
+```
+
 ### Custom Commands
 
 This datastore adds the following commands of its own:
@@ -1461,6 +1593,21 @@ Save it to verify the server from a client off the host:
 
 ```shell
 dokku postgres:certificate lollipop > server.crt
+```
+
+### remove the data an upgrade across a major version kept aside
+
+```shell
+# usage
+dokku postgres:upgrade-cleanup <service>
+```
+
+Remove the data an upgrade across a major version kept aside:
+
+> NOTE: the service must be running
+
+```shell
+dokku postgres:upgrade-cleanup lollipop
 ```
 
 ### Limiting where and to whom a service is exposed
@@ -1553,6 +1700,36 @@ sudo sh -c 'cat server.key > /var/lib/dokku/services/postgres/lollipop/certs/ser
 
 ```shell
 dokku postgres:restart lollipop
+```
+
+### Choosing the database encoding and locale
+
+The database is made the first time the service starts, with the encoding and locale of its container, which are utf8 and `en_US.utf8` unless the custom environment says otherwise. A custom environment that only sets `LC_ALL=C` leaves the database in the `SQL_ASCII` encoding, which stores bytes rather than utf8 text. To choose both, give the arguments `initdb` takes in `POSTGRES_INITDB_ARGS` when the service is created:
+
+```shell
+dokku postgres:create lollipop --custom-env "POSTGRES_INITDB_ARGS=--encoding=UTF8 --locale=C"
+```
+
+They are only read when the data directory is first made, so changing the custom environment of an existing service leaves its database as it was. To move a database to another encoding or locale, create a service with the new ones and import an export of the old service into it:
+
+```shell
+dokku postgres:export lollipop > lollipop.dump
+dokku postgres:create lollipop-utf8 --custom-env "POSTGRES_INITDB_ARGS=--encoding=UTF8 --locale=C"
+dokku postgres:import lollipop-utf8 < lollipop.dump
+```
+
+### Upgrading across a major version
+
+An upgrade that moves a service to another major version, or onto another flavor, carries its data across rather than mounting it where the new version would not read it. The linked apps are stopped while the data is copied, so the upgrade has to be given `--restart-apps`:
+
+```shell
+dokku postgres:upgrade lollipop --definition postgres-18 --restart-apps
+```
+
+From 17 to 18 on the official image the data is copied with `pg_upgrade`, which needs as much free disk as the data takes up. Every other move exports every database and role from the old version with `pg_dumpall` and replays it into the new one. A move that fails puts the service back on the version it ran, with the data it had. The old data is kept in a `data.<definition>.<timestamp>` directory beside the service's data, and is removed once the upgrade is confirmed:
+
+```shell
+dokku postgres:upgrade-cleanup lollipop
 ```
 
 ### Disabling `docker image pull` calls

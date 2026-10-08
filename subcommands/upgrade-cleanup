@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+
+service-upgrade-cleanup-cmd() {
+  declare desc="remove the data an upgrade across a major version kept aside"
+  local cmd="$PLUGIN_COMMAND_PREFIX:upgrade-cleanup" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
+
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" invoke "$PLUGIN_COMMAND_PREFIX" upgrade-cleanup "$@"
+}
+
+service-upgrade-cleanup-cmd "$@"
