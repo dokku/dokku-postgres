@@ -294,7 +294,7 @@ x-dokku:
         an upgrade that moves a service to another major version, or onto another flavor, carries its data across rather than mounting it where the new version would not read it.
         the linked apps are stopped while the data is copied, so the upgrade has to be given '--restart-apps':
         dokku {{.CommandPrefix}}:upgrade lollipop --definition postgres-18 --restart-apps
-        from 17 to 18 on the official image the data is copied with 'pg_upgrade', which needs as much free disk as the data takes up.
+        onto a newer major of the official image the data is copied with 'pg_upgrade', which needs as much free disk as the data takes up.
         every other move exports every database and role from the old version with 'pg_dumpall' and replays it into the new one.
         a move that fails puts the service back on the version it ran, with the data it had.
         the old data is kept in a 'data.<definition>.<timestamp>' directory beside the service's data, and is removed once the upgrade is confirmed:
@@ -325,8 +325,11 @@ x-dokku:
       # makes it, and marked as restoring until it is loaded, which keeps the
       # timescaledb background workers from writing into its catalog while the
       # dump copies it back. The databases are owned by postgres, as the dump
-      # carries no owners. Every postgres definition carries the same text,
-      # which a test holds them to.
+      # carries no owners. The locale columns are read through the row as json,
+      # since each major names them differently and fourteen has none of them:
+      # a column one major lacks reads as null rather than failing the query.
+      # Every postgres definition carries the same text, which a test holds
+      # them to.
       all_databases:
         extra_args: true
         exec:
@@ -350,15 +353,16 @@ x-dokku:
             SELECT format('DROP DATABASE IF EXISTS %I WITH (FORCE);', datname) || chr(10)
                 || format('CREATE DATABASE %I TEMPLATE template0 ENCODING %L LC_COLLATE %L LC_CTYPE %L',
                           datname, pg_encoding_to_char(encoding), datcollate, datctype)
-                || CASE datlocprovider
-                     WHEN 'i' THEN format(' LOCALE_PROVIDER icu ICU_LOCALE %L', datlocale)
-                       || CASE WHEN daticurules IS NULL THEN '' ELSE format(' ICU_RULES %L', daticurules) END
-                     WHEN 'b' THEN format(' LOCALE_PROVIDER builtin BUILTIN_LOCALE %L', datlocale)
-                     ELSE ' LOCALE_PROVIDER libc'
+                || CASE fields ->> 'datlocprovider'
+                     WHEN 'i' THEN format(' LOCALE_PROVIDER icu ICU_LOCALE %L', coalesce(fields ->> 'datlocale', fields ->> 'daticulocale'))
+                       || CASE WHEN fields ->> 'daticurules' IS NULL THEN '' ELSE format(' ICU_RULES %L', fields ->> 'daticurules') END
+                     WHEN 'b' THEN format(' LOCALE_PROVIDER builtin BUILTIN_LOCALE %L', fields ->> 'datlocale')
+                     WHEN 'c' THEN ' LOCALE_PROVIDER libc'
+                     ELSE ''
                    END || ';' || chr(10)
                 || format('ALTER DATABASE %I SET timescaledb.restoring = %L;', datname, 'on') || chr(10)
                 || format('\connect %I', datname)
-              FROM pg_database WHERE datname = :'database';
+              FROM pg_database d, to_jsonb(d) AS fields WHERE datname = :'database';
             SQL
               pg_dump -Fp --no-acl --no-owner -h localhost -U postgres -w "$@" "$database"
               sql -v "database=$database" <<'SQL'
@@ -416,7 +420,9 @@ x-dokku:
     # itself are not carried over.
     #
     # the create statement is read before anything is dropped, so a database
-    # that cannot be described is left alone. A service named postgres has the
+    # that cannot be described is left alone. The locale columns are read
+    # through the row as json, the way the export of every database reads them,
+    # since each major names them differently. A service named postgres has the
     # maintenance database as its own, so the drop is run from template1 instead.
     # Written inline rather than shipped as a script, since a script is only
     # mounted into a container made after it was added, and a reset runs in the
@@ -448,13 +454,14 @@ x-dokku:
           sql "$maintenance" >/dev/null <<'SQL'
           SELECT format('CREATE DATABASE %I OWNER %I TEMPLATE template0 ENCODING %L LC_COLLATE %L LC_CTYPE %L',
                    datname, pg_get_userbyid(datdba), pg_encoding_to_char(encoding), datcollate, datctype)
-                 || CASE datlocprovider
-                      WHEN 'i' THEN format(' LOCALE_PROVIDER icu ICU_LOCALE %L', datlocale)
-                        || CASE WHEN daticurules IS NULL THEN '' ELSE format(' ICU_RULES %L', daticurules) END
-                      WHEN 'b' THEN format(' LOCALE_PROVIDER builtin BUILTIN_LOCALE %L', datlocale)
-                      ELSE ' LOCALE_PROVIDER libc'
+                 || CASE fields ->> 'datlocprovider'
+                      WHEN 'i' THEN format(' LOCALE_PROVIDER icu ICU_LOCALE %L', coalesce(fields ->> 'datlocale', fields ->> 'daticulocale'))
+                        || CASE WHEN fields ->> 'daticurules' IS NULL THEN '' ELSE format(' ICU_RULES %L', fields ->> 'daticurules') END
+                      WHEN 'b' THEN format(' LOCALE_PROVIDER builtin BUILTIN_LOCALE %L', fields ->> 'datlocale')
+                      WHEN 'c' THEN ' LOCALE_PROVIDER libc'
+                      ELSE ''
                     END AS create_database
-            FROM pg_database WHERE datname = :'database' \gset
+            FROM pg_database d, to_jsonb(d) AS fields WHERE datname = :'database' \gset
           DROP DATABASE :"database" WITH (FORCE);
           SELECT :'create_database' \gexec
           SQL
