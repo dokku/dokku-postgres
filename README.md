@@ -217,6 +217,7 @@ dokku postgres:info [<service>] [--info-flags...]
 flags:
 
 - `--backend`: show the execution backend the service was created with
+- `--backup-access-key-id-fingerprint`: show a sha256 fingerprint of the stored backup access key id
 - `--backup-auth-fingerprint`: show a sha256 fingerprint of the stored backup access key id and secret
 - `--backup-authenticated`: show whether backup credentials are stored for the service
 - `--backup-bucket`: show the bucket scheduled backups are shipped to
@@ -229,6 +230,7 @@ flags:
 - `--backup-object-name`: show the name backups are uploaded under in place of the default
 - `--backup-public-key-id`: show the gpg public key id backups are encrypted with
 - `--backup-schedule`: show the cron schedule backups run on
+- `--backup-secret-access-key-fingerprint`: show a sha256 fingerprint of the stored backup secret access key
 - `--backup-signature-version`: show the signature version backups authenticate with
 - `--backup-storage-class`: show the s3 storage class backups are uploaded with
 - `--backup-timestamp`: show whether backups are uploaded under a key ending in the time they started
@@ -310,16 +312,25 @@ The properties postgres:set writes are reported under the names it takes, so a v
 dokku postgres:set lollipop initial-network my-network
 ```
 
-The stored backup credentials and passphrase are never printed. Each is reported as a lowercase hex sha256 fingerprint of the stored value, with surrounding whitespace trimmed, so a copy of the values can be compared against it:
+The stored backup credentials and passphrase are never printed. Each is reported as a lowercase hex sha256 fingerprint of that stored value, with surrounding whitespace trimmed, so a copy of one value can be compared against it:
 
 ```shell
-dokku postgres:info lollipop --backup-auth-fingerprint
+dokku postgres:info lollipop --backup-access-key-id-fingerprint
+dokku postgres:info lollipop --backup-secret-access-key-fingerprint
 dokku postgres:info lollipop --backup-encryption-fingerprint
 ```
 
-The same fingerprints can be computed from the values that were passed to backup-auth and backup-set-encryption:
+A fingerprint is empty when that value is not stored. The access key id and the secret are also reported as one fingerprint of the pair, which is empty until both are stored and is what backup-auth writes in one call:
+
+```shell
+dokku postgres:info lollipop --backup-auth-fingerprint
+```
+
+The same fingerprints can be computed from the values that were passed to set, backup-auth and backup-set-encryption:
 
 ```
+printf '%s' "$AWS_ACCESS_KEY_ID" | sha256sum
+printf '%s' "$AWS_SECRET_ACCESS_KEY" | sha256sum
 printf '%s\n%s' "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" | sha256sum
 printf '%s' "$PASSPHRASE" | sha256sum
 ```
@@ -542,7 +553,7 @@ Change one of the settings backup-auth stores, such as the endpoint of an s3 com
 dokku postgres:set lollipop backup-endpoint-url https://nyc3.digitaloceanspaces.com
 ```
 
-Rotate the credentials backups are shipped with one at a time. The value is never printed back, and info reports a fingerprint of the pair:
+Rotate the credentials backups are shipped with one at a time. The value is never printed back, and info reports a fingerprint of that value:
 
 ```shell
 dokku postgres:set lollipop backup-access-key-id AKIAIOSFODNN7EXAMPLE
