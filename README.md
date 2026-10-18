@@ -258,11 +258,13 @@ flags:
 - `--log-opt`: show the docker log options the service container is run with
 - `--memory`: show the memory limit the service container is run with
 - `--mounts`: show the host paths and docker volumes mounted into the service container
+- `--password-fingerprint`: show a sha256 fingerprint of the service password
 - `--port-bind-address`: show the address exposed ports without one of their own are bound on
 - `--port-source-range`: show the only range of client addresses the exposed ports accept
 - `--post-create-network`: show the networks to attach to after service container creation
 - `--post-start-network`: show the networks to attach to after service container start
 - `--restart-policy`: show the restart policy the service container is run with
+- `--root-password-fingerprint`: show a sha256 fingerprint of the service root password
 - `--service`: show the name of the service
 - `--service-root`: show the service root directory
 - `--shm-size`: show the shared memory size the service container is run with
@@ -326,6 +328,12 @@ A fingerprint is empty when that value is not stored. The access key id and the 
 dokku postgres:info lollipop --backup-auth-fingerprint
 ```
 
+The service's passwords are reported the same way, and are empty for a password the datastore does not have:
+
+```shell
+dokku postgres:info lollipop --password-fingerprint
+```
+
 The same fingerprints can be computed from the values that were passed to set, backup-auth and backup-set-encryption:
 
 ```
@@ -333,6 +341,7 @@ printf '%s' "$AWS_ACCESS_KEY_ID" | sha256sum
 printf '%s' "$AWS_SECRET_ACCESS_KEY" | sha256sum
 printf '%s\n%s' "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" | sha256sum
 printf '%s' "$PASSPHRASE" | sha256sum
+printf '%s' "$PASSWORD" | sha256sum
 ```
 
 ### list all Postgres services
@@ -499,6 +508,11 @@ An app is still linked after its `DATABASE_URL` is changed to point elsewhere, a
 dokku postgres:set <service> <key> <value>
 ```
 
+flags:
+
+- `--allow-restart`: restart or reexpose the service when the property only takes effect that way and its value changed
+- `--no-restart`: do not restart the linked apps when a password change updates the url they hold
+
 Set the network to attach after the service container is started:
 
 ```shell
@@ -545,6 +559,18 @@ Go back to running the process with the datastore's own arguments alone:
 
 ```shell
 dokku postgres:set lollipop config-options
+```
+
+Change the password in the datastore and in the url every linked app holds, restarting the apps. The value is never printed back, and info reports a fingerprint of it:
+
+```shell
+dokku postgres:set lollipop password "<new-password>"
+```
+
+Give the linked apps the new url without restarting them:
+
+```shell
+dokku postgres:set --no-restart lollipop password "<new-password>"
 ```
 
 Change one of the settings backup-auth stores, such as the endpoint of an s3 compatible service, without passing the rest again:
@@ -1692,7 +1718,7 @@ dokku postgres:upgrade-cleanup lollipop
 
 ### Service properties
 
-Every setting a service has after it is created, other than its image, its passwords, its mounts and its backup schedule, each of which has a command of its own, is changed with `dokku postgres:set lollipop <key> <value>`, and cleared by giving no value. `dokku postgres:info lollipop` reports each of them, with a credential reported as a fingerprint rather than its value. A setting the container is made with only reaches it once the container is built again, and `set` warns when that is the case: `dokku postgres:restart` keeps the container the service has, so use `dokku postgres:stop` and then `dokku postgres:start`.
+Every setting a service has after it is created, other than its image, its mounts and its backup schedule, each of which has a command of its own, is changed with `dokku postgres:set lollipop <key> <value>`, and cleared by giving no value. `dokku postgres:info lollipop` reports each of them, with a credential reported as a fingerprint rather than its value. A setting the container is made with only reaches it once the container is built again, and `set` warns when that is the case: `dokku postgres:restart` keeps the container the service has, so use `dokku postgres:stop` and then `dokku postgres:start`. Passing `--allow-restart` to `set` does that, or the `reexpose` an expose setting takes, whenever the value changed, and leaves the service alone when it did not.
 
 | Property | Description | Takes effect |
 | --- | --- | --- |
@@ -1728,6 +1754,9 @@ Every setting a service has after it is created, other than its image, its passw
 | `custom-env` | semicolon-delimited environment variables the container is run with | after `postgres:stop` and `postgres:start` |
 | `memory` | the container memory limit in megabytes, `0` for no limit | after `postgres:stop` and `postgres:start` |
 | `shm-size` | the shared memory size of the container, such as `64m` | after `postgres:stop` and `postgres:start` |
+| `password` | the password the service and its linked apps use, changed in the datastore and in the url every linked app holds | immediately |
+
+The `password` key is changed in the datastore as well as on disk, and every linked app is given the new url and restarted, unless `--no-restart` is passed. The datastore is told the new password while it runs, so the service has to be running. A password cannot be cleared, may only hold letters, digits, `.`, `_`, `~` and `-`, and is never printed back: `info` reports a fingerprint of it.
 
 ### Limiting where and to whom a service is exposed
 

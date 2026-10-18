@@ -65,6 +65,25 @@ x-dokku:
       length: 16
       env: SERVICE_PASSWORD
 
+      # the image only reads POSTGRES_PASSWORD when it makes the cluster, so a
+      # new password is given to the role by the server itself. The statement
+      # is written to psql's stdin rather than passed as an argument, so the
+      # password stays out of the container's process table. Every postgres
+      # definition carries the same text, which a test holds them to.
+      change:
+        exec:
+          - sh
+          - -c
+          - |
+            set -e
+            password="$(printf '%s' "$NEW_PASSWORD" | sed "s/'/''/g")"
+            printf "ALTER ROLE postgres PASSWORD '%s';\n" "$password" |
+              psql -h localhost -U postgres -w -qtAX -v ON_ERROR_STOP=1 -d postgres >/dev/null
+          - dokku-postgres-change-password
+        env:
+          PGPASSWORD: "{{ .Secret.password }}"
+          NEW_PASSWORD: "{{ .NewSecret }}"
+
   hooks:
     pre_create:
       # the certificate, made before the service runs rather than after. It is
