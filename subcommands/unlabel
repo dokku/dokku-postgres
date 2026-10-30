@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+
+service-unlabel-cmd() {
+  declare desc="remove one or all docker labels from the service container"
+  local cmd="$PLUGIN_COMMAND_PREFIX:unlabel" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
+
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" unlabel "$PLUGIN_COMMAND_PREFIX" "$@"
+}
+
+service-unlabel-cmd "$@"
