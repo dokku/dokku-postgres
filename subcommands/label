@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+
+service-label-cmd() {
+  declare desc="add docker labels to the service container"
+  local cmd="$PLUGIN_COMMAND_PREFIX:label" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
+
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" label "$PLUGIN_COMMAND_PREFIX" "$@"
+}
+
+service-label-cmd "$@"
