@@ -8,6 +8,8 @@ setup() {
 }
 
 teardown() {
+  clear_links ms
+  clear_links ls
   dokku "$PLUGIN_COMMAND_PREFIX:destroy" ms -f
   dokku "$PLUGIN_COMMAND_PREFIX:destroy" ls -f
   dokku apps:destroy my-app --force
@@ -82,11 +84,23 @@ teardown() {
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" ls my-app
 }
 
-@test "($PLUGIN_COMMAND_PREFIX:link) links to app with docker-options" {
+@test "($PLUGIN_COMMAND_PREFIX:link) links to app over a network of its own" {
+  network="dokku.$PLUGIN_COMMAND_PREFIX.ls.my-app"
   dokku "$PLUGIN_COMMAND_PREFIX:link" ls my-app
-  run dokku docker-options:report my-app
-  assert_contains "${lines[*]}" "--link dokku.postgres.ls:dokku-postgres-ls"
+
+  # internal, so joining it changes no container's route to anything else
+  run docker network inspect --format '{{ .Internal }}' "$network"
   assert_success
+  assert_output "true"
+
+  # the service answers on it to the host its url names
+  run docker container inspect --format "{{ json (index .NetworkSettings.Networks \"$network\").Aliases }}" "dokku.$PLUGIN_COMMAND_PREFIX.ls"
+  assert_success
+  assert_contains "$output" "\"dokku-$PLUGIN_COMMAND_PREFIX-ls\""
+
+  run dokku docker-options:report my-app
+  assert_success
+  assert_not_contains "${lines[*]}" "--link dokku.$PLUGIN_COMMAND_PREFIX.ls"
   dokku "$PLUGIN_COMMAND_PREFIX:unlink" ls my-app
 }
 

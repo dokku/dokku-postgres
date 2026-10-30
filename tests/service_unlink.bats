@@ -7,6 +7,7 @@ setup() {
 }
 
 teardown() {
+  clear_links ls
   dokku "$PLUGIN_COMMAND_PREFIX:destroy" ls -f
   dokku apps:destroy my-app --force
 }
@@ -36,18 +37,21 @@ teardown() {
   assert_contains "${lines[*]}" "Not linked to app my-app"
 }
 
-@test "($PLUGIN_COMMAND_PREFIX:unlink) removes link from docker-options" {
-  link_option="--link dokku.$PLUGIN_COMMAND_PREFIX.ls:dokku-$PLUGIN_COMMAND_PREFIX-ls"
+@test "($PLUGIN_COMMAND_PREFIX:unlink) removes the link network" {
+  network="dokku.$PLUGIN_COMMAND_PREFIX.ls.my-app"
+
+  dokku "$PLUGIN_COMMAND_PREFIX:link" ls my-app >&2
+  run docker network inspect "$network"
+  assert_success
+
+  dokku "$PLUGIN_COMMAND_PREFIX:unlink" ls my-app
+  run docker network inspect "$network"
+  assert_failure
 
   # the run phase is asked for by name rather than the whole report as json,
   # because a report format is a newer dokku than this suite runs against
-  dokku "$PLUGIN_COMMAND_PREFIX:link" ls my-app >&2
   options=$(dokku docker-options:report my-app --docker-options-run)
-  assert_contains "$options" "$link_option"
-
-  dokku "$PLUGIN_COMMAND_PREFIX:unlink" ls my-app
-  options=$(dokku docker-options:report my-app --docker-options-run)
-  assert_not_contains "$options" "$link_option"
+  assert_not_contains "$options" "--link dokku.$PLUGIN_COMMAND_PREFIX.ls"
 }
 
 @test "($PLUGIN_COMMAND_PREFIX:unlink) unsets config url from app" {
