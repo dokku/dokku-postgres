@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+source "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")/config"
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+
+service-link-migrate-cmd() {
+  declare desc="move apps linked to the $PLUGIN_SERVICE service off the deprecated docker link and onto a network"
+  local cmd="$PLUGIN_COMMAND_PREFIX:link-migrate" argv=("$@")
+  [[ ${argv[0]} == "$cmd" ]] && shift 1
+
+  "${DOKKU_LIB_ROOT}/data/${PLUGIN_COMMAND_PREFIX}/dokku-datastore" link-migrate "$PLUGIN_COMMAND_PREFIX" "$@"
+}
+
+service-link-migrate-cmd "$@"
