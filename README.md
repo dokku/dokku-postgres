@@ -1,6 +1,6 @@
 # dokku postgres [![Build Status](https://img.shields.io/github/actions/workflow/status/dokku/dokku-postgres/ci.yml?branch=master&style=flat-square "Build Status")](https://github.com/dokku/dokku-postgres/actions/workflows/ci.yml?query=branch%3Amaster) [![IRC Network](https://img.shields.io/badge/irc-libera-blue.svg?style=flat-square "IRC Libera")](https://webchat.libera.chat/?channels=dokku)
 
-Official postgres plugin for dokku. Currently defaults to installing [postgres 18.6](https://hub.docker.com/_/postgres/).
+Official postgres plugin for dokku. Currently defaults to installing [postgres 19.0](https://hub.docker.com/_/postgres/).
 
 ## Requirements
 
@@ -115,7 +115,7 @@ dokku postgres:create lollipop
 You can also specify the image and image version to use for the service. It *must* be compatible with the postgres image.
 
 ```shell
-dokku postgres:create lollipop --image "postgres" --image-version "18.6"
+dokku postgres:create lollipop --image "postgres" --image-version "19.0"
 ```
 
 An image other than postgres has no version to fall back on, because the version this plugin pins belongs to postgres, so name one alongside it.
@@ -127,12 +127,12 @@ dokku postgres:create lollipop --image <image> --image-version <version>
 These images each have definitions of their own, one per major version, so a service on one is placed by the major its tag carries and has a version to fall back on.
 
 ```shell
-dokku postgres:create lollipop --image pgvector/pgvector --image-version 0.8.7-pg18
-dokku postgres:create lollipop --image postgis/postgis --image-version 18-3.6
-dokku postgres:create lollipop --image timescale/timescaledb --image-version 2.31.0-pg18
+dokku postgres:create lollipop --image pgvector/pgvector --image-version 0.8.7-pg19
+dokku postgres:create lollipop --image postgis/postgis --image-version 18-3.7
+dokku postgres:create lollipop --image timescale/timescaledb --image-version 2.32.0-pg18
 ```
 
-The definition a service runs on decides where its data is mounted, and is otherwise worked out from the image and version. An image whose tags do not carry the major version can name one outright, and --image and --image-version are laid over the image and version it ships. The definitions are: postgres-14, postgres-15, postgres-16, postgres-17, postgres-18, postgres-pgvector-pg17, postgres-pgvector-pg18, postgres-postgis-pg17, postgres-postgis-pg18, postgres-timescaledb-pg17, postgres-timescaledb-pg18.
+The definition a service runs on decides where its data is mounted, and is otherwise worked out from the image and version. An image whose tags do not carry the major version can name one outright, and --image and --image-version are laid over the image and version it ships. The definitions are: postgres-14, postgres-15, postgres-16, postgres-17, postgres-18, postgres-19, postgres-pgvector-pg17, postgres-pgvector-pg18, postgres-pgvector-pg19, postgres-postgis-pg17, postgres-postgis-pg18, postgres-timescaledb-pg17, postgres-timescaledb-pg18.
 
 ```shell
 dokku postgres:create lollipop --definition postgres-14 --image <image> --image-version <version>
@@ -592,7 +592,7 @@ dokku postgres:set <service> <key> [<value>] [--id <id>]
 flags:
 
 - `--allow-restart`: restart or reexpose the service when the property only takes effect that way and its value changed
-- `--ambassador-image <string>`: the image to make the ambassador from, with a tag or digest, overriding PLUGIN_AMBASSADOR_IMAGE and the ambassador-image global property
+- `--ambassador-image <string>`: the image to make the ambassador from, with a tag or digest, overriding the ambassador-image global property
 - `--global`: set the property for every service of the datastore, taking <datastore-type> <key> [<value>] with no service name
 - `--id <string>`: record the property on this backup schedule instead of on the service
 - `--no-restart`: do not restart the linked apps when a password change updates the url they hold
@@ -1073,7 +1073,7 @@ dokku postgres:expose <service> <ports...>
 
 flags:
 
-- `--ambassador-image <string>`: the image to make the ambassador from, with a tag or digest, overriding PLUGIN_AMBASSADOR_IMAGE and the ambassador-image global property
+- `--ambassador-image <string>`: the image to make the ambassador from, with a tag or digest, overriding the ambassador-image global property
 - `-f|--force`: stop and start a running service without asking when its container has to publish other ports
 
 Expose the service on the service's normal ports, allowing access to it from the public interface (`0.0.0.0`):
@@ -1147,7 +1147,7 @@ dokku postgres:reexpose <service>
 
 flags:
 
-- `--ambassador-image <string>`: the image to make the ambassador from, with a tag or digest, overriding PLUGIN_AMBASSADOR_IMAGE and the ambassador-image global property
+- `--ambassador-image <string>`: the image to make the ambassador from, with a tag or digest, overriding the ambassador-image global property
 - `-f|--force`: stop and start a running service without asking when its container has to publish other ports
 
 Apply a changed port-bind-address or port-source-range to an exposed service, on the ports it is already exposed on:
@@ -1164,7 +1164,7 @@ dokku postgres:set lollipop expose-mode direct
 dokku postgres:reexpose lollipop --force
 ```
 
-Replace the ambassador with one made from another image. --ambassador-image wins over `PLUGIN_AMBASSADOR_IMAGE,` which wins over the ambassador-image global property:
+Replace the ambassador with one made from another image, for this command with --ambassador-image or for every service with the ambassador-image global property. The flag wins over the global property:
 
 ```shell
 dokku postgres:reexpose lollipop --ambassador-image dokku/ambassador:0.8.4
@@ -1213,7 +1213,7 @@ dokku postgres:start <service>
 
 flags:
 
-- `--ambassador-image <string>`: the image to make the ambassador from, with a tag or digest, overriding PLUGIN_AMBASSADOR_IMAGE and the ambassador-image global property
+- `--ambassador-image <string>`: the image to make the ambassador from, with a tag or digest, overriding the ambassador-image global property
 
 Start the service:
 
@@ -1258,7 +1258,7 @@ dokku postgres:restart <service>
 
 flags:
 
-- `--ambassador-image <string>`: the image to make the ambassador from, with a tag or digest, overriding PLUGIN_AMBASSADOR_IMAGE and the ambassador-image global property
+- `--ambassador-image <string>`: the image to make the ambassador from, with a tag or digest, overriding the ambassador-image global property
 
 Restart the service:
 
@@ -1275,10 +1275,11 @@ dokku postgres:upgrade <service> [--upgrade-flags...]
 
 flags:
 
-- `--ambassador-image <string>`: the image to make the ambassador from, with a tag or digest, overriding PLUGIN_AMBASSADOR_IMAGE and the ambassador-image global property
+- `--ambassador-image <string>`: the image to make the ambassador from, with a tag or digest, overriding the ambassador-image global property
 - `-c|--config-options <string>`: extra arguments for the process the service container runs, not docker flags; use mount for mounts
 - `-C|--custom-env <string>`: semi-colon delimited environment variables to start the service with
 - `--definition <string>`: the definition to move the service onto, instead of the one its image and version resolve to
+- `-f|--force`: export and import the data without asking when the upgrade cannot migrate it in place, and fall back to that when an in-place migration fails
 - `-i|--image <string>`: the image to upgrade the service to
 - `-I|--image-version <string>`: the image version to upgrade the service to
 - `-N|--initial-network <string>`: the initial network to attach the service to
@@ -2234,7 +2235,7 @@ A `port-source-range` cannot be enforced on a port the service container publish
 
 ### Choosing the ambassador image
 
-The ambassador is made from `dokku/ambassador:0.8.4` unless another image is named. Pass `--ambassador-image` to `expose`, `reexpose`, `start`, `restart`, `upgrade` or `set` to name one for that command, set the `PLUGIN_AMBASSADOR_IMAGE` environment variable, or set the `ambassador-image` global property with `dokku postgres:set --global ambassador-image dokku/ambassador:0.8.4`. The flag is used first, then the environment variable, then the global property. The environment variable only reaches the plugin where sudo keeps the caller's environment, which it does not on newer versions of ubuntu.
+The ambassador is made from `dokku/ambassador:0.8.4` unless another image is named. Pass `--ambassador-image` to `expose`, `reexpose`, `start`, `restart`, `upgrade` or `set` to name one for that command, or set the `ambassador-image` global property with `dokku postgres:set --global ambassador-image dokku/ambassador:0.8.4` to name one for every service. The flag wins over the global property.
 
 The image has to name a tag or a digest. A different image reaches an exposed service on its next start, restart, upgrade or `dokku postgres:reexpose`, which replace an ambassador made from another image. `dokku/ambassador:0.8.4` or newer is needed for a udp port.
 
@@ -2270,10 +2271,14 @@ Each volume a service mounts is named by the directory it lives in under the ser
 | postgres-17 | certs | `/certs` |
 | postgres-18 | data | `/var/lib/postgresql` |
 | postgres-18 | certs | `/certs` |
+| postgres-19 | data | `/var/lib/postgresql` |
+| postgres-19 | certs | `/certs` |
 | postgres-pgvector-pg17 | data | `/var/lib/postgresql/data` |
 | postgres-pgvector-pg17 | certs | `/certs` |
 | postgres-pgvector-pg18 | data | `/var/lib/postgresql` |
 | postgres-pgvector-pg18 | certs | `/certs` |
+| postgres-pgvector-pg19 | data | `/var/lib/postgresql` |
+| postgres-pgvector-pg19 | certs | `/certs` |
 | postgres-postgis-pg17 | data | `/var/lib/postgresql/data` |
 | postgres-postgis-pg17 | certs | `/certs` |
 | postgres-postgis-pg18 | data | `/var/lib/postgresql` |
@@ -2284,6 +2289,27 @@ Each volume a service mounts is named by the directory it lives in under the ser
 | postgres-timescaledb-pg18 | certs | `/certs` |
 
 Moving a volume changes where it is mounted, not where the image reads and writes. The datastore's own commands and the paths it is started with follow the volume, but an image that keeps writing to its own path writes into the container rather than into the volume, and what it writes is lost when the container is rebuilt, so only move a volume to where the image expects its data. The data stays in the same directory on the host, and a move reaches the container the next time one is built, so use `dokku postgres:stop` and then `dokku postgres:start` on a running service. An upgrade onto a definition that does not mount a volume the service moved is refused until the move is cleared or replaced.
+
+### Migrating data between definitions
+
+An upgrade that moves a service onto another of its definitions with `dokku postgres:upgrade lollipop --definition <definition> --restart-apps` carries the data across. The old data is kept beside the new under the service's directory, and a move that fails puts the service back on what it ran.
+
+These moves migrate the data in place, in a container of its own run from the image named:
+
+| Moved off | Moved onto | Migrated in place with |
+| --- | --- | --- |
+| postgres-14 | postgres-15 | `tianon/postgres-upgrade:14-to-15` |
+| postgres-14 | postgres-16 | `tianon/postgres-upgrade:14-to-16` |
+| postgres-15 | postgres-16 | `tianon/postgres-upgrade:15-to-16` |
+| postgres-14 | postgres-17 | `tianon/postgres-upgrade:14-to-17` |
+| postgres-15 | postgres-17 | `tianon/postgres-upgrade:15-to-17` |
+| postgres-16 | postgres-17 | `tianon/postgres-upgrade:16-to-17` |
+| postgres-14 | postgres-18 | `tianon/postgres-upgrade:14-to-18` |
+| postgres-15 | postgres-18 | `tianon/postgres-upgrade:15-to-18` |
+| postgres-16 | postgres-18 | `tianon/postgres-upgrade:16-to-18` |
+| postgres-17 | postgres-18 | `tianon/postgres-upgrade:17-to-18` |
+
+Any other move exports the data from the old definition and imports it into the new one. Before anything is touched, the upgrade says so and asks to go ahead, and changes nothing if the answer is no or there is nobody to answer. Pass `--force` to go ahead without being asked. A migration in place that fails is undone, and is only followed by an export and an import when the upgrade was given `--force`.
 
 ### Reserved service names
 
@@ -2343,10 +2369,16 @@ dokku postgres:import lollipop-utf8 < lollipop.dump
 An upgrade that moves a service to another major version, or onto another flavor, carries its data across rather than mounting it where the new version would not read it. The linked apps are stopped while the data is copied, so the upgrade has to be given `--restart-apps`:
 
 ```shell
-dokku postgres:upgrade lollipop --definition postgres-18 --restart-apps
+dokku postgres:upgrade lollipop --definition postgres-19 --restart-apps
 ```
 
-Onto a newer major of the official image the data is copied with `pg_upgrade`, which needs as much free disk as the data takes up. Every other move exports every database and role from the old version with `pg_dumpall` and replays it into the new one. A move that fails puts the service back on the version it ran, with the data it had. The old data is kept in a `data.<definition>.<timestamp>` directory beside the service's data, and is removed once the upgrade is confirmed:
+Onto a newer major of the official image the data is copied with `pg_upgrade` where an image is published for that pair of majors, which needs as much free disk as the data takes up. Every other move exports every database and role from the old version with `pg_dumpall` and replays it into the new one, and asks before it does. `--force` goes ahead without asking:
+
+```shell
+dokku postgres:upgrade lollipop --definition postgres-pgvector-pg19 --restart-apps --force
+```
+
+A move that fails puts the service back on the version it ran, with the data it had. A `pg_upgrade` that fails is only followed by an export and an import when the upgrade was given `--force`. The old data is kept in a `data.<definition>.<timestamp>` directory beside the service's data, and is removed once the upgrade is confirmed:
 
 ```shell
 dokku postgres:upgrade-cleanup lollipop

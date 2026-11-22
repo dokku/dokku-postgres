@@ -1,1 +1,1 @@
-FROM postgis/postgis:17-3.6
+FROM postgis/postgis:17-3.7
