@@ -468,10 +468,11 @@ x-dokku:
       body: |
         an upgrade that moves a service to another major version, or onto another flavor, carries its data across rather than mounting it where the new version would not read it.
         the linked apps are stopped while the data is copied, so the upgrade has to be given '--restart-apps':
-        dokku {{.Command "upgrade"}} lollipop --definition postgres-18 --restart-apps
-        onto a newer major of the official image the data is copied with 'pg_upgrade', which needs as much free disk as the data takes up.
-        every other move exports every database and role from the old version with 'pg_dumpall' and replays it into the new one.
-        a move that fails puts the service back on the version it ran, with the data it had.
+        dokku {{.Command "upgrade"}} lollipop --definition postgres-19 --restart-apps
+        onto a newer major of the official image the data is copied with 'pg_upgrade' where an image is published for that pair of majors, which needs as much free disk as the data takes up.
+        every other move exports every database and role from the old version with 'pg_dumpall' and replays it into the new one, and asks before it does. '--force' goes ahead without asking:
+        dokku {{.Command "upgrade"}} lollipop --definition postgres-pgvector-pg19 --restart-apps --force
+        a move that fails puts the service back on the version it ran, with the data it had. a 'pg_upgrade' that fails is only followed by an export and an import when the upgrade was given '--force'.
         the old data is kept in a 'data.<definition>.<timestamp>' directory beside the service's data, and is removed once the upgrade is confirmed:
         dokku {{.Command "upgrade-cleanup"}} lollipop
 
